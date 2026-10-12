@@ -84,7 +84,7 @@ wheels = [
 ]
 
 [[package]]
-name = "test-sprite-engine"
+name = "sprite-engine"
 version = "0.5.1"
 source = { editable = "." }
 dependencies = [
