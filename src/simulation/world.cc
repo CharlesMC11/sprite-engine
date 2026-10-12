@@ -18,7 +18,8 @@ namespace sc {
         if (!(atlas_ && atlas_.data())) [[unlikely]]
             throw std::runtime_error{"Could not load the atlas."};
 
-        if (!assets::atlas::validate(atlas_.data(), atlas_.size())) [[unlikely]]
+        if (!assets::atlas::validate(atlas_.data(), atlas_.size()))
+                [[unlikely]]
             throw std::runtime_error{"Atlas has an invalid structure."};
 
         bridge_.set_atlas_buffer(atlas_);

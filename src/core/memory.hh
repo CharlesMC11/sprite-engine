@@ -109,7 +109,8 @@ namespace sc::mem {
         if (aligned_new_capacity <= capacity) [[unlikely]]
             return;
 
-        const std::size_t new_total_bytes{sizeof(T) * aligned_new_capacity * N};
+        const std::size_t new_total_bytes{
+                sizeof(T) * aligned_new_capacity * N};
         const NS::SharedPtr new_buffer{NS::TransferPtr(device->newBuffer(
                 new_total_bytes, MTL::ResourceStorageModeShared))};
 

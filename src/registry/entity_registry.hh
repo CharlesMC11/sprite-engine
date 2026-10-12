@@ -24,25 +24,25 @@
  * @param buffer_name
  * The name of the buffer.
  */
-#define SC_REGISTER_ACCESSOR(EnumType, DataType, enum_val, buffer_name)        \
-    [[nodiscard]] constexpr auto enum_val##_ptr() noexcept                     \
-            -> DataType* __restrict                                            \
-    {                                                                          \
-        return get_ptr<EnumType, DataType, false>(                             \
-                buffer_name, EnumType::enum_val);                              \
-    }                                                                          \
-                                                                               \
-    [[nodiscard]] constexpr auto enum_val##_ptr() const noexcept               \
-            -> const DataType* __restrict                                      \
-    {                                                                          \
-        return get_ptr<EnumType, DataType, true>(                              \
-                buffer_name, EnumType::enum_val);                              \
+#define SC_REGISTER_ACCESSOR(EnumType, DataType, enum_val, buffer_name)       \
+    [[nodiscard]] constexpr auto enum_val##_ptr() noexcept                    \
+            -> DataType* __restrict                                           \
+    {                                                                         \
+        return get_ptr<EnumType, DataType, false>(                            \
+                buffer_name, EnumType::enum_val);                             \
+    }                                                                         \
+                                                                              \
+    [[nodiscard]] constexpr auto enum_val##_ptr() const noexcept              \
+            -> const DataType* __restrict                                     \
+    {                                                                         \
+        return get_ptr<EnumType, DataType, true>(                             \
+                buffer_name, EnumType::enum_val);                             \
     }
 
-#define SC_REGISTER_XFORM_CHANNEL_ACCESSOR(enum_val)                           \
+#define SC_REGISTER_XFORM_CHANNEL_ACCESSOR(enum_val)                          \
     SC_REGISTER_ACCESSOR(xform_channel, float, enum_val, xform_buffer_)
 
-#define SC_REGISTER_INDEX_CHANNEL_ACCESSOR(enum_val)                           \
+#define SC_REGISTER_INDEX_CHANNEL_ACCESSOR(enum_val)                          \
     SC_REGISTER_ACCESSOR(index_channel, core::index_t, enum_val, index_buffer_)
 
 /**
@@ -54,21 +54,21 @@
  * @param enum_swap
  * The enum value the channel is swappable with.
  */
-#define SC_REGISTER_SWAPPABLE_ACCESSOR(enum_val, enum_swap)                    \
-    [[nodiscard]] constexpr auto enum_val##_ptr() noexcept                     \
-            -> float* __restrict                                               \
-    {                                                                          \
-        return get_ptr<xform_channel, float, false>(xform_buffer_,             \
-                channels_swapped_ ? xform_channel::enum_val                    \
-                                  : xform_channel::enum_swap);                 \
-    }                                                                          \
-                                                                               \
-    [[nodiscard]] constexpr auto enum_val##_ptr() const noexcept               \
-            -> const float* __restrict                                         \
-    {                                                                          \
-        return get_ptr<xform_channel, float, true>(xform_buffer_,              \
-                channels_swapped_ ? xform_channel::enum_val                    \
-                                  : xform_channel::enum_swap);                 \
+#define SC_REGISTER_SWAPPABLE_ACCESSOR(enum_val, enum_swap)                   \
+    [[nodiscard]] constexpr auto enum_val##_ptr() noexcept                    \
+            -> float* __restrict                                              \
+    {                                                                         \
+        return get_ptr<xform_channel, float, false>(xform_buffer_,            \
+                channels_swapped_ ? xform_channel::enum_val                   \
+                                  : xform_channel::enum_swap);                \
+    }                                                                         \
+                                                                              \
+    [[nodiscard]] constexpr auto enum_val##_ptr() const noexcept              \
+            -> const float* __restrict                                        \
+    {                                                                         \
+        return get_ptr<xform_channel, float, true>(xform_buffer_,             \
+                channels_swapped_ ? xform_channel::enum_val                   \
+                                  : xform_channel::enum_swap);                \
     }
 
 namespace sc {
@@ -216,7 +216,8 @@ namespace sc {
 
         // Attributes
 
-        mem::channel_pool<float, static_cast<std::size_t>(xform_channel::count)>
+        mem::channel_pool<float,
+                static_cast<std::size_t>(xform_channel::count)>
                 xform_buffer_;
 
         mem::channel_pool<core::index_t,
@@ -258,13 +259,15 @@ namespace sc {
     [[nodiscard]] constexpr std::size_t entity_registry::offset(
             xform_channel channel) const noexcept
     {
-        return xform_buffer_.subarray_offset(static_cast<std::size_t>(channel));
+        return xform_buffer_.subarray_offset(
+                static_cast<std::size_t>(channel));
     }
 
     [[nodiscard]] constexpr std::size_t entity_registry::offset(
             index_channel channel) const noexcept
     {
-        return index_buffer_.subarray_offset(static_cast<std::size_t>(channel));
+        return index_buffer_.subarray_offset(
+                static_cast<std::size_t>(channel));
     }
 
     [[nodiscard]] constexpr auto entity_registry::xform_buffer() const noexcept

@@ -41,7 +41,8 @@ namespace sc::assets {
     template<unsigned Width = sprites::kDefaultSize, unsigned Height = Width>
     struct alignas(core::kNeonAlignment) sprite final {
         sprites::metadata meta;
-        graphics::packed_pixel_t pixels[Height * Width]{0U}; // Row-major pixels
+        graphics::packed_pixel_t pixels[Height * Width]{
+                0U}; // Row-major pixels
     };
 
     using sprite16 = sprite<16U>;

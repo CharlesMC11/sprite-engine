@@ -26,8 +26,8 @@ namespace sc::render {
     {
         NS::Error* error{nullptr};
 
-        const auto* library_path{
-                NS::String::string(assets::kShaderLib, NS::UTF8StringEncoding)};
+        const auto* library_path{NS::String::string(
+                assets::kShaderLib, NS::UTF8StringEncoding)};
         auto* library{device->newLibrary(library_path, &error)};
         if (!library) [[unlikely]]
             throw std::runtime_error{
@@ -88,7 +88,8 @@ namespace sc::render {
     {
         encoder_->setComputePipelineState(clear_pso_.get());
 
-        const auto grid_size = MTL::Size(display::kWidth, display::kHeight, 1U);
+        const auto grid_size =
+                MTL::Size(display::kWidth, display::kHeight, 1U);
         const auto thread_group_size = MTL::Size(16U, 16U, 1U);
 
         encoder_->dispatchThreads(grid_size, thread_group_size);
