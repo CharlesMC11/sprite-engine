@@ -118,8 +118,8 @@ constexpr T& operator^=(T& lhs, const T rhs) noexcept
     return lhs = lhs ^ rhs;
 }
 
-#define SC_ENABLE_ENUM_BITWISE_OPS(EnumType)                                   \
-    template<>                                                                 \
+#define SC_ENABLE_ENUM_BITWISE_OPS(EnumType)                                  \
+    template<>                                                                \
     inline constexpr bool sc::core::enable_bitwise_ops_v<EnumType>{true};
 
 static_assert(std::has_single_bit(sc::core::kNeonAlignment));
