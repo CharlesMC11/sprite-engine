@@ -1,5 +1,5 @@
 [project]
-name = "test-sprite-engine"
+name = "sprite-engine"
 version = "0.5.1"
 description = "Compile artworks into sprites, and preview them."
 readme = "README.md"
@@ -20,7 +20,7 @@ preview = "pipeline.interpreter:main"
 
 [tool.ruff]
 indent-width = 4
-line-length = 80
+line-length = 79
 
 [tool.ruff.format]
 docstring-code-format = true
