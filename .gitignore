@@ -2,28 +2,32 @@
 !*.*
 !*/
 
-# Python-generated files
-__pycache__/
-*.egg-info
-*.py[oc]
-dist/
-wheels/
-
-build*/
-*.so
-
-# Virtual environments
-.venv/
-
 # System files
-.idea/
-.vscode/
 .DS_Store
 
+/.git/
+
+/.idea/
+/.vscode/
+
+/build*/
+/cmake-build-*/
+*.so
+
+# Python-generated files
+/.ruff_cache/
+/.venv/
+
+/dist/
+*.egg-info/
+
+__pycache__/
+*.pyc
+
 # Project files
-assets/
+/assets/
 !src/assets/
-vendor/
+/vendor/
 
 *.aco
 *.atlas
