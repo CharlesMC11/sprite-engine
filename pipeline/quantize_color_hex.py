@@ -1,15 +1,20 @@
 #!/usr/bin/env -S python3
 """
-Quantize a list of hexadecimal color codes to 6‑bit and 5‑bit representations,
-then display the entered and quantized colors in a tabular format along with
-their ANSI color representations.
+Quantize a list of hexadecimal color codes to 16-bit packed and 8-bit packed
+representations, then display the entered and quantized colors in a tabular
+format along with their ANSI color representations.
 """
 
 from argparse import ArgumentParser
+from collections import namedtuple
 from collections.abc import Iterable
-from functools import partial
 
-from pipeline import MAX_5_BIT, MAX_6_BIT, dequantize, quantize
+from pipeline import remap
+
+# Types
+
+Color = namedtuple("Color", "r g b")
+
 
 # Public function
 
@@ -28,60 +33,41 @@ def main() -> None:
 
 
 def quantize_color_hex_codes(hex_codes: Iterable[str]) -> None:
-
-    unique_codes: set[tuple[int, int, int]] = filter_hex_codes(hex_codes)
+    unique_codes: tuple[Color] = filter_hex_codes(hex_codes)
 
     palette_size = len(unique_codes)
     bit_count = max(palette_size - 1, 0).bit_length()
     unit = "bit" if bit_count == 1 else "bits"
 
-    print(
-        f"{palette_size} colors ({bit_count} {unit})\n"
-        f"{'Entered':<7} {'Neutral':^14} {'Warm':^14} {'Cool':^14} {'Patches':<7}"
+    header = f"{'Entered':<7} │ {'N16':^14} │ {'W16':^14} │ {'C16':^14} │ {'P16':^8} │ {'N8':^12} │ {'W8':^12} │ {'C8':^12} │ {'P8':^8}"
+    separator = (
+        "─" * 8
+        + ("┬" + "─" * 16) * 3
+        + "┬"
+        + ("─" * 10)
+        + ("┬" + "─" * 14) * 3
+        + "┬"
+        + "─" * 9
     )
 
-    for r, g, b in unique_codes:
-        # 6-bit
-        r6_quantized = _quantize_to_6bit(r)
-        g6_quantized = _quantize_to_6bit(g)
-        b6_quantized = _quantize_to_6bit(b)
+    print(
+        f"{palette_size} colors ({bit_count} {unit})",
+        separator,
+        header.rstrip(),
+        separator.replace("┬", "┼"),
+        sep="\n",
+    )
 
-        r6_expanded = _expand_from_6bit(r6_quantized)
-        g6_expanded = _expand_from_6bit(g6_quantized)
-        b6_expanded = _expand_from_6bit(b6_quantized)
+    for color in unique_codes:
+        print(hex_str(*color), end="")
+        print_16bit(color)
+        print_8bit(color)
 
-        # 5-bit
-        r5_quantized = _quantize_to_5bit(r)
-        g5_quantized = _quantize_to_5bit(g)
-        b5_quantized = _quantize_to_5bit(b)
-
-        r5_expanded = _expand_from_5bit(r5_quantized)
-        g5_expanded = _expand_from_5bit(g5_quantized)
-        b5_expanded = _expand_from_5bit(b5_quantized)
-
-        _print_codes(
-            r,
-            g,
-            b,
-            r6_quantized,
-            g6_quantized,
-            b6_quantized,
-            r5_quantized,
-            g5_quantized,
-            b5_quantized,
-            r6_expanded,
-            g6_expanded,
-            b6_expanded,
-            r5_expanded,
-            g5_expanded,
-            b5_expanded,
-        )
+    print(separator.replace("┬", "┴"))
 
 
-def filter_hex_codes(
-    raw_hex_codes: Iterable[str],
-) -> list[tuple[int, int, int]]:
-    result: set[tuple[int, int, int]] = set()
+def filter_hex_codes(raw_hex_codes: Iterable[str]) -> tuple[Color]:
+    result: set[Color] = set()
 
     for raw_code in raw_hex_codes:
         cleaned_code = raw_code.strip().removeprefix("#")
@@ -93,66 +79,171 @@ def filter_hex_codes(
         except ValueError:
             continue
 
-        result.add((r, g, b))
+        result.add(Color(r, g, b))
 
-    return sorted(result)
+    return tuple(sorted(result))
 
 
 def hex_str(r: int, g: int, b: int) -> str:
     return f"#{r:02X}{g:02X}{b:02X}"
 
 
-# Protected helpers
+def print_16bit(color: Color) -> None:
+    """Print the 16-bit packed color
 
-_quantize_to_6bit = partial(quantize, dst_max=MAX_6_BIT)
-_quantize_to_5bit = partial(quantize, dst_max=MAX_5_BIT)
+    :param color: The original color value
+    """
+    r, g, b = color
 
-_expand_from_6bit = partial(dequantize, src_max=MAX_6_BIT)
-_expand_from_5bit = partial(dequantize, src_max=MAX_5_BIT)
+    max6 = (1 << 6) - 1
+    q6 = _quantize(r, g, b, dst_max=max6)
+    e6 = _dequantize(*q6, src_max=max6)
+
+    max5 = max6 >> 1
+    q5 = _quantize(r, g, b, dst_max=max5)
+    e5 = _dequantize(*q5, src_max=max5)
+
+    _print_codes_16bit(color, q6, q5, e6, e5)
 
 
-def _print_codes(
-    r: int,
-    g: int,
-    b: int,
-    r6_quantized: int,
-    g6_quantized: int,
-    b6_quantized: int,
-    r5_quantized: int,
-    g5_quantized: int,
-    b5_quantized: int,
-    r6_expanded: int,
-    g6_expanded: int,
-    b6_expanded: int,
-    r5_expanded: int,
-    g5_expanded: int,
-    b5_expanded: int,
-) -> None:
-    entered = hex_str(r, g, b)
+def print_8bit(color: Color) -> None:
+    """Print the 8-bit packed color
 
-    neutral_quantized = (
-        (r5_quantized << 11) | (g6_quantized << 5) | b5_quantized
+    :param color: The original color value
+    """
+    r, g, b = color
+
+    max4 = (1 << 4) - 1
+    q4 = _quantize(r, g, b, dst_max=max4)
+    e4 = _dequantize(*q4, src_max=max4)
+
+    max3 = max4 >> 1
+    q3 = _quantize(r, g, b, dst_max=max3)
+    e3 = _dequantize(*q3, src_max=max3)
+
+    max2 = max3 >> 1
+    q2 = _quantize(r, g, b, dst_max=max2)
+    e2 = _dequantize(*q2, src_max=max2)
+
+    _print_codes_8bit(
+        color,
+        q4,
+        q3,
+        q2,
+        e4,
+        e3,
+        e2,
     )
-    warm_quantized = (r6_quantized << 10) | (g5_quantized << 5) | b5_quantized
-    cool_quantized = (r5_quantized << 11) | (g5_quantized << 5) | b6_quantized
 
-    neutral_expanded = hex_str(r5_expanded, g6_expanded, b5_expanded)
-    warm_expanded = hex_str(r6_expanded, g5_expanded, b5_expanded)
-    cool_expanded = hex_str(r5_expanded, g5_expanded, b6_expanded)
+
+def _quantize(r: int, g: int, b: int, dst_max: int) -> Color:
+    return Color(
+        remap(r, src_max=0xFF, dst_max=dst_max),
+        remap(g, src_max=0xFF, dst_max=dst_max),
+        remap(b, src_max=0xFF, dst_max=dst_max),
+    )
+
+
+def _dequantize(r: int, g: int, b: int, src_max: int) -> Color:
+    return Color(
+        remap(r, src_max=src_max, dst_max=0xFF),
+        remap(g, src_max=src_max, dst_max=0xFF),
+        remap(b, src_max=src_max, dst_max=0xFF),
+    )
+
+
+def _print_codes_16bit(
+    original: Color,
+    q6: Color,
+    q5: Color,
+    e6: Color,
+    e5: Color,
+) -> None:
+    """Print the 16-bit packed color
+
+    :param original: The original blue value
+    :param q6: The 6-bit quantized color value
+    :param q5: The 5-bit quantized color value
+    :param e6: The 6-bit expanded color value
+    :param e5: The 5-bit expanded color value
+    """
+
+    rq6, gq6, bq6 = q6
+    rq5, gq5, bq5 = q5
+
+    nq = (rq5 << 11) | (gq6 << 5) | bq5
+    wq = (rq6 << 10) | (gq5 << 5) | bq5
+    cq = (rq5 << 11) | (gq5 << 6) | bq6
+
+    re6, ge6, be6 = e6
+    re5, ge5, be5 = e5
+
+    ne = hex_str(re5, ge6, be5)
+    we = hex_str(re6, ge5, be5)
+    ce = hex_str(re5, ge5, be6)
 
     patches = (
-        f"{_ansi_str(r, g, b)}"
-        f"{_ansi_str(r5_expanded, g6_expanded, b5_expanded)}"
-        f"{_ansi_str(r6_expanded, g5_expanded, b5_expanded)}"
-        f"{_ansi_str(r5_expanded, g5_expanded, b6_expanded)}"
+        f"{_ansi_str(*original)}"
+        f"{_ansi_str(re5, ge6, be5)}"
+        f"{_ansi_str(re6, ge5, be5)}"
+        f"{_ansi_str(re5, ge5, be6)}"
     )
 
     print(
-        entered,
-        f"{neutral_expanded} [{neutral_quantized:04X}]",
-        f"{warm_expanded} [{warm_quantized:04X}]",
-        f"{cool_expanded} [{cool_quantized:04X}]",
+        f" | {ne} [{nq:04X}] | {we} [{wq:04X}] | {ce} [{cq:04X}] | ",
         patches,
+        end="",
+        sep="",
+    )
+
+
+def _print_codes_8bit(
+    original: Color,
+    q4: Color,
+    q3: Color,
+    q2: Color,
+    e4: Color,
+    e3: Color,
+    e2: Color,
+) -> None:
+    """Print the 8-bit packed colors
+
+    :param original: The original color value
+    :param q4: The 4-bit quantized color value
+    :param q3: The 3-bit quantized color value
+    :param q2: The 2-bit quantized color value
+    :param e4: The 4-bit expanded color value
+    :param e3: The 3-bit expanded color value
+    :param e2: The 2-bit expanded color value
+    """
+
+    rq4, gq4, bq4 = q4
+    rq3, gq3, bq3 = q3
+    rq2, gq2, bq2 = q2
+
+    nq = (rq3 << 5) | (gq3 << 2) | bq2
+    wq = (rq4 << 4) | (gq2 << 2) | bq2
+    cq = (rq2 << 6) | (gq2 << 4) | bq4
+
+    re4, ge4, be4 = e4
+    re3, ge3, be3 = e3
+    re2, ge2, be2 = e2
+
+    ne = hex_str(re3, ge3, be2)
+    we = hex_str(re4, ge2, ge2)
+    ce = hex_str(re2, ge2, be4)
+
+    patches = (
+        f"{_ansi_str(*original)}"
+        f"{_ansi_str(re3, ge3, be2)}"
+        f"{_ansi_str(re4, ge2, be2)}"
+        f"{_ansi_str(re2, ge2, be4)}"
+    )
+
+    print(
+        f" | {ne} [{nq:02X}] | {we} [{wq:02X}] | {ce} [{cq:02X}] | ",
+        patches,
+        sep="",
     )
 
 

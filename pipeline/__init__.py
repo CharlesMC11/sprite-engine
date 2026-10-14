@@ -24,14 +24,12 @@ from pipeline._pipeline import (
 
 # Graphics
 
-ASSET_LAYOUT_VERSION: Final[bytes] = b"6"
+ASSET_LAYOUT_VERSION: bytes = b"6"
 
-SPRITE_DIMENSIONS_SIZE_BYTES: Final[int] = 2
+SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
 """The total size of the sprite dimensions in bytes."""
 
-FOOTER_SIZE_BYTES: Final[int] = (
-    PALETTE_SIZE_BYTES + SPRITE_DIMENSIONS_SIZE_BYTES
-)
+FOOTER_SIZE_BYTES: int = PALETTE_SIZE_BYTES + SPRITE_DIMENSIONS_SIZE_BYTES
 """ The total size of the sprite footer in bytes."""
 
 type BGRImage = npt.NDArray[np.uint8]
@@ -200,6 +198,10 @@ def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
 
     :return: The remapped value.
     """
+    if src_max == 0x00 or dst_max == 0x00:
+        raise ValueError(
+            "Source or destination maximum values cannot be 0x00."
+        )
 
     return (value * dst_max + src_max // 2) // src_max
 
