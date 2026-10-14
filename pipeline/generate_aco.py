@@ -15,7 +15,9 @@ from pipeline.quantize_color_hex import filter_hex_codes, hex_str
 
 
 def main() -> None:
-    parser = ArgumentParser("Adobe Color Swatch Generator", description=__doc__)
+    parser = ArgumentParser(
+        "Adobe Color Swatch Generator", description=__doc__
+    )
     parser.add_argument(
         "-n",
         "--name",
