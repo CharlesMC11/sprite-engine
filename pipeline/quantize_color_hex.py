@@ -1,4 +1,3 @@
-#!/usr/bin/env -S python3
 """
 Quantize a list of hexadecimal color codes to 16‑bit packed and 8‑bit packed
 representations, then display the entered and quantized colors in a tabular
