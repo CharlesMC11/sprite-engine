@@ -1,6 +1,6 @@
 #!/usr/bin/env -S python3
 """
-Quantize a list of hexadecimal color codes to 16-bit packed and 8-bit packed
+Quantize a list of hexadecimal color codes to 16‑bit packed and 8‑bit packed
 representations, then display the entered and quantized colors in a tabular
 format along with their ANSI color representations.
 """
@@ -89,7 +89,7 @@ def hex_str(r: int, g: int, b: int) -> str:
 
 
 def print_16bit(color: Color) -> None:
-    """Print the 16-bit packed color
+    """Print the 16‑bit packed color
 
     :param color: The original color value
     """
@@ -107,7 +107,7 @@ def print_16bit(color: Color) -> None:
 
 
 def print_8bit(color: Color) -> None:
-    """Print the 8-bit packed color
+    """Print the 8‑bit packed color
 
     :param color: The original color value
     """
@@ -159,13 +159,13 @@ def _print_codes_16bit(
     e6: Color,
     e5: Color,
 ) -> None:
-    """Print the 16-bit packed color
+    """Print the 16‑bit packed color
 
     :param original: The original blue value
-    :param q6: The 6-bit quantized color value
-    :param q5: The 5-bit quantized color value
-    :param e6: The 6-bit expanded color value
-    :param e5: The 5-bit expanded color value
+    :param q6: The 6‑bit quantized color value
+    :param q5: The 5‑bit quantized color value
+    :param e6: The 6‑bit expanded color value
+    :param e5: The 5‑bit expanded color value
     """
 
     rq6, gq6, bq6 = q6
@@ -206,15 +206,15 @@ def _print_codes_8bit(
     e3: Color,
     e2: Color,
 ) -> None:
-    """Print the 8-bit packed colors
+    """Print the 8‑bit packed colors
 
     :param original: The original color value
-    :param q4: The 4-bit quantized color value
-    :param q3: The 3-bit quantized color value
-    :param q2: The 2-bit quantized color value
-    :param e4: The 4-bit expanded color value
-    :param e3: The 3-bit expanded color value
-    :param e2: The 2-bit expanded color value
+    :param q4: The 4‑bit quantized color value
+    :param q3: The 3‑bit quantized color value
+    :param q2: The 2‑bit quantized color value
+    :param e4: The 4‑bit expanded color value
+    :param e3: The 3‑bit expanded color value
+    :param e2: The 2‑bit expanded color value
     """
 
     rq4, gq4, bq4 = q4
