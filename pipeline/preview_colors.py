@@ -1,7 +1,8 @@
 """
-Quantize a list of hexadecimal color codes to 16‑bit packed and 8‑bit packed
-representations, then display the entered and quantized colors in a tabular
-format along with their ANSI color representations.
+Quantize a list of hexadecimal color codes from 24‑bit colors to their 16‑bit
+and 8‑bit packed representations. Then, display the original, quantized, and
+expanded hexadecimal codes in a tabular format along with their ANSI color
+representations.
 """
 
 from argparse import ArgumentParser
@@ -11,6 +12,7 @@ from collections.abc import Iterable
 from pipeline import remap
 
 # Types
+
 
 Color = namedtuple("Color", "r g b")
 
@@ -67,7 +69,7 @@ def preview_colors(hex_codes: Iterable[str]) -> None:
 
     print(
         grid_sep.replace("┼", "┴"),
-        f"│ {f'{palette_size} colors ({bit_count} {unit})':<126}│",
+        f"│ {f'{palette_size} colors ({bit_count} {unit})':<125} │",
         f"└{'─' * (len(grid_top) - 2)}┘",
         sep="\n",
     )
@@ -237,7 +239,7 @@ def _print_codes_8bit(
     re2, ge2, be2 = e2
 
     ne = hex_str(re3, ge3, be2)
-    we = hex_str(re4, ge2, ge2)
+    we = hex_str(re4, ge2, be2)
     ce = hex_str(re2, ge2, be4)
 
     patches = (
