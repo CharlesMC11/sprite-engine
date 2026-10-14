@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from functools import partial
 
 from pipeline import quantize
-from pipeline.quantize_color_hex import filter_hex_codes, hex_str
+from pipeline.preview_colors import filter_hex_codes, hex_str
 
 # Public function
 

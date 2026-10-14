@@ -15,7 +15,7 @@ from pipeline import remap
 Color = namedtuple("Color", "r g b")
 
 
-# Public function
+# Public functions
 
 
 def main() -> None:
@@ -28,15 +28,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    quantize_color_hex_codes(args.hex_codes)
+    preview_colors(args.hex_codes)
 
 
-def quantize_color_hex_codes(hex_codes: Iterable[str]) -> None:
-    unique_codes: tuple[Color] = filter_hex_codes(hex_codes)
-
-    palette_size = len(unique_codes)
-    bit_count = max(palette_size - 1, 0).bit_length()
-    unit = "bit" if bit_count == 1 else "bits"
+def preview_colors(hex_codes: Iterable[str]) -> None:
+    """Quantize each color and display it."""
 
     grid_top = (
         "┌"
@@ -49,25 +45,28 @@ def quantize_color_hex_codes(hex_codes: Iterable[str]) -> None:
         + "─" * 10
         + "┐"
     )
-    grid_mid1 = grid_top.replace("┌", "├").replace("┬", "┼").replace("┐", "┤")
-    grid_mid2 = grid_mid1.replace("┼", "┴")
-
+    grid_sep = grid_top.replace("┌", "├").replace("┬", "┼").replace("┐", "┤")
     header = f"│ {'Entered':<7} │ {'Neutral 16':^14} │ {'Warm 16':^14} │ {'Cool 16':^14} │ {'Pal 16':^8} │ {'Neutral 8':^12} │ {'Warm 8':^12} │ {'Cool 8':^12} │ {'Pal 8':^8} │"
 
     print(
         grid_top,
         header.rstrip(),
-        grid_mid1,
+        grid_sep,
         sep="\n",
     )
 
+    unique_codes: tuple[Color] = filter_hex_codes(hex_codes)
     for color in unique_codes:
         print("│", hex_str(*color), end="")
         print_16bit(color)
         print_8bit(color)
 
+    palette_size = len(unique_codes)
+    bit_count = max(palette_size - 1, 0).bit_length()
+    unit = "bit" if bit_count == 1 else "bits"
+
     print(
-        grid_mid2.replace("┼", "┴"),
+        grid_sep.replace("┼", "┴"),
         f"│ {f'{palette_size} colors ({bit_count} {unit})':<126}│",
         f"└{'─' * (len(grid_top) - 2)}┘",
         sep="\n",
