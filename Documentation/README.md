@@ -86,7 +86,5 @@
 ### Battle
 
 - Turn-based: Attack, Defend, Skill, Item, Move, Run?
-- Decide between top-down _Fire Emblem_or _Disgaea_-like grid or _Naruto: Path
-  of the
-  Ninja_ stage
+- Decide between top-down _Fire Emblem_ or _Disgaea_-like grid or _Naruto: Path of the Ninja_ stage
 - Environment hazards?
