@@ -39,31 +39,40 @@ def quantize_color_hex_codes(hex_codes: Iterable[str]) -> None:
     bit_count = max(palette_size - 1, 0).bit_length()
     unit = "bit" if bit_count == 1 else "bits"
 
-    header = f"{'Entered':<7} │ {'N16':^14} │ {'W16':^14} │ {'C16':^14} │ {'P16':^8} │ {'N8':^12} │ {'W8':^12} │ {'C8':^12} │ {'P8':^8}"
-    separator = (
-        "─" * 8
+    grid_top = (
+        "┌"
+        + "─" * 9
         + ("┬" + "─" * 16) * 3
         + "┬"
         + ("─" * 10)
         + ("┬" + "─" * 14) * 3
         + "┬"
-        + "─" * 9
+        + "─" * 10
+        + "┐"
     )
+    grid_mid1 = grid_top.replace("┌", "├").replace("┬", "┼").replace("┐", "┤")
+    grid_mid2 = grid_mid1.replace("┼", "┴")
+
+    header = f"│ {'Entered':<7} │ {'Neutral 16':^14} │ {'Warm 16':^14} │ {'Cool 16':^14} │ {'Pal 16':^8} │ {'Neutral 8':^12} │ {'Warm 8':^12} │ {'Cool 8':^12} │ {'Pal 8':^8} │"
 
     print(
-        f"{palette_size} colors ({bit_count} {unit})",
-        separator,
+        grid_top,
         header.rstrip(),
-        separator.replace("┬", "┼"),
+        grid_mid1,
         sep="\n",
     )
 
     for color in unique_codes:
-        print(hex_str(*color), end="")
+        print("│", hex_str(*color), end="")
         print_16bit(color)
         print_8bit(color)
 
-    print(separator.replace("┬", "┴"))
+    print(
+        grid_mid2.replace("┼", "┴"),
+        f"│ {f'{palette_size} colors ({bit_count} {unit})':<126}│",
+        f"└{'─' * (len(grid_top) - 2)}┘",
+        sep="\n",
+    )
 
 
 def filter_hex_codes(raw_hex_codes: Iterable[str]) -> tuple[Color]:
@@ -190,7 +199,7 @@ def _print_codes_16bit(
     )
 
     print(
-        f" | {ne} [{nq:04X}] | {we} [{wq:04X}] | {ce} [{cq:04X}] | ",
+        f" │ {ne} [{nq:04X}] │ {we} [{wq:04X}] │ {ce} [{cq:04X}] │ ",
         patches,
         end="",
         sep="",
@@ -241,8 +250,9 @@ def _print_codes_8bit(
     )
 
     print(
-        f" | {ne} [{nq:02X}] | {we} [{wq:02X}] | {ce} [{cq:02X}] | ",
+        f" │ {ne} [{nq:02X}] │ {we} [{wq:02X}] │ {ce} [{cq:02X}] │ ",
         patches,
+        " │",
         sep="",
     )
 
