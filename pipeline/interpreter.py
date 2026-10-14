@@ -97,7 +97,9 @@ def decompile_asset(source_path: Path) -> BGRImage:
         (height, width)
     )
 
-    unpacked_palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
+    unpacked_palette = _unpack_16bit_to_color(
+        palette_blob, meta.color_encoding
+    )
     image_bgr = unpacked_palette[index_bits].reshape((height, width, 3))
 
     return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8)

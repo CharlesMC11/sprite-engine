@@ -227,7 +227,9 @@ class AssetLinker:
 
         for i, asset in enumerate(buffer):
             blobs.extend(asset.blob)
-            lines.append(f"{INDENT * 2}{_clean_identifier(asset.name)} = {i}U,")
+            lines.append(
+                f"{INDENT * 2}{_clean_identifier(asset.name)} = {i}U,"
+            )
         lines.extend((f"{INDENT * 2}count", f"{INDENT}}};\n"))
 
         return blobs, lines
@@ -248,7 +250,11 @@ def main() -> None:
         "output_path", type=Path, help="Target path for the sprite atlas."
     )
     parser.add_argument(
-        "-i", "--input", nargs="*", type=Path, help="Paths to the sprite files."
+        "-i",
+        "--input",
+        nargs="*",
+        type=Path,
+        help="Paths to the sprite files.",
     )
     parser.add_argument(
         "-f",
