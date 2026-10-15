@@ -1,24 +1,23 @@
-*
-!*.*
-!*/
-
-# System files
 .DS_Store
 
-/.git/
+.idea/
+.vscode/
 
-/.idea/
-/.vscode/
-
-/build*/
-/cmake-build-*/
+# C/C++-generated files
+build/
+cmake-build-debug/
+cmake-build-release/
+*.a
+*.o
+*.dll
+*.dylib
 *.so
 
 # Python-generated files
-/.ruff_cache/
-/.venv/
+.ruff_cache/
+.venv/
 
-/dist/
+dist/
 *.egg-info/
 
 __pycache__/
@@ -26,7 +25,6 @@ __pycache__/
 
 # Project files
 /assets/
-!src/assets/
 /vendor/
 
 *.aco
