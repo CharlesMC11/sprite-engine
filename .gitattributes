@@ -1,5 +1,7 @@
 *       text=auto
 
+*.mm    diff=objc
+
 *.so    binary
 
 uv.lock generated
