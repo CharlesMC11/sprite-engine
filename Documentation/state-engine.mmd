@@ -1,0 +1,23 @@
+---
+title: Engine State Machine Diagram
+---
+stateDiagram-v2
+    state "Home Menu" as Home
+    [*] --> Home: Launch
+    Home --> Settings: Select
+    Settings --> Home: Close
+    Home --> Opening: New
+    Opening --> Exploring
+    state "Opening Cutscene" as Opening
+    Home --> Exploring: Continue
+    Exploring --> Paused: Pause
+    Paused --> Exploring: Close
+    Paused --> Exploring: Fast Travel
+    Paused --> Settings: Settings
+    Settings --> Paused: Close
+    Paused --> Home: Quit
+    Exploring --> Battle: Encounter
+    Battle --> Exploring: Flee
+    Battle --> Exploring: Victory
+    Battle --> Exploring: Defeat: Load Save
+    Battle --> Home: Defeat: Quit
