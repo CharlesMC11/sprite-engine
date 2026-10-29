@@ -1,0 +1,71 @@
+---
+title: Pause Menu
+---
+stateDiagram-v2
+    [*] --> Menu: Game Paused
+    Menu --> [*]: Close / Return Home
+    Menu --> Sketchbook: Select
+    Sketchbook --> Menu: Close
+    state Sketchbook {
+        state "Mission List" as MissionList
+        [*] --> MissionList: Open
+        state "Mission Details" as Mission
+        MissionList --> Mission: Select
+        Mission --> MissionList: Close
+    }
+    Sketchbook --> [*]: Fast Travel
+    Menu --> Notes: Select
+    state Notes {
+        state "List" as Items
+        [*] --> Items: Open
+        Items --> Settings: Select
+        Settings --> Items: Close
+    }
+    state "Character Stats" as Stats
+    Notes --> Stats: Select Character
+    Stats --> Notes: Close
+    Notes --> Menu: Close
+    Menu --> Toolbag: Select
+    Toolbag --> Stats: Equip Item to Character
+    Stats --> Toolbag: Done / Cancel
+    Toolbag --> Menu: Close
+    state Toolbag {
+        state "Item List" as ItemList
+        [*] --> ItemList
+        state "Item Details" as Item
+        ItemList --> Item: Select
+        Item --> ItemList: Close
+    }
+    state "To-Do List" as ToDoList
+    Menu --> ToDoList: Select
+    ToDoList --> Menu: Close
+    state ToDoList {
+        state "Quest List" as QuestList
+        [*] --> QuestList: Open
+        state "Quest Details" as Quest
+        QuestList --> Quest: Select
+        Quest --> QuestList: Close
+    }
+    Menu --> Journal: Select
+    Journal --> Menu: Close
+    state Journal {
+        state "Journal Contents" as JournalContents
+        [*] --> JournalContents: Open
+        state "Saving Game" as Save
+        JournalContents --> Save: Save
+        Save --> JournalContents: Done
+        state "Photo Album" as Album
+        JournalContents --> Album: Select
+        state Album {
+            [*] --> Photos: Open
+            state "Photo Details" as Photo
+            Photos --> Photo: Select
+            Photo --> Photos: Close
+        }
+        JournalContents --> Camera: Select
+        Camera --> Album: View Album
+        Album --> Camera: Close
+        Camera --> JournalContents: Close
+        Album --> JournalContents: Close
+    }
+
