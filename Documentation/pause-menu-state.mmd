@@ -37,13 +37,7 @@ stateDiagram-v2
         Character --> CharacterList: Close
     }
 
-    state "Character Stats" as Stats
-    Notes --> Stats: Check Character Stats
-    Stats --> Notes: Close
-
     Menu --> Toolbag: Select
-    Toolbag --> Stats: Equip Item to Character
-    Stats --> Toolbag: Done / Cancel
     Toolbag --> Menu: Close
     state Toolbag {
         state "Item List" as ItemList
@@ -52,6 +46,12 @@ stateDiagram-v2
         ItemList --> Item: Select
         Item --> ItemList: Close
     }
+
+    Character --> Toolbag: Select Equipment to Equip
+    Toolbag --> Character: Done / Cancel
+
+    Item --> Notes: Select Character to Equip
+    Notes --> Item: Done / Cancel
 
     state "Saving Progress" as Journal
     Menu --> Journal: Select Journal
