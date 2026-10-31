@@ -17,7 +17,7 @@ The binary layout contains:
         - Physics type (1 byte)
         - Color encoding (1 byte)
         - Palette index (1 byte), set to 0x3F (ASCII for '?') as a placeholder
-- Pixels (height×width bytes): 1‑byte packed values [S][E][AA][IIII]
+- Pixels (height×width bytes): 1‑byte packed values [*][E][AA][IIII]
 - Footer (34 bytes): additional metadata
     - Color palette (32 bytes): 16 2‑byte unique colors
     - Width (1 byte): width in pixels
@@ -44,6 +44,9 @@ from pipeline import (
     SpriteMetadata,
     dequantize,
     is_power_of_2,
+    MASK_ALPHA,
+    MASK_PALETTE_INDEX,
+    MASK_EMISSION,
 )
 
 
@@ -90,9 +93,9 @@ def decompile_asset(source_path: Path) -> BGRImage:
         )
 
     pixels = np.frombuffer(pixels_blob, dtype=np.uint8)
-    index_bits = pixels & 0x0F
+    index_bits = pixels & MASK_PALETTE_INDEX
 
-    alpha_bits = (pixels >> 4).astype(np.uint16)
+    alpha_bits = ((pixels & MASK_ALPHA) >> 4).astype(np.uint16)
     alpha_mask = dequantize(alpha_bits, src_max=MAX_2_BIT).reshape(
         (height, width)
     )

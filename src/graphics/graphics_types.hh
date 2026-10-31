@@ -1,5 +1,4 @@
-#ifndef SC_GRAPHICS_VISUAL_TYPES_HH
-#define SC_GRAPHICS_VISUAL_TYPES_HH
+#pragma once
 
 #ifndef __METAL_VERSION__
 
@@ -12,7 +11,7 @@
 namespace sc::graphics {
 
     using packed_color_t = uint16_t;
-    using packed_pixel_t = uint8_t; // [S][E][AA][IIII]
+    using packed_pixel_t = uint8_t; // [*][E][AA][IIII]
 
     inline SC_CONSTEXPR uint32_t kMaxPaletteSize{16U};
 
@@ -44,5 +43,3 @@ namespace sc::graphics {
 std::ostream& operator<<(std::ostream&, const sc::graphics::palette&);
 
 #endif // __METAL_VERSION__
-
-#endif // SC_GRAPHICS_VISUAL_TYPES_HH

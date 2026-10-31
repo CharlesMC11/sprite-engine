@@ -18,7 +18,7 @@ The binary layout contains:
         - Physics type (1 byte)
         - Color encoding (1 byte)
         - Palette index (1 byte), set to 0x3F (ASCII for '?') as a placeholder
-- Pixels (height×width bytes): 1‑byte packed values [S][E][AA][IIII]
+- Pixels (height×width bytes): 1‑byte packed values [*][E][AA][IIII]
 - Footer (34 bytes): additional metadata
     - Color palette (32 bytes): 16 2‑byte unique colors
     - Width (1 byte): width in pixels
@@ -59,7 +59,6 @@ from pipeline import (
 
 type AlphaMask = npt.NDArray[np.uint8]
 type EmissionMask = npt.NDArray[np.uint8]
-type SpecularMask = npt.NDArray[np.uint8]
 
 type PackedColors = npt.NDArray[np.uint16]
 type BakedPixels = npt.NDArray[np.uint8]
@@ -71,7 +70,6 @@ class SpriteComponents:
     bgr_image: BGRImage
     alpha_mask: AlphaMask | None
     emission_mask: EmissionMask | None
-    specular_mask: SpecularMask | None
     width: int
     height: int
 
@@ -126,13 +124,6 @@ def main() -> None:
         type=Path,
         help="Optional grayscale mask for emission mapping.",
     )
-    parser.add_argument(
-        "-s",
-        "--specular_mask",
-        default=None,
-        type=Path,
-        help="Optional grayscale mask for specular mapping.",
-    )
 
     args = parser.parse_args()
 
@@ -143,7 +134,6 @@ def main() -> None:
         args.depth,
         args.physics_type,
         args.emission_mask,
-        args.specular_mask,
     )
     compile_asset(args.output_path, asset_components)
 
@@ -155,7 +145,6 @@ def ingest_asset(
     depth: int,
     physics_type: PhysicsType,
     emission_mask_path: Path | None,
-    specular_mask_path: Path | None,
 ) -> SpriteComponents:
     """
     Validate the source asset.
@@ -169,7 +158,6 @@ def ingest_asset(
     :param depth: The asset’s 'thickness'.
     :param physics_type: The laws of physics this asset obeys.
     :param emission_mask_path: Optional path to a grayscale emission mask.
-    :param specular_mask_path: Optional path to a grayscale specular mask.
 
     :raises FileNotFoundError: If the assets can’t be found.
     :raises RuntimeError: If OpenCV fails to read the assets.
@@ -250,15 +238,6 @@ def ingest_asset(
     else:
         source_emission = None
 
-    # Extract specular mask
-
-    if specular_mask_path is not None:
-        source_specular = _ingest_grayscale_mask(
-            specular_mask_path, width, height
-        )
-    else:
-        source_specular = None
-
     # Construct components
 
     header = SpriteMetadata(
@@ -277,7 +256,6 @@ def ingest_asset(
         source_bgr,
         source_alpha,
         source_emission,
-        source_specular,
         width,
         height,
     )
@@ -367,7 +345,7 @@ def _calculate_bounding_box(mask: AlphaMask) -> tuple[int, int, int, int]:
 
 def _ingest_grayscale_mask(
     mask_path: Path, source_image_width: int, source_image_height: int
-) -> EmissionMask | SpecularMask:
+) -> EmissionMask:
     """
     Ingest the grayscale mask.
 
@@ -403,7 +381,7 @@ def _bake_pixels(
     Bake the pixel components into a final 8‑bit format.
 
     The Bit Mapping:
-    - [7] Specular: Boolean signal (0 or 1).
+    - [7] Unused.
     - [6] Emission: Boolean signal (0 or 1).
     - [4–5] Alpha: 2‑bit transparency (0–3).
     - [0–3] Palette Index: Pointer to one of the 16 colors.
@@ -433,13 +411,7 @@ def _bake_pixels(
     else:
         emission = np.zeros(height * width, dtype=np.uint16)
 
-    if pixel_components.specular_mask is not None:
-        flattened_specular = pixel_components.specular_mask.flatten(order="C")
-        specular = (flattened_specular > 0x08) & 0x01
-    else:
-        specular = np.zeros(height * width, dtype=np.uint16)
-
-    baked_pixels = specular << 7 | emission << 6 | alpha << 4 | index
+    baked_pixels = emission << 6 | alpha << 4 | index
     return baked_pixels.astype(np.uint8), palette
 
 
