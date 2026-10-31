@@ -214,20 +214,24 @@ def ingest_asset(
     u_anchor, v_anchor = anchor
 
     if np.isnan(u_anchor):
-        u_anchor = width / 2.0
+        u_anchor = _convert_to_fixed_point(width / 2.0)
     elif u_anchor < u_min or u_anchor > u_max:
         raise ValueError(
             "U anchor point out of range! "
             f"Expected to be in [0, {width}), got {u_anchor}."
         )
+    else:
+        u_anchor = _convert_to_fixed_point(u_anchor)
 
     if np.isnan(v_anchor):
-        v_anchor = height / 2.0
+        v_anchor = _convert_to_fixed_point(height / 2.0)
     elif v_anchor < v_min or v_anchor > v_max:
         raise ValueError(
             "V anchor point out of range! "
             f"Expected to be in [0, {height}), got {v_anchor}."
         )
+    else:
+        v_anchor = _convert_to_fixed_point(v_anchor)
 
     # Validate depth
 
@@ -331,6 +335,16 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
 
 # Protected helpers
+
+
+def _convert_to_fixed_point(value: float) -> int:
+    """
+    Convert the given value into a Q13.19 fixed point value.
+    :param value: The value to convert.
+    :return: The converted value in Q13.19 format.
+    """
+
+    return round(value * (1 << 19))
 
 
 def _calculate_bounding_box(mask: AlphaMask) -> tuple[int, int, int, int]:

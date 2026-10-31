@@ -19,13 +19,12 @@ namespace sc::assets {
         /**
          * A sprite’s metadata.
          *
-         * Contains information regarding a sprite’s bounding box, pivot, color
-         * encoding, and physics type.
+         * Contains information regarding a sprite’s bounding box, anchor
+         * point, depth, physics type, color encoding, and palette index.
          */
         struct alignas(core::kNeonAlignment) metadata final {
             geometry::bbox<> bbox;
-            float u_anchor{0.0f};
-            float v_anchor{0.0f};
+            int32_t u_anchor{0U}, v_anchor{0U};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
             graphics::color_encoding color_encoding{0U};
