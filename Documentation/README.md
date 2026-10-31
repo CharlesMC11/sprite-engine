@@ -105,8 +105,8 @@ Requires:
 ### Main Menu
 
 - Continue
-- New
-- Options
+- New Simulation
+- Settings
 
 ### Overworld
 
@@ -135,13 +135,12 @@ Requires:
 #### Pause Menu
 
 - **Sketchbook**: Story missions & fast travel
-    - Also proxy for the other menu options until corresponding characters join
-- **Notes**: Party’s stats & in-game options
 - **To-Do List**: Side quests
-- **Journal**: Save function & photo mode/gallery
-    - Also proxy for **Notes** and **To-Do List** when they leave
-- **Toolbag**: Max bag capacity + carry better equipment
-- **Return Home**: Go to home menu
+- **Notes**: Party’s stats
+- **Toolbag**: Items & equipment
+- **Save**
+- **Settings**
+- **Quit**: Go to home menu
 
 #### Virginia Exclusion Zone
 

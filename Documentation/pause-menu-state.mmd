@@ -3,7 +3,8 @@ title: Pause Menu
 ---
 stateDiagram-v2
     [*] --> Menu: Game Paused
-    Menu --> [*]: Close / Return Home
+    Menu --> [*]: Close / Quit
+
     Menu --> Sketchbook: Select
     Sketchbook --> Menu: Close
     state Sketchbook {
@@ -14,17 +15,32 @@ stateDiagram-v2
         Mission --> MissionList: Close
     }
     Sketchbook --> [*]: Fast Travel
-    Menu --> Notes: Select
-    state Notes {
-        state "List" as Items
-        [*] --> Items: Open
-        Items --> Settings: Select
-        Settings --> Items: Close
+
+    state "To-Do List" as ToDoList
+    Menu --> ToDoList: Select
+    ToDoList --> Menu: Close
+    state ToDoList {
+        state "Quest List" as QuestList
+        [*] --> QuestList: Open
+        state "Quest Details" as Quest
+        QuestList --> Quest: Select
+        Quest --> QuestList: Close
     }
-    state "Character Stats" as Stats
-    Notes --> Stats: Select Character
-    Stats --> Notes: Close
+
+    Menu --> Notes: Select
     Notes --> Menu: Close
+    state Notes {
+        state "Character List" as CharacterList
+        [*] --> CharacterList: Open
+        state "Character Details" as Character
+        CharacterList --> Character: Select
+        Character --> CharacterList: Close
+    }
+
+    state "Character Stats" as Stats
+    Notes --> Stats: Check Character Stats
+    Stats --> Notes: Close
+
     Menu --> Toolbag: Select
     Toolbag --> Stats: Equip Item to Character
     Stats --> Toolbag: Done / Cancel
@@ -36,36 +52,10 @@ stateDiagram-v2
         ItemList --> Item: Select
         Item --> ItemList: Close
     }
-    state "To-Do List" as ToDoList
-    Menu --> ToDoList: Select
-    ToDoList --> Menu: Close
-    state ToDoList {
-        state "Quest List" as QuestList
-        [*] --> QuestList: Open
-        state "Quest Details" as Quest
-        QuestList --> Quest: Select
-        Quest --> QuestList: Close
-    }
-    Menu --> Journal: Select
-    Journal --> Menu: Close
-    state Journal {
-        state "Journal Contents" as JournalContents
-        [*] --> JournalContents: Open
-        state "Saving Game" as Save
-        JournalContents --> Save: Save
-        Save --> JournalContents: Done
-        state "Photo Album" as Album
-        JournalContents --> Album: Select
-        state Album {
-            [*] --> Photos: Open
-            state "Photo Details" as Photo
-            Photos --> Photo: Select
-            Photo --> Photos: Close
-        }
-        JournalContents --> Camera: Select
-        Camera --> Album: View Album
-        Album --> Camera: Close
-        Camera --> JournalContents: Close
-        Album --> JournalContents: Close
-    }
 
+    state "Saving Progress" as Journal
+    Menu --> Journal: Select Journal
+    Journal --> Menu: Done
+
+    Menu --> Settings: Select
+    Settings --> Menu: Close

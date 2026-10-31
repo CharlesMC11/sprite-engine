@@ -12,7 +12,7 @@ flowchart
     Idle --> SimWorld[Update NPCs & Environment]
 
     PAUSE -->|Fast Travel| Load
-    PAUSE -->|Close| Render
+    PAUSE -->|Close / Quit| Render
 
     Interactable? -->|No| SimWorld
     Interactable? -->|Yes| Interact[Initiate Interaction]
