@@ -15,16 +15,19 @@ from pipeline._pipeline import (
     MAX_5_BIT,
     MAX_6_BIT,
     MAX_PALETTE_SIZE,
+    MASK_ALPHA,
+    MASK_EMISSION,
+    MASK_PALETTE_INDEX,
     NEON_ALIGNMENT,
     PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
     ColorEncoding,
-    PhysicsType,
+    PhysicsType, SpriteMetadata as _SpriteMetadata
 )
 
 # Graphics
 
-ASSET_LAYOUT_VERSION: bytes = b"6"
+ASSET_LAYOUT_VERSION: bytes = b"7"
 
 SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
 """The total size of the sprite dimensions in bytes."""
@@ -45,9 +48,9 @@ class ResourceLayoutWarning(UserWarning): ...
 
 @dataclass(slots=True)
 class Metadata(ABC):
-    MAGIC: ClassVar[Final[bytes]]
-    STRUCT: ClassVar[Final[Struct]]
-    EXPECTED_SIZE_BYTES: ClassVar[Final[int]]
+    MAGIC: ClassVar[bytes]
+    STRUCT: ClassVar[Struct]
+    EXPECTED_SIZE_BYTES: ClassVar[int]
 
     @classmethod
     def from_bytes(cls, buffer: bytes) -> Self:
@@ -82,40 +85,37 @@ class Metadata(ABC):
         )
 
 
-@dataclass(slots=True)
-class SpriteMetadata(Metadata):
-    u_min: int
-    u_max: int
-    v_min: int
-    v_max: int
-    u_anchor: float
-    v_anchor: float
-    depth: int
-    physics_type: PhysicsType
-    color_encoding: ColorEncoding
-    palette_index: int = 0x3F
+class SpriteMetadata(_SpriteMetadata):
+    MAGIC: ClassVar[bytes] = b"SC SP v" + ASSET_LAYOUT_VERSION
 
-    MAGIC: ClassVar[Final[bytes]] = b"SC SP v" + ASSET_LAYOUT_VERSION
+    EXPECTED_SIZE_BYTES = len(MAGIC) + _SpriteMetadata.EXPECTED_SIZE_BYTES
+    PALETTE_INDEX_OFFSET = EXPECTED_SIZE_BYTES - 1
 
-    STRUCT: ClassVar[Final[Struct]] = Struct("<BBBBffBBBB")
-    """The layout of a 24‑byte asset metadata.
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> Self:
 
-    - magic
-    - bbox
-        - u_min (uint8), u_max (uint8)
-        - v_min (uint8), v_max (uint8)
-    - anchor
-        - u_anchor (float32)
-        - v_anchor (float32)
-    - depth (uint8)
-    - physics_type (uint8)
-    - color_encoding (uint8)
-    - palette_index (uint8)
-    """
+        expected_size = super().EXPECTED_SIZE_BYTES
+        err_msg = (
+            f"Buffer size too small for {cls.__name__}. "
+            f"Expected {expected_size}, got"
+        )
 
-    EXPECTED_SIZE_BYTES: ClassVar[Final[int]] = STRUCT.size + len(MAGIC)
+        buffer_size = len(buffer)
+        if buffer_size < expected_size:
+            raise ResourceLayoutError(f"{err_msg} {buffer_size}.")
 
-    PALETTE_INDEX_OFFSET: ClassVar[Final[int]] = EXPECTED_SIZE_BYTES - 1
+        magic_size = len(cls.MAGIC)
+        magic = buffer[:magic_size]
+        if magic != cls.MAGIC:
+            raise ResourceLayoutError(
+                "Invalid magic bytes! "
+                f"Expected '{cls.MAGIC}' bytes, got {magic}."
+            )
+
+        return super().from_bytes(buffer[magic_size:])
+
+    def to_bytes(self) -> bytes:
+        return self.MAGIC + super().to_bytes()
 
 
 SPRITE_MINIMUM_FILE_SIZE_BYTES: Final[int] = (
