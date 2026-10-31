@@ -144,8 +144,8 @@ class AtlasMetadata(Metadata):
     EXPECTED_SIZE_BYTES: ClassVar[Final[int]] = STRUCT.size + len(MAGIC)
 
 
-@dataclass(frozen=True, slots=True)
-class Sprite:
+@dataclass(slots=True)
+class Sprite(Metadata):
     meta: SpriteMetadata
     pixels: BGRImage
     palette: Palette
