@@ -34,6 +34,9 @@ import numpy.typing as npt
 
 from pipeline import (
     FOOTER_SIZE_BYTES,
+    MASK_ALPHA,
+    MASK_EMISSION,
+    MASK_PALETTE_INDEX,
     MAX_2_BIT,
     MAX_5_BIT,
     MAX_6_BIT,
@@ -44,9 +47,6 @@ from pipeline import (
     SpriteMetadata,
     dequantize,
     is_power_of_2,
-    MASK_ALPHA,
-    MASK_PALETTE_INDEX,
-    MASK_EMISSION,
 )
 
 

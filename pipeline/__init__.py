@@ -11,18 +11,21 @@ import numpy.typing as npt
 
 from pipeline._pipeline import (
     CACHE_ALIGNMENT,
+    MASK_ALPHA,
+    MASK_EMISSION,
+    MASK_PALETTE_INDEX,
     MAX_2_BIT,
     MAX_5_BIT,
     MAX_6_BIT,
     MAX_PALETTE_SIZE,
-    MASK_ALPHA,
-    MASK_EMISSION,
-    MASK_PALETTE_INDEX,
     NEON_ALIGNMENT,
     PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
     ColorEncoding,
-    PhysicsType, SpriteMetadata as _SpriteMetadata
+    PhysicsType,
+)
+from pipeline._pipeline import (
+    SpriteMetadata as _SpriteMetadata,
 )
 
 # Graphics

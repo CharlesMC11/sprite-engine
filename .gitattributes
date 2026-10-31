@@ -2,6 +2,7 @@
 
 *.mm     diff=objc
 
+*.pyi    generated
 *.so     binary
 *_ids.hh generated
 
