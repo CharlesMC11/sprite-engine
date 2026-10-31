@@ -1,27 +1,56 @@
 cmake_minimum_required(VERSION 4.1)
+
+set(CMAKE_CXX_STANDARD 26)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 project(test-sprite-engine CXX OBJCXX)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include(CheckIPOSupported)
+option(ENABLE_LTO "Enable ThinLTO in Release builds" ON)
 
-include_directories(
-        .venv/
-        src/
-        vendor/metal-cpp
+# Compiler & Linker Options
+
+set(COMMON_COMPILE_OPTIONS
+        -D_FORTIFY_SOURCE=2
+        -mbranch-protection=standard
+        -falign-functions=16
+        -fcolor-diagnostics
+        -fstrict-aliasing
+        -Wall
+        -Wextra
+        -Wpedantic
 )
 
-find_package(Python 3.14 COMPONENTS Interpreter Development.Module REQUIRED)
-execute_process(
-        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
-        OUTPUT_VARIABLE nanobind_ROOT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
+set(COMMON_LINK_OPTIONS
+        -Wl,-dead_strip
+        -Wl,-no_warn_duplicate_libraries
 )
-find_package(nanobind CONFIG REQUIRED)
 
-find_library(APPKIT_LIB AppKit REQUIRED)
-find_library(METAL_LIB Metal REQUIRED)
-find_library(METALKIT_LIB MetalKit REQUIRED)
-find_library(QUARTZ_LIB QuartzCore REQUIRED)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_compile_definitions(DEBUG)
+  list(APPEND COMMON_COMPILE_OPTIONS
+          -O0
+          -g
+          -fno-omit-frame-pointer
+          -fno-optimize-sibling-calls
+  )
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-4")
+  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dysm)
+  set(GET_TASK_ALLOW true)
+else ()
+  add_compile_definitions(NDEBUG)
+  list(APPEND COMMON_COMPILE_OPTIONS -Os -fomit-frame-pointer)
+  if (ENABLE_LTO)
+    check_ipo_supported(RESULT ipo_supported)
+    if (ipo_supported)
+      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    endif ()
+  endif ()
+  set(GET_TASK_ALLOW false)
+endif ()
+
+# Shared Library
 
 add_library(shared INTERFACE
         src/assets/atlas.hh
@@ -33,12 +62,46 @@ add_library(shared INTERFACE
         src/simulation/physics_types.hh
 )
 
+# Sprite Compiler / Atlas Linker
+
+find_package(Python 3.14 COMPONENTS Interpreter Development.Module REQUIRED)
+execute_process(
+        COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
+        OUTPUT_VARIABLE nanobind_ROOT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+find_package(nanobind CONFIG REQUIRED)
+
 nanobind_add_module(_pipeline
         pipeline/_pipeline.cc
 )
+
+target_include_directories(_pipeline PRIVATE
+        .venv/
+        src/
+        vendor/metal-cpp/
+)
+
+target_compile_options(_pipeline PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
 target_link_libraries(_pipeline PRIVATE shared)
 
-add_executable(test-sprite-engine
+target_link_options(_pipeline PRIVATE
+        ${COMMON_LINK_OPTIONS}
+)
+
+# Frameworks
+
+find_library(APPKIT_LIB AppKit REQUIRED)
+find_library(METAL_LIB Metal REQUIRED)
+find_library(METALKIT_LIB MetalKit REQUIRED)
+find_library(QUARTZ_LIB QuartzCore REQUIRED)
+
+# Executable
+
+add_executable(sprite-engine
         src/assets/asset_constants.hh
         src/assets/asset_ids.hh
         src/assets/atlas.cc
@@ -67,7 +130,18 @@ add_executable(test-sprite-engine
         src/simulation/world.hh
         src/simulation/world.cc
 )
-target_link_libraries(test-sprite-engine PRIVATE
+
+target_include_directories(sprite-engine PUBLIC
+        src/
+        vendor/metal-cpp/
+)
+
+target_compile_options(sprite-engine PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+        $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
+)
+
+target_link_libraries(sprite-engine PRIVATE
         shared
         ${APPKIT_LIB}
         ${METAL_LIB}
@@ -75,28 +149,19 @@ target_link_libraries(test-sprite-engine PRIVATE
         ${QUARTZ_LIB}
 )
 
-target_compile_options(test-sprite-engine PRIVATE
-        -arch arm64
-        -march=native
-        -falign-functions=16
-        -fcolor-diagnostics
-        -Wall -Wextra -Wpedantic
+target_link_options(sprite-engine PRIVATE
+        ${COMMON_LINK_OPTIONS}
 )
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(test-sprite-engine PRIVATE -O0 -g -fsanitize=address,undefined)
-    target_link_options(test-sprite-engine PRIVATE -fsanitize=address,undefined)
-else ()
-    target_compile_options(test-sprite-engine PRIVATE -O3 -flto)
-    target_link_options(test-sprite-engine PRIVATE -flto -Wl,-dead_strip)
-endif ()
-
-add_custom_command(OUTPUT shader.metallib
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib"
         COMMAND xcrun -sdk macosx metal -c -I "${CMAKE_CURRENT_SOURCE_DIR}/src"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shader.metal" -o shader.air
-        COMMAND xcrun -sdk macosx metallib shader.air -o "${CMAKE_CURRENT_SOURCE_DIR}/assets/shader.metallib"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shader.metal" -o
+        "${CMAKE_CURRENT_BINARY_DIR}/shader.air"
+        COMMAND xcrun -sdk macosx metallib
+        "${CMAKE_CURRENT_BINARY_DIR}/shader.air" -o
+        "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shader.metal"
 )
 
 add_custom_target(shaders DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib")
-add_dependencies(test-sprite-engine shaders)
+add_dependencies(sprite-engine shaders)
