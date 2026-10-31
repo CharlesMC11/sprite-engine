@@ -7,7 +7,7 @@ flowchart
     InputType -->|None / Idle| Idle[Update Player Idle Animation]
     InputType -->|Interact| Interactable?{Is Interactable?}
     InputType -->|Move| Physics{Is Valid Tile?}
-    InputType -->|Pause| PAUSE((PAUSE MENU))
+    InputType -->|Pause| PAUSE((PAUSE))
 
     Idle --> SimWorld[Update NPCs & Environment]
 
@@ -22,8 +22,8 @@ flowchart
     Encounter? -->|No| SimWorld
     Encounter? -->|Yes| Battle((BATTLE))
 
-    Event? -->|Yes| EVENT
-    EVENT --> Encounter?
+    Event? -->|Yes| EVENT((EVENT))
+    EVENT --> Render
 
     Physics -->|Yes| Move[Update Player Kinematics]
     Physics -->|No| SimWorld
@@ -32,9 +32,12 @@ flowchart
     LoadArea? -->|No| Event?
     LoadArea? -->|Yes| Load[Lock Input & Load Area]
 
+    Load --> Event?2{Triggers Event?}
+    Event?2 -->|Yes| EVENT
+    Event?2 -->|No| Render
+
     SimWorld--> Render[Flush Framebuffer to Display]
 
-    Load --> Render
     Battle --> Render
 
     Render --> END([End Tick])
