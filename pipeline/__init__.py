@@ -1,10 +1,9 @@
 import dataclasses
-import struct
-from abc import ABC
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from struct import Struct
-from typing import ClassVar, Final, Self
+from typing import ClassVar, Final, Protocol, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -49,15 +48,29 @@ class ResourceLayoutError(Exception): ...
 class ResourceLayoutWarning(UserWarning): ...
 
 
-@dataclass(slots=True)
-class Metadata(ABC):
+class Serializable(Protocol):
+    @classmethod
+    def from_bytes(cls, buffer: bytes) -> Self: ...
+
+    def to_bytes(self) -> bytes: ...
+
+
+class Metadata:
+    # Type annotations
+
+    _internal: Serializable
+    _from_bytes: ClassVar[Callable[[bytes], Self]]
+
+    # Public class constants
+
     MAGIC: ClassVar[bytes]
     STRUCT: ClassVar[Struct]
     EXPECTED_SIZE_BYTES: ClassVar[int]
 
+    # Public class methods
+
     @classmethod
     def from_bytes(cls, buffer: bytes) -> Self:
-        """"""
 
         expected_size = cls.EXPECTED_SIZE_BYTES
         err_msg = (
@@ -78,47 +91,103 @@ class Metadata(ABC):
             )
 
         try:
-            return cls(*cls.STRUCT.unpack(buffer[magic_size:expected_size]))
-        except struct.error:
+            return cls._from_bytes(buffer[magic_size:expected_size])
+        except Exception:
             raise ResourceLayoutError(f"{err_msg} {len(buffer)}.")
 
+    # Public methods
+
     def to_bytes(self) -> bytes:
-        return self.MAGIC + self.__class__.STRUCT.pack(
-            *dataclasses.astuple(self)
-        )
+        return self.MAGIC + self._internal.to_bytes()
 
 
-class SpriteMetadata(_SpriteMetadata):
+class SpriteMetadata(Metadata):
+    __doc__ = _SpriteMetadata.__doc__
+
+    # Type annotations
+
+    _internal: _SpriteMetadata
+    _from_bytes = _SpriteMetadata.from_bytes
+
+    # Public class constants
+
     MAGIC: ClassVar[bytes] = b"SC SP v" + ASSET_LAYOUT_VERSION
-
     EXPECTED_SIZE_BYTES = len(MAGIC) + _SpriteMetadata.EXPECTED_SIZE_BYTES
     PALETTE_INDEX_OFFSET = EXPECTED_SIZE_BYTES - 1
 
-    @classmethod
-    def from_bytes(cls, buffer: bytes) -> Self:
+    # Magic methods
 
-        expected_size = super().EXPECTED_SIZE_BYTES
-        err_msg = (
-            f"Buffer size too small for {cls.__name__}. "
-            f"Expected {expected_size}, got"
+    def __init__(
+        self,
+        u_min: int,
+        u_max: int,
+        v_min: int,
+        v_max: int,
+        u_anchor: int,
+        v_anchor: int,
+        depth: int,
+        physics_type: PhysicsType,
+        color_encoding: ColorEncoding,
+        palette_index: int = 0x3F,
+    ):
+        self._internal = _SpriteMetadata(
+            u_min,
+            u_max,
+            v_min,
+            v_max,
+            u_anchor,
+            v_anchor,
+            depth,
+            physics_type,
+            color_encoding,
+            palette_index,
         )
 
-        buffer_size = len(buffer)
-        if buffer_size < expected_size:
-            raise ResourceLayoutError(f"{err_msg} {buffer_size}.")
+    # Properties
 
-        magic_size = len(cls.MAGIC)
-        magic = buffer[:magic_size]
-        if magic != cls.MAGIC:
-            raise ResourceLayoutError(
-                "Invalid magic bytes! "
-                f"Expected '{cls.MAGIC}' bytes, got {magic}."
-            )
+    @property
+    def u_min(self) -> int:
+        return self._internal.bbox.u_min
 
-        return super().from_bytes(buffer[magic_size:])
+    @property
+    def u_max(self) -> int:
+        return self._internal.bbox.u_max
 
-    def to_bytes(self) -> bytes:
-        return self.MAGIC + super().to_bytes()
+    @property
+    def v_min(self) -> int:
+        return self._internal.bbox.v_min
+
+    @property
+    def v_max(self) -> int:
+        return self._internal.bbox.v_max
+
+    @property
+    def u_anchor(self) -> int:
+        return self._internal.u_anchor
+
+    @property
+    def v_anchor(self) -> int:
+        return self._internal.v_anchor
+
+    @property
+    def depth(self) -> int:
+        return self._internal.depth
+
+    @property
+    def physics_type(self) -> PhysicsType:
+        return self._internal.physics_type
+
+    @property
+    def color_encoding(self) -> ColorEncoding:
+        return self._internal.color_encoding
+
+    @property
+    def palette_index(self) -> int:
+        return self._internal.palette_index
+
+    @palette_index.setter
+    def palette_index(self, index: int) -> None:
+        self._internal.palette_index = index
 
 
 SPRITE_MINIMUM_FILE_SIZE_BYTES: Final[int] = (
@@ -129,9 +198,13 @@ SPRITE_MINIMUM_FILE_SIZE_BYTES: Final[int] = (
 
 @dataclass(slots=True)
 class AtlasMetadata(Metadata):
+    # Type annotations
+
     sprite16_count: int
     sprite32_count: int
     palette_count: int
+
+    # Public class constants
 
     MAGIC: ClassVar[Final[bytes]] = b"SC AT v" + ASSET_LAYOUT_VERSION
 
@@ -145,6 +218,11 @@ class AtlasMetadata(Metadata):
     """
 
     EXPECTED_SIZE_BYTES: ClassVar[Final[int]] = STRUCT.size + len(MAGIC)
+
+    def to_bytes(self) -> bytes:
+        return self.MAGIC + self.__class__.STRUCT.pack(
+            *dataclasses.astuple(self)
+        )
 
 
 @dataclass(slots=True)

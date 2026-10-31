@@ -1,6 +1,5 @@
 #include <nanobind/nanobind.h>
 
-#include "assets/atlas.hh"
 #include "assets/sprite.hh"
 #include "core/core.hh"
 #include "graphics/graphics_types.hh"
@@ -18,12 +17,16 @@ NB_MODULE(_pipeline, m)
 {
     m.doc() = "Pipeline Bridge Library";
 
+    // Core
+
     m.attr("MAX_2_BIT") = sc::core::k2BitMax;
     m.attr("MAX_5_BIT") = sc::core::k5BitMax;
     m.attr("MAX_6_BIT") = sc::core::k6BitMax;
 
     m.attr("NEON_ALIGNMENT") = sc::core::kNeonAlignment;
     m.attr("CACHE_ALIGNMENT") = sc::core::kCacheAlignment;
+
+    // Sprites
 
     m.attr("MAX_PALETTE_SIZE") = sc::graphics::kMaxPaletteSize;
 
@@ -37,7 +40,7 @@ NB_MODULE(_pipeline, m)
     m.attr("MASK_EMISSION") = sc::graphics::kMaskEmission;
 
     nb::enum_<sc::graphics::color_encoding>(m, "ColorEncoding",
-            "Distribution of color bits across a 2-byte packed integer.",
+            "Distribution of color bits across a 2‑byte packed integer.",
             nb::is_arithmetic())
             .value("NEUTRAL", sc::graphics::color_encoding::neutral, "R5G6B5")
             .value("WARM", sc::graphics::color_encoding::warm, "R6G5B5")
@@ -56,45 +59,16 @@ NB_MODULE(_pipeline, m)
     nb::class_<sc::assets::sprites::metadata>(m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
             "Contains information regarding a sprite’s bounding box, anchor "
-            "point, depth, color encoding, and physics type.\n\n"
+            "point,\ndepth, color encoding, and physics type.\n\n"
             "- bbox\n"
             "    - u_min (uint8), u_max (uint8)\n"
             "    - v_min (uint8), v_max (uint8)\n"
             "- anchor\n"
-            "- u_anchor (int32), v_anchor (int32)\n"
+            "    - u_anchor (int32), v_anchor (int32)\n"
             "- depth (uint8)\n"
             "- physics_type (uint8)\n"
             "- color_encoding (uint8)\n"
-            "- palette_index (uint8)")
-
-            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
-                         std::uint8_t, std::int32_t, std::int32_t,
-                         std::uint8_t, sc::core::physics_t,
-                         sc::graphics::color_encoding>(),
-                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
-                    "v_anchor"_a, "depth"_a, "physics_type"_a,
-                    "color_encoding"_a)
-            .def_prop_ro("u_min",
-                    [](const sc::assets::sprites::metadata& meta)
-                            -> std::uint8_t { return meta.bbox.u_min; })
-            .def_prop_ro("u_max",
-                    [](const sc::assets::sprites::metadata& meta)
-                            -> std::uint8_t { return meta.bbox.u_max; })
-            .def_prop_ro("v_min",
-                    [](const sc::assets::sprites::metadata& meta)
-                            -> std::uint8_t { return meta.bbox.v_min; })
-            .def_prop_ro("v_max",
-                    [](const sc::assets::sprites::metadata& meta)
-                            -> std::uint8_t { return meta.bbox.v_max; })
-            .def_ro("u_anchor", &sc::assets::sprites::metadata::u_anchor)
-            .def_ro("v_anchor", &sc::assets::sprites::metadata::v_anchor)
-            .def_ro("depth", &sc::assets::sprites::metadata::depth)
-            .def_ro("physics_type",
-                    &sc::assets::sprites::metadata::physics_type)
-            .def_ro("color_encoding",
-                    &sc::assets::sprites::metadata::color_encoding)
-            .def_rw("palette_index",
-                    &sc::assets::sprites::metadata::palette_index, "index"_a)
+            "- palette_index (uint8)\n")
             .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
             .def_ro_static("PALETTE_INDEX_OFFSET", &kPaletteIndexOffset)
             .def_static(
@@ -110,6 +84,27 @@ NB_MODULE(_pipeline, m)
                         return meta;
                     },
                     "buffer"_a)
+            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
+                         std::uint8_t, std::int32_t, std::int32_t,
+                         std::uint8_t, sc::core::physics_t,
+                         sc::graphics::color_encoding, std::uint8_t>(),
+                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
+                    "v_anchor"_a, "depth"_a, "physics_type"_a,
+                    "color_encoding"_a, "palette_index"_a)
+            .def_ro("bbox", &sc::assets::sprites::metadata::bbox)
+            .def_ro("u_anchor", &sc::assets::sprites::metadata::u_anchor)
+            .def_ro("v_anchor", &sc::assets::sprites::metadata::v_anchor)
+            .def_ro("depth", &sc::assets::sprites::metadata::depth)
+            .def_prop_ro("physics_type",
+                    [](const sc::assets::sprites::metadata& meta)
+                            -> sc::physics::type {
+                        return static_cast<sc::physics::type>(
+                                meta.physics_type);
+                    })
+            .def_ro("color_encoding",
+                    &sc::assets::sprites::metadata::color_encoding)
+            .def_rw("palette_index",
+                    &sc::assets::sprites::metadata::palette_index, "index"_a)
             .def("to_bytes",
                     [](const sc::assets::sprites::metadata& meta)
                             -> nb::bytes {
