@@ -1,5 +1,4 @@
-#ifndef SC_ASSETS_SPRITE_HH
-#define SC_ASSETS_SPRITE_HH
+#pragma once
 
 #ifndef __METAL_VERSION__
 #include <cstdint>
@@ -91,5 +90,3 @@ std::ostream& operator<<(
 }
 
 #endif //__METAL_VERSION__
-
-#endif // SC_ASSETS_SPRITE_HH
