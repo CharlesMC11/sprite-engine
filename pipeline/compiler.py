@@ -52,6 +52,7 @@ from pipeline import (
     ResourceLayoutWarning,
     SpriteMetadata,
     calculate_padding_needed,
+    get_encoding_params,
     is_power_of_2,
     remap_from_8bit,
 )
@@ -413,28 +414,9 @@ def _pack_colors_to_16bit(
     :param encoding: The color encoding mode to use.
 
     :returns: The packed 2‑byte colors.
-
-    :raises ValueError: If the given color encoding is invalid.
     """
 
-    r_max = g_max = b_max = MAX_5_BIT
-
-    r_shift = 11
-    g_shift = 5
-
-    if encoding == ColorEncoding.NEUTRAL:
-        g_max = MAX_6_BIT
-
-    elif encoding == ColorEncoding.WARM:
-        r_max = MAX_6_BIT
-        r_shift = 10
-
-    elif encoding == ColorEncoding.COOL:
-        b_max = MAX_6_BIT
-        g_shift = 6
-
-    else:
-        raise ValueError("Invalid color encoding.")
+    r_max, g_max, b_max, r_shift, g_shift = get_encoding_params(encoding)
 
     b: npt.NDArray[np.uint16]
     g: npt.NDArray[np.uint16]
@@ -477,7 +459,7 @@ if __name__ == "__main__":
         "--depth",
         default=0,
         type=int,
-        help='"Thickness" of the sprite. Default is 0.',
+        help="“Thickness” of the sprite. Default is 0.",
     )
     parser.add_argument(
         "-p",

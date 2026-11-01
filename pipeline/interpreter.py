@@ -36,16 +36,14 @@ import numpy.typing as npt
 from pipeline import (
     FOOTER_SIZE_BYTES,
     MASK_ALPHA,
-    MASK_EMISSION,
     MASK_PALETTE_INDEX,
     MAX_2_BIT,
-    MAX_5_BIT,
-    MAX_6_BIT,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
     ResourceLayoutWarning,
     SpriteMetadata,
+    get_encoding_params,
     is_power_of_2,
     remap_to_8bit,
 )
@@ -53,9 +51,7 @@ from pipeline import (
 TARGET_HEIGHT: int = 512
 
 
-def decompile_asset(
-    source_path: Path,
-) -> tuple[BGRImage, SpriteMetadata]:
+def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     """
     Decompile the asset into a viewable image.
 
@@ -104,28 +100,9 @@ def _unpack_16bit_to_color(
     :param encoding: The color encoding to use.
 
     :returns: The unpacked BGR image.
-
-    :raises ValueError: If the given color encoding is invalid.
     """
 
-    r_max = g_max = b_max = MAX_5_BIT
-
-    r_shift = 11
-    g_shift = 5
-
-    if encoding == ColorEncoding.NEUTRAL:
-        g_max = MAX_6_BIT
-
-    elif encoding == ColorEncoding.WARM:
-        r_max = MAX_6_BIT
-        r_shift = 10
-
-    elif encoding == ColorEncoding.COOL:
-        b_max = MAX_6_BIT
-        g_shift = 6
-
-    else:
-        raise ValueError("Invalid color encoding.")
+    r_max, g_max, b_max, r_shift, g_shift = get_encoding_params(encoding)
 
     b: npt.NDArray[np.uint16]
     g: npt.NDArray[np.uint16]
@@ -152,6 +129,7 @@ if __name__ == "__main__":
 
     image, meta = decompile_asset(path)
 
+    # TODO: Hide scaling in a function later
     scale_factor = TARGET_HEIGHT / image.shape[0]
     target_width = round(image.shape[1] * scale_factor)
 
@@ -160,6 +138,8 @@ if __name__ == "__main__":
         (target_width, TARGET_HEIGHT),
         interpolation=cv2.INTER_NEAREST,
     )
+
+    # TODO: Hide annotation in a function later
     cv2.rectangle(
         image_resized,
         (
@@ -186,5 +166,6 @@ if __name__ == "__main__":
         color=(0x00, 0xFF, 0x00),
         thickness=8,
     )
+
     cv2.imshow(f"Preview: {path.name}", image_resized)
     cv2.waitKey(0)

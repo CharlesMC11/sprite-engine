@@ -242,6 +242,32 @@ def calculate_padding_needed(n: int, alignment: int) -> int:
     return (alignment - n % alignment) % alignment
 
 
+def get_encoding_params(
+    encoding: ColorEncoding,
+) -> tuple[int, int, int, int, int]:
+    """
+    Get the parameters needed to pack/unpack colors.
+
+    :param encoding: The color encoding scheme.
+
+    :return: The masks for red, green, blue, and the shift amounts for red and
+        green.
+
+    :raises ValueError: If the given color encoding is invalid.
+    """
+
+    if encoding == ColorEncoding.NEUTRAL:
+        return MAX_5_BIT, MAX_6_BIT, MAX_5_BIT, 11, 5
+
+    elif encoding == ColorEncoding.WARM:
+        return MAX_6_BIT, MAX_5_BIT, MAX_5_BIT, 10, 5
+
+    elif encoding == ColorEncoding.COOL:
+        return MAX_5_BIT, MAX_5_BIT, MAX_6_BIT, 11, 6
+
+    raise ValueError("Invalid color encoding.")
+
+
 def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
     """
     Remap a value from one bit depth to another.
