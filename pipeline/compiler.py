@@ -457,7 +457,7 @@ def _index_colors(bgr_array: BGRImage, palette: Palette):
     """
 
     color_deltas = bgr_array[:, np.newaxis, :] - palette
-    distances = np.linalg.norm(color_deltas, axis=2)
+    distances = np.sum(color_deltas**2, axis=2)
 
     return np.argmin(distances, axis=1)
 
