@@ -20,6 +20,7 @@ from pipeline._pipeline import (
     NEON_ALIGNMENT,
     PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
+    BBox,
     ColorEncoding,
     PhysicsType,
 )
@@ -74,7 +75,7 @@ class Metadata:
         expected_size = cls.EXPECTED_SIZE_BYTES
         err_msg = (
             f"Buffer size too small for {cls.__name__}. "
-            f"Expected {expected_size}, got"
+            f"Expected {expected_size} bytes, got"
         )
 
         buffer_size = len(buffer)
@@ -145,20 +146,8 @@ class SpriteMetadata(Metadata):
     # Properties
 
     @property
-    def u_min(self) -> int:
-        return self._internal.bbox.u_min
-
-    @property
-    def u_max(self) -> int:
-        return self._internal.bbox.u_max
-
-    @property
-    def v_min(self) -> int:
-        return self._internal.bbox.v_min
-
-    @property
-    def v_max(self) -> int:
-        return self._internal.bbox.v_max
+    def bbox(self) -> BBox:
+        return self._internal.bbox
 
     @property
     def u_anchor(self) -> int:
@@ -222,20 +211,6 @@ class AtlasMetadata(Metadata):
         return self.MAGIC + self.__class__.STRUCT.pack(
             *dataclasses.astuple(self)
         )
-
-
-@dataclass(slots=True)
-class Sprite(Metadata):
-    meta: SpriteMetadata
-    pixels: BGRImage
-    palette: Palette
-    width: int
-    height: int
-
-    @classmethod
-    def from_bytes(cls, buffer: bytes) -> Self: ...
-
-    def to_bytes(self) -> bytes: ...
 
 
 # Public functions

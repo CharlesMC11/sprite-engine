@@ -87,7 +87,7 @@ NB_MODULE(_pipeline, m)
                     "from_bytes",
                     [](const nb::bytes& b) -> sc::assets::sprites::metadata {
                         if (b.size() < kSpriteMetadataSize) {
-                            throw std::invalid_argument{
+                            throw std::runtime_error{
                                     std::format("Buffer size too small for "
                                                 "SpriteMetadata. Expected "
                                                 "{} bytes, got {}.",

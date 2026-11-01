@@ -121,8 +121,8 @@ class AssetLinker:
 
         :raises FileNotFoundError: If a path does not exist.
         :raises ValueError: If the sprite contains invalid magic bytes.
-        :raises ResourceLayoutError: If a sprite is less than or equal to 54 bytes in size
-            or has invalid dimensions.
+        :raises ResourceLayoutError: If a sprite is less than or equal to
+            54 bytes in size or has invalid dimensions.
         """
 
         asset_magic_size = len(SpriteMetadata.MAGIC)
