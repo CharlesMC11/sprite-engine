@@ -24,6 +24,7 @@ The binary layout contains:
     - Height (1 byte): height in pixels
 """
 
+import math
 from argparse import ArgumentParser
 from pathlib import Path
 from warnings import warn
@@ -49,6 +50,8 @@ from pipeline import (
     is_power_of_2,
 )
 
+TARGET_HEIGHT: int = 512
+
 
 def main() -> None:
     parser = ArgumentParser("Asset Interpreter", description=__doc__)
@@ -60,16 +63,49 @@ def main() -> None:
     if not path.exists():
         raise FileNotFoundError(f"Missing asset file: '{path}'")
 
-    image = decompile_asset(path)
+    image, meta = decompile_asset(path)
 
-    cv2.imshow(
-        f"Preview: {path.name}",
-        cv2.resize(image, (512, 512), interpolation=cv2.INTER_NEAREST),
+    scale_factor = TARGET_HEIGHT / image.shape[0]
+    target_width = round(image.shape[1] * scale_factor)
+
+    image_resized = cv2.resize(
+        image,
+        (target_width, TARGET_HEIGHT),
+        interpolation=cv2.INTER_NEAREST,
     )
+    cv2.rectangle(
+        image_resized,
+        (
+            math.floor(meta.bbox.u_min * scale_factor),
+            math.floor(meta.bbox.v_min * scale_factor),
+        ),
+        (
+            math.ceil((meta.bbox.u_max + 1) * scale_factor),
+            math.ceil((meta.bbox.v_max + 1) * scale_factor),
+        ),
+        color=(0, 0, 0xFF),
+        thickness=1,
+    )
+
+    u_anchor = meta.u_anchor / (1 << 19)
+    v_anchor = meta.v_anchor / (1 << 19)
+    cv2.circle(
+        image_resized,
+        (
+            math.floor(u_anchor * scale_factor),
+            math.floor((v_anchor + 1.0) * scale_factor),
+        ),
+        radius=0,
+        color=(0x00, 0xFF, 0x00),
+        thickness=8,
+    )
+    cv2.imshow(f"Preview: {path.name}", image_resized)
     cv2.waitKey(0)
 
 
-def decompile_asset(source_path: Path) -> BGRImage:
+def decompile_asset(
+    source_path: Path,
+) -> tuple[BGRImage, SpriteMetadata]:
     """
     Decompile the asset into a viewable image.
 
@@ -104,7 +140,7 @@ def decompile_asset(source_path: Path) -> BGRImage:
     unpacked_palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
     image_bgr = unpacked_palette[index_bits].reshape((height, width, 3))
 
-    return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8)
+    return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8), meta
 
 
 # Protected helpers
