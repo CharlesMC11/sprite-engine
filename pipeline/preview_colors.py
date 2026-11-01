@@ -75,7 +75,7 @@ def preview_colors(hex_codes: Iterable[str]) -> None:
     )
 
 
-def filter_hex_codes(raw_hex_codes: Iterable[str]) -> tuple[Color]:
+def filter_hex_codes(raw_hex_codes: Iterable[str]) -> tuple[Color, ...]:
     result: set[Color] = set()
 
     for raw_code in raw_hex_codes:
