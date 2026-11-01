@@ -24,7 +24,7 @@ The binary layout contains:
     - Height (1 byte): height in pixels
 """
 
-import sys
+from argparse import ArgumentParser
 from pathlib import Path
 from warnings import warn
 
@@ -51,18 +51,19 @@ from pipeline import (
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        raise ValueError("No filename given.")
+    parser = ArgumentParser("Asset Interpreter", description=__doc__)
+    parser.add_argument(
+        "source_sprite", type=Path, help="Path to the source sprite file."
+    )
 
-    filename = sys.argv[1]
-    path = Path(f"assets/{filename}.sprite")
+    path = parser.parse_args().source_sprite
     if not path.exists():
         raise FileNotFoundError(f"Missing asset file: '{path}'")
 
     image = decompile_asset(path)
 
     cv2.imshow(
-        f"Preview: {filename}",
+        f"Preview: {path.name}",
         cv2.resize(image, (512, 512), interpolation=cv2.INTER_NEAREST),
     )
     cv2.waitKey(0)
@@ -100,9 +101,7 @@ def decompile_asset(source_path: Path) -> BGRImage:
         (height, width)
     )
 
-    unpacked_palette = _unpack_16bit_to_color(
-        palette_blob, meta.color_encoding
-    )
+    unpacked_palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
     image_bgr = unpacked_palette[index_bits].reshape((height, width, 3))
 
     return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8)
