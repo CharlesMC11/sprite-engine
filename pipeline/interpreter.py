@@ -46,61 +46,11 @@ from pipeline import (
     ColorEncoding,
     ResourceLayoutWarning,
     SpriteMetadata,
-    dequantize,
     is_power_of_2,
+    remap_to_8bit,
 )
 
 TARGET_HEIGHT: int = 512
-
-
-def main() -> None:
-    parser = ArgumentParser("Asset Interpreter", description=__doc__)
-    parser.add_argument(
-        "source_sprite", type=Path, help="Path to the source sprite file."
-    )
-
-    path = parser.parse_args().source_sprite
-    if not path.exists():
-        raise FileNotFoundError(f"Missing asset file: '{path}'")
-
-    image, meta = decompile_asset(path)
-
-    scale_factor = TARGET_HEIGHT / image.shape[0]
-    target_width = round(image.shape[1] * scale_factor)
-
-    image_resized = cv2.resize(
-        image,
-        (target_width, TARGET_HEIGHT),
-        interpolation=cv2.INTER_NEAREST,
-    )
-    cv2.rectangle(
-        image_resized,
-        (
-            math.floor(meta.bbox.u_min * scale_factor),
-            math.floor(meta.bbox.v_min * scale_factor),
-        ),
-        (
-            math.ceil((meta.bbox.u_max + 1) * scale_factor),
-            math.ceil((meta.bbox.v_max + 1) * scale_factor),
-        ),
-        color=(0, 0, 0xFF),
-        thickness=1,
-    )
-
-    u_anchor = meta.u_anchor / (1 << 19)
-    v_anchor = meta.v_anchor / (1 << 19)
-    cv2.circle(
-        image_resized,
-        (
-            math.floor(u_anchor * scale_factor),
-            math.floor((v_anchor + 1.0) * scale_factor),
-        ),
-        radius=0,
-        color=(0x00, 0xFF, 0x00),
-        thickness=8,
-    )
-    cv2.imshow(f"Preview: {path.name}", image_resized)
-    cv2.waitKey(0)
 
 
 def decompile_asset(
@@ -133,12 +83,10 @@ def decompile_asset(
     index_bits = pixels & MASK_PALETTE_INDEX
 
     alpha_bits = ((pixels & MASK_ALPHA) >> 4).astype(np.uint16)
-    alpha_mask = dequantize(alpha_bits, src_max=MAX_2_BIT).reshape(
-        (height, width)
-    )
+    alpha_mask = remap_to_8bit(alpha_bits, MAX_2_BIT).reshape((height, width))
 
-    unpacked_palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
-    image_bgr = unpacked_palette[index_bits].reshape((height, width, 3))
+    palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
+    image_bgr = palette[index_bits].reshape((height, width, 3))
 
     return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8), meta
 
@@ -184,12 +132,59 @@ def _unpack_16bit_to_color(
     r: npt.NDArray[np.uint16]
 
     packed_color = np.frombuffer(packed_buffer, dtype=np.uint16)
-    r = dequantize((packed_color >> r_shift) & r_max, src_max=r_max)
-    g = dequantize((packed_color >> g_shift) & g_max, src_max=g_max)
-    b = dequantize(packed_color & b_max, src_max=b_max)
+    r = remap_to_8bit((packed_color >> r_shift) & r_max, r_max)
+    g = remap_to_8bit((packed_color >> g_shift) & g_max, g_max)
+    b = remap_to_8bit(packed_color & b_max, b_max)
 
     return np.stack((b, g, r), axis=-1)
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser("Asset Interpreter", description=__doc__)
+    parser.add_argument(
+        "source_sprite", type=Path, help="Path to the source sprite file."
+    )
+
+    args = parser.parse_args()
+
+    if not (path := args.source_sprite).exists():
+        raise FileNotFoundError(f"Missing asset file: '{path}'")
+
+    image, meta = decompile_asset(path)
+
+    scale_factor = TARGET_HEIGHT / image.shape[0]
+    target_width = round(image.shape[1] * scale_factor)
+
+    image_resized = cv2.resize(
+        image,
+        (target_width, TARGET_HEIGHT),
+        interpolation=cv2.INTER_NEAREST,
+    )
+    cv2.rectangle(
+        image_resized,
+        (
+            math.floor(meta.bbox.u_min * scale_factor),
+            math.floor(meta.bbox.v_min * scale_factor),
+        ),
+        (
+            math.ceil((meta.bbox.u_max + 1) * scale_factor),
+            math.ceil((meta.bbox.v_max + 1) * scale_factor),
+        ),
+        color=(0x00, 0x00, 0xFF),
+        thickness=1,
+    )
+
+    u_anchor = meta.u_anchor / (1 << 19)
+    v_anchor = meta.v_anchor / (1 << 19)
+    cv2.circle(
+        image_resized,
+        (
+            math.floor(u_anchor * scale_factor),
+            math.floor((v_anchor + 1.0) * scale_factor),
+        ),
+        radius=0,
+        color=(0x00, 0xFF, 0x00),
+        thickness=8,
+    )
+    cv2.imshow(f"Preview: {path.name}", image_resized)
+    cv2.waitKey(0)

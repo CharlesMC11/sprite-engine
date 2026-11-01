@@ -1,7 +1,6 @@
 import dataclasses
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
 from struct import Struct
 from typing import ClassVar, Final, Protocol, Self
 
@@ -251,15 +250,37 @@ def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
     :param src_max: The maximum value for the source bit depth.
     :param dst_max: The maximum value for the destination bit depth.
 
-    :return: The remapped value.
+    :return: The remapped value/s.
     """
     if src_max == 0x00 or dst_max == 0x00:
         raise ValueError(
             "Source or destination maximum values cannot be 0x00."
         )
 
-    return (value * dst_max + src_max // 2) // src_max
+    return (value * dst_max + (src_max >> 1)) // src_max
 
 
-quantize = partial(remap, src_max=0xFF)
-dequantize = partial(remap, dst_max=0xFF)
+def remap_from_8bit[T: (int, npt.NDArray)](value: T, dst_max: int) -> T:
+    """
+    Remap a value or tensor from 8-bit to another bit depth.
+
+    :param value: The value/s to remap.
+    :param dst_max: The maximum value for the destination bit depth.
+
+    :return: The remapped value/s.
+    """
+
+    return remap(value, src_max=0xFF, dst_max=dst_max)
+
+
+def remap_to_8bit[T: (int, npt.NDArray)](value: T, src_max: int) -> T:
+    """
+    Remap a value or tensor from one bit depth to 8-bit.
+
+    :param value: The value/s to remap.
+    :param src_max: The maximum value for the source bit depth.
+
+    :return: The remapped value/s.
+    """
+
+    return remap(value, src_max=src_max, dst_max=0xFF)

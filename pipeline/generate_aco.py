@@ -1,4 +1,3 @@
-#!/usr/bin/env -S python3
 """
 Generate an Adobe Color Swatch file.
 """
@@ -8,32 +7,10 @@ from argparse import ArgumentParser
 from collections.abc import Iterable
 from functools import partial
 
-from pipeline import quantize
+from pipeline import remap_from_8bit
 from pipeline.preview_colors import filter_hex_codes, hex_str
 
 # Public function
-
-
-def main() -> None:
-    parser = ArgumentParser(
-        "Adobe Color Swatch Generator", description=__doc__
-    )
-    parser.add_argument(
-        "-n",
-        "--name",
-        help="Name of the color palette",
-        type=str,
-        required=True,
-    )
-    parser.add_argument(
-        "hex_codes",
-        help="Hexadecimal color codes to quantize",
-        nargs="+",
-        type=str,
-    )
-    args = parser.parse_args()
-
-    generate_aco(args.name, args.hex_codes)
 
 
 def generate_aco(name: str, hex_codes: Iterable[str]) -> None:
@@ -46,6 +23,8 @@ def generate_aco(name: str, hex_codes: Iterable[str]) -> None:
 
     v1_color_buf = bytearray()
     v2_color_buf = bytearray()
+
+    _expand_to_16bit = partial(remap_from_8bit, dst_max=0xFFFF)
     for code in filtered_codes:
         r, g, b = code
 
@@ -73,10 +52,23 @@ def generate_aco(name: str, hex_codes: Iterable[str]) -> None:
         f.write(combined_buf)
 
 
-# Private helpers
-
-_expand_to_16bit = partial(quantize, dst_max=0xFFFF)
-
-
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(
+        "Adobe Color Swatch Generator", description=__doc__
+    )
+    parser.add_argument(
+        "-n",
+        "--name",
+        help="Name of the color palette",
+        type=str,
+        required=True,
+    )
+    parser.add_argument(
+        "hex_codes",
+        help="Hexadecimal color codes to quantize",
+        nargs="+",
+        type=str,
+    )
+    args = parser.parse_args()
+
+    generate_aco(args.name, args.hex_codes)

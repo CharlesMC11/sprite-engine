@@ -53,7 +53,7 @@ from pipeline import (
     SpriteMetadata,
     calculate_padding_needed,
     is_power_of_2,
-    quantize,
+    remap_from_8bit,
 )
 
 # Types
@@ -76,66 +76,6 @@ class SpriteComponents:
 
 
 # Public functions
-
-
-def main() -> None:
-    parser = ArgumentParser("Asset Compiler", description=__doc__)
-    parser.add_argument(
-        "source_image", type=Path, help="Path to the source BGR/RGBA image."
-    )
-    parser.add_argument(
-        "output_path", type=Path, help="Target path for the asset binary."
-    )
-    parser.add_argument(
-        "-c",
-        "--color_encoding",
-        default=ColorEncoding.NEUTRAL,
-        type=lambda e: ColorEncoding[e.upper()],
-        choices=list(ColorEncoding),
-        help="Color encoding (Neutral, Warm, or Cool). Default is Neutral.",
-    )
-    parser.add_argument(
-        "-a",
-        "--anchor",
-        nargs=2,
-        default=(float("NaN"), float("NaN")),
-        type=float,
-        help=f"Sprite anchor (u, v). Default is center.",
-    )
-    parser.add_argument(
-        "-d",
-        "--depth",
-        default=0,
-        type=int,
-        help='"Thickness" of the sprite. Default is 0.',
-    )
-    parser.add_argument(
-        "-p",
-        "--physics_type",
-        default=PhysicsType.UNDEFINED,
-        type=lambda p: PhysicsType[p.upper()],
-        choices=list(PhysicsType),
-        help="Physics type (None, Actor, Static, Sensor, or Projectile).",
-    )
-    parser.add_argument(
-        "-e",
-        "--emission_mask",
-        default=None,
-        type=Path,
-        help="Optional grayscale mask for emission mapping.",
-    )
-
-    args = parser.parse_args()
-
-    asset_components = ingest_asset(
-        args.source_image,
-        args.color_encoding,
-        args.anchor,
-        args.depth,
-        args.physics_type,
-        args.emission_mask,
-    )
-    compile_asset(args.output_path, asset_components)
 
 
 def ingest_asset(
@@ -268,8 +208,8 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
     :param output_path: The path to save the binary to.
     :param components: The asset pixel_components to bake.
 
-    :raises ResourceLayoutError: If the baked asset does not follow the expected
-        format.
+    :raises ResourceLayoutError: If the baked asset does not follow the
+        expected format.
     """
 
     meta = components.metadata
@@ -401,7 +341,7 @@ def _bake_pixels(
 
     if pixel_components.alpha_mask is not None:
         flattened_alpha = pixel_components.alpha_mask.flatten(order="C")
-        alpha = quantize(flattened_alpha.astype(np.uint16), dst_max=MAX_2_BIT)
+        alpha = remap_from_8bit(flattened_alpha.astype(np.uint16), MAX_2_BIT)
     else:
         alpha = np.full(height * width, MAX_2_BIT, dtype=np.uint16)
 
@@ -501,12 +441,68 @@ def _pack_colors_to_16bit(
     r: npt.NDArray[np.uint16]
 
     b, g, r = bgr_matrix.astype(np.uint16).T
-    r_quantized = quantize(r, dst_max=r_max) << r_shift
-    g_quantized = quantize(g, dst_max=g_max) << g_shift
-    b_quantized = quantize(b, dst_max=b_max)
+    r_quantized = remap_from_8bit(r, r_max) << r_shift
+    g_quantized = remap_from_8bit(g, g_max) << g_shift
+    b_quantized = remap_from_8bit(b, b_max)
 
     return r_quantized | g_quantized | b_quantized
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser("Asset Compiler", description=__doc__)
+    parser.add_argument(
+        "source_image", type=Path, help="Path to the source BGR/RGBA image."
+    )
+    parser.add_argument(
+        "output_path", type=Path, help="Target path for the asset binary."
+    )
+    parser.add_argument(
+        "-c",
+        "--color_encoding",
+        default=ColorEncoding.NEUTRAL,
+        type=lambda e: ColorEncoding[e.upper()],
+        choices=tuple(ColorEncoding),
+        help="Color encoding (Neutral, Warm, or Cool). Default is Neutral.",
+    )
+    parser.add_argument(
+        "-a",
+        "--anchor",
+        nargs=2,
+        default=(float("NaN"), float("NaN")),
+        type=float,
+        help=f"Sprite anchor (u, v). Default is center.",
+    )
+    parser.add_argument(
+        "-d",
+        "--depth",
+        default=0,
+        type=int,
+        help='"Thickness" of the sprite. Default is 0.',
+    )
+    parser.add_argument(
+        "-p",
+        "--physics_type",
+        default=PhysicsType.UNDEFINED,
+        type=lambda p: PhysicsType[p.upper()],
+        choices=tuple(PhysicsType),
+        help="Physics type (None, Actor, Static, Sensor, or Projectile).",
+    )
+    parser.add_argument(
+        "-e",
+        "--emission_mask",
+        default=None,
+        type=Path,
+        help="Optional grayscale mask for emission mapping.",
+    )
+
+    args = parser.parse_args()
+
+    asset_components = ingest_asset(
+        args.source_image,
+        args.color_encoding,
+        args.anchor,
+        args.depth,
+        args.physics_type,
+        args.emission_mask,
+    )
+    compile_asset(args.output_path, asset_components)

@@ -9,7 +9,13 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterable
 
-from pipeline import remap
+from pipeline import (
+    MAX_2_BIT,
+    MAX_5_BIT,
+    MAX_6_BIT,
+    remap_from_8bit,
+    remap_to_8bit,
+)
 
 # Types
 
@@ -18,19 +24,6 @@ Color = namedtuple("Color", "r g b")
 
 
 # Public functions
-
-
-def main() -> None:
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "hex_codes",
-        help="Hexadecimal color codes to quantize",
-        nargs="+",
-        type=str,
-    )
-    args = parser.parse_args()
-
-    preview_colors(args.hex_codes)
 
 
 def preview_colors(hex_codes: Iterable[str]) -> None:
@@ -50,12 +43,7 @@ def preview_colors(hex_codes: Iterable[str]) -> None:
     grid_sep = grid_top.replace("┌", "├").replace("┬", "┼").replace("┐", "┤")
     header = f"│ {'Entered':<7} │ {'Neutral 16':^14} │ {'Warm 16':^14} │ {'Cool 16':^14} │ {'Pal 16':^8} │ {'Neutral 8':^12} │ {'Warm 8':^12} │ {'Cool 8':^12} │ {'Pal 8':^8} │"
 
-    print(
-        grid_top,
-        header.rstrip(),
-        grid_sep,
-        sep="\n",
-    )
+    print(grid_top, header.rstrip(), grid_sep, sep="\n")
 
     unique_codes: tuple[Color] = filter_hex_codes(hex_codes)
     for color in unique_codes:
@@ -102,15 +90,12 @@ def print_16bit(color: Color) -> None:
 
     :param color: The original color value
     """
-    r, g, b = color
 
-    max6 = (1 << 6) - 1
-    q6 = _quantize(r, g, b, dst_max=max6)
-    e6 = _dequantize(*q6, src_max=max6)
+    q6 = _quantize(color, dst_max=MAX_6_BIT)
+    e6 = _dequantize(q6, src_max=MAX_6_BIT)
 
-    max5 = max6 >> 1
-    q5 = _quantize(r, g, b, dst_max=max5)
-    e5 = _dequantize(*q5, src_max=max5)
+    q5 = _quantize(color, dst_max=MAX_5_BIT)
+    e5 = _dequantize(q5, src_max=MAX_5_BIT)
 
     _print_codes_16bit(color, q6, q5, e6, e5)
 
@@ -120,19 +105,18 @@ def print_8bit(color: Color) -> None:
 
     :param color: The original color value
     """
-    r, g, b = color
 
-    max4 = (1 << 4) - 1
-    q4 = _quantize(r, g, b, dst_max=max4)
-    e4 = _dequantize(*q4, src_max=max4)
+    max3 = MAX_2_BIT << 1
+    max4 = max3 << 1
 
-    max3 = max4 >> 1
-    q3 = _quantize(r, g, b, dst_max=max3)
-    e3 = _dequantize(*q3, src_max=max3)
+    q4 = _quantize(color, dst_max=max4)
+    e4 = _dequantize(q4, src_max=max4)
 
-    max2 = max3 >> 1
-    q2 = _quantize(r, g, b, dst_max=max2)
-    e2 = _dequantize(*q2, src_max=max2)
+    q3 = _quantize(color, dst_max=max3)
+    e3 = _dequantize(q3, src_max=max3)
+
+    q2 = _quantize(color, dst_max=MAX_2_BIT)
+    e2 = _dequantize(q2, src_max=MAX_2_BIT)
 
     _print_codes_8bit(
         color,
@@ -145,20 +129,12 @@ def print_8bit(color: Color) -> None:
     )
 
 
-def _quantize(r: int, g: int, b: int, dst_max: int) -> Color:
-    return Color(
-        remap(r, src_max=0xFF, dst_max=dst_max),
-        remap(g, src_max=0xFF, dst_max=dst_max),
-        remap(b, src_max=0xFF, dst_max=dst_max),
-    )
+def _quantize(color: Color, dst_max: int) -> Color:
+    return Color(*(remap_from_8bit(c, dst_max) for c in color))
 
 
-def _dequantize(r: int, g: int, b: int, src_max: int) -> Color:
-    return Color(
-        remap(r, src_max=src_max, dst_max=0xFF),
-        remap(g, src_max=src_max, dst_max=0xFF),
-        remap(b, src_max=src_max, dst_max=0xFF),
-    )
+def _dequantize(color: Color, src_max: int) -> Color:
+    return Color(*(remap_to_8bit(c, src_max) for c in color))
 
 
 def _print_codes_16bit(
@@ -262,4 +238,13 @@ def _ansi_str(r: int, g: int, b: int) -> str:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "hex_codes",
+        help="Hexadecimal color codes to quantize",
+        nargs="+",
+        type=str,
+    )
+    args = parser.parse_args()
+
+    preview_colors(args.hex_codes)

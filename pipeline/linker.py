@@ -241,10 +241,22 @@ class AssetLinker:
         return f"{INDENT}enum class {name}_id : core::index_t {{"
 
 
-# Public functions
+# Protected helpers
 
 
-def main() -> None:
+def _clean_identifier(identifier: str) -> str:
+    """
+    Clean a string to be a valid C++ identifier.
+
+    :param identifier: The string to clean.
+
+    :return: The cleaned string.
+    """
+
+    return INVALID_IDENTIFIER_SYMBOLS_RE.sub("_", identifier).lower()
+
+
+if __name__ == "__main__":
     parser = ArgumentParser("Atlas Linker", description=__doc__)
     parser.add_argument(
         "output_path", type=Path, help="Target path for the sprite atlas."
@@ -277,21 +289,3 @@ def main() -> None:
         raise ValueError("No assets to link.")
 
     linker.link(args.output_path)
-
-
-# Protected helpers
-
-
-def _clean_identifier(identifier: str) -> str:
-    """
-    Clean a string to be a valid C++ identifier.
-
-    :param identifier: The string to clean.
-
-    :return: The cleaned string.
-    """
-    return INVALID_IDENTIFIER_SYMBOLS_RE.sub("_", identifier).lower()
-
-
-if __name__ == "__main__":
-    main()
