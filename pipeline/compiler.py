@@ -25,6 +25,7 @@ The binary layout contains:
     - Height (1 byte): height in pixels
 """
 
+import math
 import struct
 from argparse import ArgumentParser
 from collections.abc import Sequence
@@ -200,7 +201,7 @@ def ingest_asset(
 
     u_anchor, v_anchor = anchor
 
-    if np.isnan(u_anchor):
+    if math.isnan(u_anchor):
         u_anchor = _convert_to_fixed_point(width / 2.0)
     elif u_anchor < u_min or u_anchor > u_max:
         raise ValueError(
@@ -210,7 +211,7 @@ def ingest_asset(
     else:
         u_anchor = _convert_to_fixed_point(u_anchor)
 
-    if np.isnan(v_anchor):
+    if math.isnan(v_anchor):
         v_anchor = _convert_to_fixed_point(height / 2.0)
     elif v_anchor < v_min or v_anchor > v_max:
         raise ValueError(
