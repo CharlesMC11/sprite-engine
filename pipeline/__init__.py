@@ -29,6 +29,9 @@ from pipeline._pipeline import (
 
 # Graphics
 
+type BGRImage = npt.NDArray[np.uint8]
+type Palette = npt.NDArray[np.uint8]
+
 ASSET_LAYOUT_VERSION: bytes = b"7"
 
 SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
@@ -36,10 +39,6 @@ SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
 
 FOOTER_SIZE_BYTES: int = PALETTE_SIZE_BYTES + SPRITE_DIMENSIONS_SIZE_BYTES
 """ The total size of the sprite footer in bytes."""
-
-type BGRImage = npt.NDArray[np.uint8]
-
-type Palette = npt.NDArray[np.uint8]
 
 
 class ResourceLayoutError(Exception): ...

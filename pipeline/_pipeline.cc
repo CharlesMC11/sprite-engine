@@ -1,5 +1,8 @@
 #include <nanobind/nanobind.h>
 
+#include <format>
+#include <stdexcept>
+
 #include "assets/sprite.hh"
 #include "core/core.hh"
 #include "graphics/graphics_types.hh"
@@ -9,9 +12,8 @@
 namespace nb = nanobind;
 using nb::literals::operator""_a;
 
-constexpr std::size_t kSpriteMetadataSize{
+inline constexpr std::size_t kSpriteMetadataSize{
         sizeof(sc::assets::sprites::metadata)};
-constexpr std::size_t kPaletteIndexOffset{kSpriteMetadataSize - 1UZ};
 
 NB_MODULE(_pipeline, m)
 {
@@ -70,13 +72,15 @@ NB_MODULE(_pipeline, m)
             "- color_encoding (uint8)\n"
             "- palette_index (uint8)\n")
             .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
-            .def_ro_static("PALETTE_INDEX_OFFSET", &kPaletteIndexOffset)
             .def_static(
                     "from_bytes",
                     [](const nb::bytes& b) -> sc::assets::sprites::metadata {
                         if (b.size() < kSpriteMetadataSize) {
-                            throw std::runtime_error(
-                                    "Invalid size of Sprite Metadata");
+                            throw std::invalid_argument{
+                                    std::format("Buffer size too small for "
+                                                "SpriteMetadata. Expected "
+                                                "{} bytes, got {}.",
+                                            kSpriteMetadataSize, b.size())};
                         }
 
                         sc::assets::sprites::metadata meta;
@@ -87,7 +91,7 @@ NB_MODULE(_pipeline, m)
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
                          std::uint8_t, std::int32_t, std::int32_t,
                          std::uint8_t, sc::core::physics_t,
-                         sc::graphics::color_encoding, std::uint8_t>(),
+                         sc::graphics::color_encoding, std::uint8_t>{},
                     "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
                     "color_encoding"_a, "palette_index"_a)
@@ -108,6 +112,6 @@ NB_MODULE(_pipeline, m)
             .def("to_bytes",
                     [](const sc::assets::sprites::metadata& meta)
                             -> nb::bytes {
-                        return nb::bytes(&meta, sizeof(meta));
+                        return nb::bytes{&meta, kSpriteMetadataSize};
                     });
 }

@@ -108,7 +108,6 @@ def main() -> None:
         type=int,
         help='"Thickness" of the sprite. Default is 0.',
     )
-
     parser.add_argument(
         "-p",
         "--physics_type",
