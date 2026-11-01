@@ -58,6 +58,17 @@ NB_MODULE(_pipeline, m)
             .value("SENSOR", sc::physics::type::SENSOR)
             .value("PROJECTILE", sc::physics::type::PROJECTILE);
 
+    nb::class_<sc::geometry::bbox<>>(m, "BBox", "A bounding box.")
+            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
+                         std::uint8_t>{},
+                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a)
+            .def_ro("u_min", &sc::geometry::bbox<>::u_min)
+            .def_ro("u_max", &sc::geometry::bbox<>::u_max)
+            .def_ro("v_min", &sc::geometry::bbox<>::v_min)
+            .def_ro("v_max", &sc::geometry::bbox<>::v_max)
+            .def_prop_ro("width", &sc::geometry::bbox<>::width)
+            .def_prop_ro("height", &sc::geometry::bbox<>::height);
+
     nb::class_<sc::assets::sprites::metadata>(m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
             "Contains information regarding a sprite’s bounding box, anchor "
