@@ -1,151 +1,101 @@
-#ifndef SC_CORE_MEMORY_HH
-#define SC_CORE_MEMORY_HH
+#pragma once
 
-#include <Metal/Metal.hpp>
+#if defined(__APPLE__) || defined(__linux__)
+
+#include <sys/mman.h>
+
+#endif // defined(__APPLE__) || defined(__linux__)
+
+#include <sysexits.h>
 
 #include <cstddef>
-#include <cstring>
+#include <cstdlib>
+#include <span>
 
-#include "core/core.hh"
-#include "math/utils.hh"
+namespace sc {
 
-namespace sc::mem {
+    inline constexpr std::size_t kStripedBankSize{0x1'0000};
+    inline constexpr std::size_t kStripedBankCount{8UZ};
+    inline constexpr std::size_t kUnstripedBankSize{0x1000};
+    inline constexpr std::size_t kUnstripedBankCount{2UZ};
+
+    inline constexpr std::size_t kSRAMSize{
+            kStripedBankSize * kStripedBankCount +
+            kUnstripedBankSize * kUnstripedBankCount};
 
     /**
-     * A dynamic array meant to contain at least 2 subarrays.
+     * @class memory
      *
-     * @tparam T
-     * The type of the contained elements.
-     *
-     * @tparam N
-     * The number of subarrays.
+     * The RP2350’s memory layout.
      */
-    template<typename T, std::size_t N = 2UZ>
-    struct channel_pool final {
-        // Constructors
+    class memory final {
+    public:
+        memory() noexcept;
+        ~memory() noexcept;
 
-        [[nodiscard]] constexpr channel_pool() = default;
+        memory(const memory&) = delete;
+        memory(memory&&) = delete;
 
-        channel_pool(const channel_pool&) = delete;
-        channel_pool& operator=(const channel_pool&) = delete;
+        auto operator=(const memory&) -> memory& = delete;
+        auto operator=(memory&&) -> memory& = delete;
 
-        channel_pool(channel_pool&&) = delete;
-        channel_pool& operator=(channel_pool&&) = delete;
+        template<std::size_t Index>
+        [[nodiscard]] constexpr auto striped_bank() const noexcept
+                -> std::span<std::byte>
+        {
+            static_assert(Index < kStripedBankCount,
+                    "Memory bank index out of range!");
 
-        ~channel_pool() = default;
-
-        // Operators
-
-        /**
-         * Get the subarray
-         *
-         * @param i
-         * The index.
-         *
-         * @return
-         * The subarray.
-         */
-        [[nodiscard]] constexpr auto operator[](std::size_t i) const noexcept
-                -> T* __restrict;
-
-        // Mutators
-
-        /**
-         * Increate the capacity of each subarray.
-         *
-         * @param device
-         * The metal device.
-         *
-         * @param new_capacity
-         * The new capacity size.
-         */
-        void grow(MTL::Device* device, std::size_t new_capacity) noexcept;
-
-        // Accessors
-
-        /**
-         * Calculate the subarray’s offset from the base pointer.
-         *
-         * @param i
-         * The subarray’s index.
-         *
-         * @return
-         * The offset.
-         */
-        [[nodiscard]] constexpr auto subarray_offset(
-                std::size_t i) const noexcept -> std::size_t;
-
-        // Attributes
-
-        NS::SharedPtr<MTL::Buffer> buffer{nullptr};
-        std::size_t count{0UZ};
-        std::size_t capacity{0UZ};
-
-    private:
-        [[nodiscard]] constexpr auto data() const noexcept
-                -> std::byte* __restrict;
-    };
-
-    // Operators
-
-    template<typename T, std::size_t N>
-    [[nodiscard]] constexpr auto channel_pool<T, N>::operator[](
-            const std::size_t i) const noexcept -> T* __restrict
-    {
-        if (!buffer) [[unlikely]]
-            return nullptr;
-
-        return reinterpret_cast<T*>(data() + subarray_offset(i));
-    }
-
-    // Mutators
-
-    template<typename T, std::size_t N>
-    void channel_pool<T, N>::grow(
-            MTL::Device* device, const std::size_t new_capacity) noexcept
-    {
-        const std::size_t aligned_new_capacity{
-                math::align_up(new_capacity, core::kCacheAlignment)};
-        if (aligned_new_capacity <= capacity) [[unlikely]]
-            return;
-
-        const std::size_t new_total_bytes{
-                sizeof(T) * aligned_new_capacity * N};
-        const NS::SharedPtr new_buffer{NS::TransferPtr(device->newBuffer(
-                new_total_bytes, MTL::ResourceStorageModeShared))};
-
-        if (buffer) [[likely]] {
-            const auto* src{data()};
-            auto* dst{static_cast<std::byte*>(new_buffer->contents())};
-
-            for (std::size_t i{0UZ}; i < N; ++i) {
-                std::memcpy(dst + sizeof(T) * aligned_new_capacity * i,
-                        src + subarray_offset(i), sizeof(T) * count);
-            }
+            return {buffer_ + kStripedBankSize * Index, kStripedBankSize};
         }
 
-        buffer = new_buffer;
-        capacity = aligned_new_capacity;
-    }
+        template<std::size_t Index>
+        [[nodiscard]] constexpr auto unstriped_bank() const noexcept
+                -> std::span<std::byte>
+        {
+            static_assert(Index < kUnstripedBankCount,
+                    "Memory bank index out of range!");
 
-    // Accessors
+            constexpr std::size_t striped_offset{
+                    kStripedBankSize * kStripedBankCount};
+            return {buffer_ + striped_offset + kUnstripedBankSize * Index,
+                    kUnstripedBankSize};
+        }
 
-    template<typename T, std::size_t N>
-    [[nodiscard]] constexpr auto channel_pool<T, N>::subarray_offset(
-            const std::size_t i) const noexcept -> std::size_t
+    private:
+        std::byte* buffer_{nullptr};
+    };
+
+    // Constructors
+
+    inline memory::memory() noexcept
     {
-        return sizeof(T) * capacity * i;
+#if defined(__APPLE__) || defined(__linux__)
+
+        void* addr{::mmap(nullptr, kSRAMSize, PROT_READ | PROT_WRITE,
+                MAP_ANON | MAP_PRIVATE, -1, 0)};
+        if (addr == MAP_FAILED) {
+            std::exit(EX_OSERR);
+        }
+
+        buffer_ = static_cast<std::byte*>(addr);
+
+#else // defined(__APPLE__) || defined(__linux__)
+
+        buffer_ = reinterpret_cast<std::byte*>(0x2000'0000);
+
+#endif // defined(__APPLE__) || defined(__linux__)
     }
 
-    // Private helpers
-
-    template<typename T, std::size_t N>
-    [[nodiscard]] constexpr auto channel_pool<T, N>::data() const noexcept
-            -> std::byte* __restrict
+    inline memory::~memory() noexcept
     {
-        return static_cast<std::byte*>(buffer->contents());
+#if defined(__APPLE__) || defined(__linux__)
+
+        if (buffer_) {
+            ::munmap(buffer_, kSRAMSize);
+        }
+
+#endif // defined(__APPLE__) || defined(__linux__)
     }
 
-} // namespace sc::mem
-
-#endif // SC_CORE_MEMORY_HH
+} // namespace sc
