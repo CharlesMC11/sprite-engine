@@ -1,5 +1,4 @@
 #include <nanobind/nanobind.h>
-#include <nanobind/ndarray.h>
 
 #include <format>
 #include <stdexcept>
@@ -29,29 +28,30 @@ NB_MODULE(_pipeline, m)
 
     m.attr("FRACTIONAL_BITS") = sc::core::kFractionalBits;
 
+    m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
+    m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
+
+    // Math
+
+    nb::class_<sc::geometry::bbox<>>(m, "BBox", "A bounding box.")
+            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
+                         std::uint8_t>{},
+                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a)
+            .def_ro("u_min", &sc::geometry::bbox<>::u_min)
+            .def_ro("u_max", &sc::geometry::bbox<>::u_max)
+            .def_ro("v_min", &sc::geometry::bbox<>::v_min)
+            .def_ro("v_max", &sc::geometry::bbox<>::v_max)
+            .def_prop_ro("width", &sc::geometry::bbox<>::width)
+            .def_prop_ro("height", &sc::geometry::bbox<>::height);
+
     m.def("convert_to_fixed_point", &sc::math::convert_to_fixed_point, "n"_a,
             "Convert the given value into a Q13.19 fixed point value.\n\n"
             ":param n: The value to convert.\n\n"
             ":return: The converted value in Q13.19 format.\n");
 
-    m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
-    m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
-
-    // Sprites
+    // Graphics
 
     m.attr("MAX_COLOR_COUNT") = sc::graphics::kMaxColorCount;
-
-    m.attr("PACKED_COLOR_SIZE_BYTES") = sizeof(sc::graphics::packed_color_t);
-
-    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::kMaxColorCount *
-            sizeof(sc::graphics::packed_color_t);
-
-    m.attr("MASK_PALETTE_INDEX") = sc::graphics::kMaskPaletteIndex;
-    m.attr("MASK_ALPHA") = sc::graphics::kMaskAlpha;
-    m.attr("MASK_EMISSION") = sc::graphics::kMaskEmission;
-
-    m.attr("SHIFT_ALPHA") = sc::graphics::kShiftAlpha;
-    m.attr("SHIFT_EMISSION") = sc::graphics::kShiftEmission;
 
     nb::enum_<sc::graphics::color_encoding>(m, "ColorEncoding",
             "Distribution of color bits across a 2‑byte packed integer.",
@@ -74,6 +74,19 @@ NB_MODULE(_pipeline, m)
             .def_ro("r_shift", &sc::graphics::color_encoding_params::r_shift)
             .def_ro("g_shift", &sc::graphics::color_encoding_params::g_shift);
 
+    m.attr("SHIFT_ALPHA") = sc::graphics::kShiftAlpha;
+    m.attr("SHIFT_EMISSION") = sc::graphics::kShiftEmission;
+
+    m.attr("MASK_PALETTE_INDEX") = sc::graphics::kMaskPaletteIndex;
+    m.attr("MASK_ALPHA") = sc::graphics::kMaskAlpha;
+    m.attr("MASK_EMISSION") = sc::graphics::kMaskEmission;
+
+    m.attr("PACKED_COLOR_SIZE_BYTES") = sizeof(sc::graphics::packed_color_t);
+    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::kMaxColorCount *
+            sizeof(sc::graphics::packed_color_t);
+
+    // Physics
+
     nb::enum_<sc::physics::type>(m, "PhysicsType",
             "The laws of physics an entity obeys.", nb::is_arithmetic(),
             nb::is_flag())
@@ -84,16 +97,7 @@ NB_MODULE(_pipeline, m)
             .value("SENSOR", sc::physics::type::SENSOR)
             .value("PROJECTILE", sc::physics::type::PROJECTILE);
 
-    nb::class_<sc::geometry::bbox<>>(m, "BBox", "A bounding box.")
-            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
-                         std::uint8_t>{},
-                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a)
-            .def_ro("u_min", &sc::geometry::bbox<>::u_min)
-            .def_ro("u_max", &sc::geometry::bbox<>::u_max)
-            .def_ro("v_min", &sc::geometry::bbox<>::v_min)
-            .def_ro("v_max", &sc::geometry::bbox<>::v_max)
-            .def_prop_ro("width", &sc::geometry::bbox<>::width)
-            .def_prop_ro("height", &sc::geometry::bbox<>::height);
+    // Sprites
 
     nb::class_<sc::assets::sprites::metadata>(m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
@@ -111,8 +115,7 @@ NB_MODULE(_pipeline, m)
             .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
             .def_static(
                     "from_bytes",
-                    [](const nb::bytes& buffer)
-                            -> sc::assets::sprites::metadata {
+                    [](const nb::bytes& buffer) {
                         if (buffer.size() < kSpriteMetadataSize) {
                             throw std::runtime_error{std::format(
                                     "Buffer size too small for "
@@ -139,18 +142,15 @@ NB_MODULE(_pipeline, m)
             .def_ro("v_anchor", &sc::assets::sprites::metadata::v_anchor)
             .def_ro("depth", &sc::assets::sprites::metadata::depth)
             .def_prop_ro("physics_type",
-                    [](const sc::assets::sprites::metadata& meta)
-                            -> sc::physics::type {
+                    [](const sc::assets::sprites::metadata& self) {
                         return static_cast<sc::physics::type>(
-                                meta.physics_type);
+                                self.physics_type);
                     })
             .def_ro("color_encoding",
                     &sc::assets::sprites::metadata::color_encoding)
             .def_rw("palette_index",
                     &sc::assets::sprites::metadata::palette_index, "index"_a)
-            .def("to_bytes",
-                    [](const sc::assets::sprites::metadata& self)
-                            -> nb::bytes {
-                        return nb::bytes{&self, kSpriteMetadataSize};
-                    });
+            .def("to_bytes", [](const sc::assets::sprites::metadata& self) {
+                return nb::bytes{&self, kSpriteMetadataSize};
+            });
 }
