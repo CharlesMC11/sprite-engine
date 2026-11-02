@@ -8,7 +8,7 @@ namespace sc::assets {
 
     namespace sprites {
 
-        inline SC_CONSTEXPR uint32_t kDefaultSize{32U};
+        inline SC_CONSTEXPR size_t kDefaultSize{32U};
 
         /**
          * A sprite’s metadata.
@@ -16,9 +16,9 @@ namespace sc::assets {
          * Contains information regarding a sprite’s bounding box, anchor
          * point, depth, physics type, color encoding, and palette index.
          */
-        struct alignas(core::kNeonAlignment) metadata final {
+        struct alignas(core::kAlignmentNeon) metadata final {
             geometry::bbox<> bbox;
-            int32_t u_anchor{0U}, v_anchor{0U};
+            core::kinematics_t u_anchor{0}, v_anchor{0};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
             graphics::color_encoding color_encoding{0U};
@@ -28,10 +28,10 @@ namespace sc::assets {
     } // namespace sprites
 
     /**
-     * hardware-aware sprite definition.
+     * A hardware-aware sprite definition.
      */
-    template<unsigned Width = sprites::kDefaultSize, unsigned Height = Width>
-    struct alignas(core::kNeonAlignment) sprite final {
+    template<size_t Width = sprites::kDefaultSize, size_t Height = Width>
+    struct alignas(core::kAlignmentNeon) sprite final {
         sprites::metadata meta;
         graphics::packed_pixel_t pixels[Height * Width]{
                 0U}; // Row-major pixels
