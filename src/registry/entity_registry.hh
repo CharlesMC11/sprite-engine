@@ -129,6 +129,11 @@ namespace sc {
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(draw_order)
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(next_in_cell)
 
+        [[nodiscard]] constexpr std::byte* buffer() const noexcept
+        {
+            return std::as_writable_bytes(buffer_).data();
+        }
+
         [[nodiscard]] constexpr std::size_t count() const noexcept
         {
             return status_ >> 2U;
