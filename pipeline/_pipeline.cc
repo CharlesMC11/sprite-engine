@@ -1,4 +1,5 @@
 #include <nanobind/nanobind.h>
+#include <nanobind/ndarray.h>
 
 #include <format>
 #include <stdexcept>
@@ -59,6 +60,20 @@ NB_MODULE(_pipeline, m)
             .value("WARM", sc::graphics::color_encoding::warm, "R6G5B5")
             .value("COOL", sc::graphics::color_encoding::cool, "R5G5B6");
 
+    nb::class_<sc::graphics::color_encoding_params>(m, "ColorEncodingParams",
+            "Parameters of how a 2‑byte color is packed or unpacked.\n")
+            .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
+            .def("__iter__",
+                    [](const sc::graphics::color_encoding_params& self) {
+                        return nb::iter(nb::make_tuple(self.r_max, self.g_max,
+                                self.b_max, self.r_shift, self.g_shift));
+                    })
+            .def_ro("r_max", &sc::graphics::color_encoding_params::r_max)
+            .def_ro("g_max", &sc::graphics::color_encoding_params::g_max)
+            .def_ro("b_max", &sc::graphics::color_encoding_params::b_max)
+            .def_ro("r_shift", &sc::graphics::color_encoding_params::r_shift)
+            .def_ro("g_shift", &sc::graphics::color_encoding_params::g_shift);
+
     nb::enum_<sc::physics::type>(m, "PhysicsType",
             "The laws of physics an entity obeys.", nb::is_arithmetic(),
             nb::is_flag())
@@ -96,18 +111,19 @@ NB_MODULE(_pipeline, m)
             .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
             .def_static(
                     "from_bytes",
-                    [](const nb::bytes& b) -> sc::assets::sprites::metadata {
-                        if (b.size() < kSpriteMetadataSize) {
-                            throw std::runtime_error{
-                                    std::format("Buffer size too small for "
-                                                "SpriteMetadata. Expected "
-                                                "{} bytes, got {}.",
-                                            kSpriteMetadataSize, b.size())};
+                    [](const nb::bytes& buffer)
+                            -> sc::assets::sprites::metadata {
+                        if (buffer.size() < kSpriteMetadataSize) {
+                            throw std::runtime_error{std::format(
+                                    "Buffer size too small for "
+                                    "SpriteMetadata. Expected "
+                                    "{} bytes, got {}.",
+                                    kSpriteMetadataSize, buffer.size())};
                         }
 
-                        sc::assets::sprites::metadata meta;
-                        std::memcpy(&meta, b.data(), kSpriteMetadataSize);
-                        return meta;
+                        sc::assets::sprites::metadata cls;
+                        std::memcpy(&cls, buffer.data(), kSpriteMetadataSize);
+                        return cls;
                     },
                     "buffer"_a)
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
@@ -133,8 +149,8 @@ NB_MODULE(_pipeline, m)
             .def_rw("palette_index",
                     &sc::assets::sprites::metadata::palette_index, "index"_a)
             .def("to_bytes",
-                    [](const sc::assets::sprites::metadata& meta)
+                    [](const sc::assets::sprites::metadata& self)
                             -> nb::bytes {
-                        return nb::bytes{&meta, kSpriteMetadataSize};
+                        return nb::bytes{&self, kSpriteMetadataSize};
                     });
 }

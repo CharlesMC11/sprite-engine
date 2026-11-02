@@ -44,9 +44,9 @@ from pipeline import (
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
+    ColorEncodingParams,
     ResourceLayoutWarning,
     SpriteMetadata,
-    get_encoding_params,
     is_power_of_2,
     remap_to_8bit,
 )
@@ -105,7 +105,7 @@ def _unpack_16bit_to_color(
     :returns: The unpacked BGR image.
     """
 
-    r_max, g_max, b_max, r_shift, g_shift = get_encoding_params(encoding)
+    r_max, g_max, b_max, r_shift, g_shift = ColorEncodingParams(encoding)
 
     b: npt.NDArray[np.uint16]
     g: npt.NDArray[np.uint16]

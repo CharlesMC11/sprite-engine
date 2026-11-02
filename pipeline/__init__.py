@@ -25,6 +25,7 @@ from pipeline._pipeline import (
     SHIFT_EMISSION,
     BBox,
     ColorEncoding,
+    ColorEncodingParams,
     PhysicsType,
     convert_to_fixed_point,
 )
@@ -247,32 +248,6 @@ def calculate_padding_needed(n: int, alignment: int) -> int:
         raise ValueError(f"Alignment must be a power of 2, got {alignment}.")
 
     return (alignment - n % alignment) % alignment
-
-
-def get_encoding_params(
-    encoding: ColorEncoding,
-) -> tuple[int, int, int, int, int]:
-    """
-    Get the parameters needed to pack/unpack colors.
-
-    :param encoding: The color encoding scheme.
-
-    :return: The masks for red, green, blue, and the shift amounts for red and
-        green.
-
-    :raises ValueError: If the given color encoding is invalid.
-    """
-
-    if encoding == ColorEncoding.NEUTRAL:
-        return MAX_5BIT, MAX_6BIT, MAX_5BIT, 11, 5
-
-    elif encoding == ColorEncoding.WARM:
-        return MAX_6BIT, MAX_5BIT, MAX_5BIT, 10, 5
-
-    elif encoding == ColorEncoding.COOL:
-        return MAX_5BIT, MAX_5BIT, MAX_6BIT, 11, 6
-
-    raise ValueError("Invalid color encoding.")
 
 
 def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
