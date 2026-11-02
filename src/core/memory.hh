@@ -34,7 +34,7 @@ namespace sc {
      */
     class memory final {
     public:
-        memory() noexcept;
+        constexpr memory() noexcept;
         ~memory() noexcept;
 
         memory(const memory&) = delete;
@@ -57,7 +57,7 @@ namespace sc {
 
     // Constructor
 
-    inline memory::memory() noexcept
+    constexpr memory::memory() noexcept
     {
 #if defined(__APPLE__) || defined(__linux__)
 
