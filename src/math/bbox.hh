@@ -56,8 +56,8 @@ namespace sc::geometry {
             const noexcept
     {
         return {.u_min = math::convert_to_fixed_point(u_min),
-                .u_max = math::convert_to_fixed_point(v_min),
-                .v_min = math::convert_to_fixed_point(u_max),
+                .u_max = math::convert_to_fixed_point(u_max),
+                .v_min = math::convert_to_fixed_point(v_min),
                 .v_max = math::convert_to_fixed_point(v_max)};
     }
 
