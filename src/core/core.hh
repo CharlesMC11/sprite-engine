@@ -12,8 +12,8 @@
 #define SC_CONSTEXPR constexpr
 
 #include <bit>
+#include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <type_traits>
 
 #endif
@@ -41,6 +41,37 @@ namespace sc::core {
 
 #ifndef __METAL_VERSION__
 
+    template<typename T>
+    constexpr bool enable_bitwise_ops_v{false};
+
+    /**
+     * Requirements for enums to have bitwise operations.
+     *
+     * @tparam T
+     * An enum class.
+     */
+    template<typename T>
+    concept bitwise_enum =
+            std::is_enum_v<T> && sc::core::enable_bitwise_ops_v<T>;
+
+    /**
+     * Check if any of an enum’s bits are on.
+     *
+     * @tparam T
+     * The enum class.
+     *
+     * @param val
+     * The value to check.
+     *
+     * @return
+     * `true` if any bits are on; `false` otherwise.
+     */
+    template<bitwise_enum T>
+    [[nodiscard]] constexpr bool any(const T val) noexcept
+    {
+        return static_cast<std::underlying_type_t<T>>(val) != 0;
+    }
+
     /**
      * Requirements for types to be safe to direct memory mapping.
      *
@@ -51,44 +82,31 @@ namespace sc::core {
     concept mappable = alignof(T) % kAlignmentNeon == 0UZ &&
             std::is_standard_layout_v<T> && !std::is_polymorphic_v<T>;
 
-    template<typename T>
-    constexpr bool enable_bitwise_ops_v{false};
-
-    template<typename T>
-    concept bitwise_enum =
-            std::is_enum_v<T> && sc::core::enable_bitwise_ops_v<T>;
-
-    template<bitwise_enum T>
-    [[nodiscard]] constexpr bool any(const T val) noexcept
-    {
-        return static_cast<std::underlying_type_t<T>>(val) != 0;
-    }
-
 #endif // __METAL_VERSION__
 
 } // namespace sc::core
 
 #ifndef __METAL_VERSION__
 
-template<sc::core::bitwise_enum T>
-[[nodiscard]] constexpr T operator|(const T lhs, const T rhs) noexcept
+template<sc::core::bitwise_enum L, typename R = L>
+[[nodiscard]] constexpr L operator|(const L lhs, const R rhs) noexcept
 {
-    using U = std::underlying_type_t<T>;
-    return static_cast<T>(static_cast<U>(lhs) | static_cast<U>(rhs));
+    using T = std::underlying_type_t<L>;
+    return static_cast<L>(static_cast<T>(lhs) | static_cast<T>(rhs));
 }
 
-template<sc::core::bitwise_enum T>
-[[nodiscard]] constexpr T operator&(const T lhs, const T rhs) noexcept
+template<sc::core::bitwise_enum L, typename R = L>
+[[nodiscard]] constexpr L operator&(const L lhs, const R rhs) noexcept
 {
-    using U = std::underlying_type_t<T>;
-    return static_cast<T>(static_cast<U>(lhs) & static_cast<U>(rhs));
+    using T = std::underlying_type_t<L>;
+    return static_cast<L>(static_cast<T>(lhs) & static_cast<T>(rhs));
 }
 
-template<sc::core::bitwise_enum T>
-[[nodiscard]] constexpr T operator^(const T lhs, const T rhs) noexcept
+template<sc::core::bitwise_enum L, typename R = L>
+[[nodiscard]] constexpr L operator^(const L lhs, const R rhs) noexcept
 {
-    using U = std::underlying_type_t<T>;
-    return static_cast<T>(static_cast<U>(lhs) ^ static_cast<U>(rhs));
+    using T = std::underlying_type_t<L>;
+    return static_cast<L>(static_cast<T>(lhs) ^ static_cast<T>(rhs));
 }
 
 template<sc::core::bitwise_enum T>
@@ -116,6 +134,12 @@ constexpr T& operator^=(T& lhs, const T rhs) noexcept
     return lhs = lhs ^ rhs;
 }
 
+/**
+ * Enable bitwise operations on an enum.
+ *
+ * @param EnumType
+ * The enum to enable bitwise operations for.
+ */
 #define SC_ENABLE_ENUM_BITWISE_OPS(EnumType)                                  \
     template<>                                                                \
     inline constexpr bool sc::core::enable_bitwise_ops_v<EnumType>{true};
