@@ -19,8 +19,8 @@ namespace sc::math {
      * @return
      * The aligned value.
      */
-    [[nodiscard]] constexpr std::size_t align_up(
-            const std::size_t n, const std::size_t alignment) noexcept
+    [[nodiscard]] constexpr auto align_up(const std::size_t n,
+            const std::size_t alignment) noexcept -> std::size_t
     {
         return (n + alignment - 1UZ) & ~(alignment - 1UZ);
     }
@@ -34,8 +34,8 @@ namespace sc::math {
      * @return
      * The converted value in Q13.19 format.
      */
-    [[nodiscard]] constexpr core::kinematics_t convert_to_fixed_point(
-            const float n) noexcept
+    [[nodiscard]] constexpr auto convert_to_fixed_point(const float n) noexcept
+            -> core::kinematics_t
     {
         return static_cast<core::kinematics_t>(
                 std::round(n * (1 << core::kFractionalBits)));

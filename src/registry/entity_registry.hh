@@ -129,26 +129,26 @@ namespace sc {
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(draw_order)
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(next_in_cell)
 
-        [[nodiscard]] constexpr std::byte* buffer() const noexcept
+        [[nodiscard]] constexpr auto buffer() const noexcept -> std::byte*
         {
             return std::as_writable_bytes(buffer_).data();
         }
 
-        [[nodiscard]] constexpr std::size_t count() const noexcept
+        [[nodiscard]] constexpr auto count() const noexcept -> std::size_t
         {
             return status_ >> 2U;
         }
 
-        [[nodiscard]] constexpr std::size_t capacity() const noexcept
+        [[nodiscard]] constexpr auto capacity() const noexcept -> std::size_t
         {
             return buffer_.size();
         }
 
-        [[nodiscard]] constexpr std::size_t offset(
-                xform_channel) const noexcept;
+        [[nodiscard]] constexpr auto offset(xform_channel) const noexcept
+                -> std::size_t;
 
-        [[nodiscard]] constexpr std::size_t offset(
-                index_channel) const noexcept;
+        [[nodiscard]] constexpr auto offset(index_channel) const noexcept
+                -> std::size_t;
 
         // Public mutators
 
@@ -245,15 +245,15 @@ namespace sc {
 
     // Accessors
 
-    [[nodiscard]] constexpr std::size_t entity_registry::offset(
-            xform_channel channel) const noexcept
+    [[nodiscard]] constexpr auto entity_registry::offset(
+            xform_channel channel) const noexcept -> std::size_t
     {
         return sizeof(buffer_[0UZ]) * kMaxEntityCount *
                 static_cast<std::size_t>(channel);
     }
 
-    [[nodiscard]] constexpr std::size_t entity_registry::offset(
-            index_channel channel) const noexcept
+    [[nodiscard]] constexpr auto entity_registry::offset(
+            index_channel channel) const noexcept -> std::size_t
     {
         return offset(xform_channel::count) +
                 sizeof(buffer_[0UZ]) * kMaxEntityCount *
