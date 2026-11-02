@@ -24,11 +24,11 @@ namespace sc::graphics {
      * Parameters of how a 2‑byte color is packed or unpacked.
      */
     struct color_encoding_params final {
-        unsigned r_max{0U};
-        unsigned g_max{0U};
-        unsigned b_max{0U};
-        unsigned r_shift{0U};
-        unsigned g_shift{0U};
+        size_t r_max{0U};
+        size_t g_max{0U};
+        size_t b_max{0U};
+        size_t r_shift{0U};
+        size_t g_shift{0U};
 
         /**
          * Construct the parameters based on the color encoding.
@@ -39,10 +39,10 @@ namespace sc::graphics {
          * @return
          * An instance of the parameters.
          */
-        explicit color_encoding_params(color_encoding encoding);
+        explicit constexpr color_encoding_params(color_encoding encoding);
     };
 
-    inline SC_CONSTEXPR uint32_t kMaxColorCount{16U};
+    inline SC_CONSTEXPR size_t kMaxColorCount{16U};
     using palette = packed_color_t[kMaxColorCount]; // A 16‑color palette.
 
     /**
@@ -56,17 +56,17 @@ namespace sc::graphics {
      */
     using packed_pixel_t = uint8_t; // [*][E][AA][IIII]
 
-    inline SC_CONSTEXPR auto kShiftAlpha{4U};
-    inline SC_CONSTEXPR auto kShiftEmission{6U};
+    inline SC_CONSTEXPR size_t kShiftAlpha{4U};
+    inline SC_CONSTEXPR size_t kShiftEmission{6U};
 
-    inline SC_CONSTEXPR uint32_t kMaskPaletteIndex{core::kMax4Bit};
-    inline SC_CONSTEXPR uint32_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
-    inline SC_CONSTEXPR uint32_t kMaskEmission{1U << kShiftEmission};
+    inline SC_CONSTEXPR size_t kMaskPaletteIndex{core::kMax4Bit};
+    inline SC_CONSTEXPR size_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
+    inline SC_CONSTEXPR size_t kMaskEmission{1U << kShiftEmission};
 
     // Static methods
 
     [[nodiscard]]
-    inline color_encoding_params::color_encoding_params(
+    constexpr color_encoding_params::color_encoding_params(
             const color_encoding encoding)
     {
         switch (encoding) {

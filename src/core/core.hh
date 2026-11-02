@@ -6,12 +6,10 @@
 #ifdef __METAL_VERSION__
 
 #define SC_CONSTEXPR constant constexpr
-#define SC_SIZE_T uint64_t
 
 #else
 
 #define SC_CONSTEXPR constexpr
-#define SC_SIZE_T std::size_t
 
 #include <bit>
 #include <cstdint>
@@ -24,16 +22,16 @@ namespace sc::core {
 
     // Constants
 
-    inline SC_CONSTEXPR auto kMax2Bit{(1U << 2U) - 1U};
-    inline SC_CONSTEXPR auto kMax4Bit{(1U << 4U) - 1U};
-    inline SC_CONSTEXPR auto kMax5Bit{(1U << 5U) - 1U};
-    inline SC_CONSTEXPR auto kMax6Bit{(1U << 6U) - 1U};
+    inline SC_CONSTEXPR size_t kMax2Bit{(1U << 2U) - 1U};
+    inline SC_CONSTEXPR size_t kMax4Bit{(1U << 4U) - 1U};
+    inline SC_CONSTEXPR size_t kMax5Bit{(1U << 5U) - 1U};
+    inline SC_CONSTEXPR size_t kMax6Bit{(1U << 6U) - 1U};
 
     using ufp_t = uint32_t; // Fixed-point number
-    inline SC_CONSTEXPR auto kFractionalBits{19U};
+    inline SC_CONSTEXPR size_t kFractionalBits{19U};
 
-    inline SC_CONSTEXPR SC_SIZE_T kAlignmentNeon{16U};
-    inline SC_CONSTEXPR SC_SIZE_T kAlignmentCache{128U};
+    inline SC_CONSTEXPR size_t kAlignmentNeon{16U};
+    inline SC_CONSTEXPR size_t kAlignmentCache{128U};
 
     using index_t = uint32_t;
     inline SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
