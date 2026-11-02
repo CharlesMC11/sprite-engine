@@ -1,5 +1,4 @@
-#ifndef SC_CORE_INPUT_HH
-#define SC_CORE_INPUT_HH
+#pragma once
 
 #include <cstdint>
 
@@ -7,7 +6,13 @@
 
 namespace sc::input {
 
-    enum class mask : std::uint8_t {
+    // Type aliases
+
+    using input_t = std::uint8_t;
+
+    // Enums
+
+    enum class mask : input_t {
         none = 0U,
         up = 1U,
         down = 1U << 1U,
@@ -19,5 +24,3 @@ namespace sc::input {
 } // namespace sc::input
 
 SC_ENABLE_ENUM_BITWISE_OPS(sc::input::mask)
-
-#endif // SC_CORE_INPUT_HH
