@@ -9,10 +9,11 @@
 #include <sysexits.h>
 
 #include <cstddef>
-#include <cstdlib>
 #include <span>
 
 namespace sc {
+
+    // Constants
 
     inline constexpr std::size_t kStripedBankSize{0x1'0000};
     inline constexpr std::size_t kStripedBankCount{8UZ};
