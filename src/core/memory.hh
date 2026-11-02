@@ -9,6 +9,7 @@
 #include <sysexits.h>
 
 #include <cstddef>
+#include <cstdlib>
 #include <span>
 
 namespace sc {
@@ -44,26 +45,11 @@ namespace sc {
 
         template<std::size_t Index>
         [[nodiscard]] constexpr auto striped_bank() const noexcept
-                -> std::span<std::byte>
-        {
-            static_assert(Index < kStripedBankCount,
-                    "Memory bank index out of range!");
-
-            return {buffer_ + kStripedBankSize * Index, kStripedBankSize};
-        }
+                -> std::span<std::byte>;
 
         template<std::size_t Index>
         [[nodiscard]] constexpr auto unstriped_bank() const noexcept
-                -> std::span<std::byte>
-        {
-            static_assert(Index < kUnstripedBankCount,
-                    "Memory bank index out of range!");
-
-            constexpr std::size_t striped_offset{
-                    kStripedBankSize * kStripedBankCount};
-            return {buffer_ + striped_offset + kUnstripedBankSize * Index,
-                    kUnstripedBankSize};
-        }
+                -> std::span<std::byte>;
 
     private:
         std::byte* buffer_{nullptr};
@@ -101,6 +87,31 @@ namespace sc {
         }
 
 #endif // defined(__APPLE__) || defined(__linux__)
+    }
+
+    // Accessors
+
+    template<std::size_t Index>
+    [[nodiscard]] constexpr auto memory::striped_bank() const noexcept
+            -> std::span<std::byte>
+    {
+        static_assert(
+                Index < kStripedBankCount, "Memory bank index out of range!");
+
+        return {buffer_ + kStripedBankSize * Index, kStripedBankSize};
+    }
+
+    template<std::size_t Index>
+    [[nodiscard]] constexpr auto memory::unstriped_bank() const noexcept
+            -> std::span<std::byte>
+    {
+        static_assert(Index < kUnstripedBankCount,
+                "Memory bank index out of range!");
+
+        constexpr std::size_t striped_offset{
+                kStripedBankSize * kStripedBankCount};
+        return {buffer_ + striped_offset + kUnstripedBankSize * Index,
+                kUnstripedBankSize};
     }
 
 } // namespace sc
