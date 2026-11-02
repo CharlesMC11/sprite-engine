@@ -1,8 +1,7 @@
 /**
  * Source of truth for type aliases, constants, and enums.
  */
-#ifndef SC_CORE_CORE_HH
-#define SC_CORE_CORE_HH
+#pragma once
 
 #ifdef __METAL_VERSION__
 
@@ -23,17 +22,20 @@
 
 namespace sc::core {
 
-    inline SC_CONSTEXPR auto k2BitMax{0x03U};
-    inline SC_CONSTEXPR auto k5BitMax{0x1FU};
-    inline SC_CONSTEXPR auto k6BitMax{0x3FU};
+    inline SC_CONSTEXPR auto k2BitMax{(1U << 2U) - 1U};
+    inline SC_CONSTEXPR auto k5BitMax{(1U << 5U) - 1U};
+    inline SC_CONSTEXPR auto k6BitMax{(1U << 6U) - 1U};
+
+    inline SC_CONSTEXPR SC_SIZE_T kNeonAlignment{16UZ};
+    inline SC_CONSTEXPR SC_SIZE_T kCacheAlignment{128UZ};
+
 
     using index_t = uint32_t;
     inline SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
 
     using physics_t = uint8_t;
+    using kinematics_t = int32_t;
 
-    inline SC_CONSTEXPR SC_SIZE_T kNeonAlignment{16UZ};
-    inline SC_CONSTEXPR SC_SIZE_T kCacheAlignment{128UZ};
 
 #ifndef __METAL_VERSION__
 
@@ -126,5 +128,3 @@ static_assert(std::has_single_bit(sc::core::kNeonAlignment));
 static_assert(std::has_single_bit(sc::core::kCacheAlignment));
 
 #endif // __METAL_VERSION__
-
-#endif // SC_CORE_CORE_HH

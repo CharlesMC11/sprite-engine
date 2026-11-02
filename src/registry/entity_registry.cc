@@ -1,122 +1,73 @@
 #include "registry/entity_registry.hh"
 
-#include <arm_neon.h>
-
-#include <cmath>
+#include <algorithm>
+#include <cassert>
 #include <cstddef>
-#include <format>
-#include <iostream>
+#include <cstdlib>
 #include <span>
 
 #include "core/core.hh"
 
 namespace sc {
-    // Public methods
 
-    void entity_registry::update(const float dt) noexcept
+    void entity_registry::update(const core::kinematics_t dt) noexcept
     {
-        const std::size_t n{count()};
-        const std::size_t vectorized_lim{n - n % 4UZ};
-
-        const float32x4_t v_dt{vdupq_n_f32(dt)};
-        for (std::size_t i{0UZ}; i < vectorized_lim; i += 4UZ) {
-            const float32x4_t v_pos_x{vld1q_f32(&x_pos_ptr()[i])};
-            const float32x4_t v_pos_y{vld1q_f32(&y_pos_ptr()[i])};
-            const float32x4_t v_pos_z{vld1q_f32(&z_pos_ptr()[i])};
-
-            const float32x4_t v_vel_x{vld1q_f32(&x_vel_ptr()[i])};
-            const float32x4_t v_vel_y{vld1q_f32(&y_vel_ptr()[i])};
-            const float32x4_t v_vel_z{vld1q_f32(&z_vel_ptr()[i])};
-
-            const float32x4_t v_new_x{vfmaq_f32(v_pos_x, v_vel_x, v_dt)};
-            const float32x4_t v_new_y{vfmaq_f32(v_pos_y, v_vel_y, v_dt)};
-            const float32x4_t v_new_z{vfmaq_f32(v_pos_z, v_vel_z, v_dt)};
-
-            vst1q_f32(&new_x_pos_ptr()[i], v_new_x);
-            vst1q_f32(&new_y_pos_ptr()[i], v_new_y);
-            vst1q_f32(&new_z_pos_ptr()[i], v_new_z);
-        }
-
-        for (core::index_t i{static_cast<core::index_t>(vectorized_lim)};
-                i < static_cast<core::index_t>(n); ++i) {
-            new_x_pos_ptr()[i] = std::fma(x_vel_ptr()[i], dt, x_pos_ptr()[i]);
-            new_y_pos_ptr()[i] = std::fma(y_vel_ptr()[i], dt, y_pos_ptr()[i]);
-            new_z_pos_ptr()[i] = std::fma(z_vel_ptr()[i], dt, z_pos_ptr()[i]);
+        for (std::size_t i{0UZ}; i < count(); ++i) {
+            new_x_pos_ptr()[i] = x_vel_ptr()[i] * dt + x_pos_ptr()[i];
+            new_y_pos_ptr()[i] = y_vel_ptr()[i] * dt + y_pos_ptr()[i];
+            new_z_pos_ptr()[i] = z_vel_ptr()[i] * dt + z_pos_ptr()[i];
         }
     }
 
     void entity_registry::sort_draw() noexcept
     {
-        if (draw_order_needs_sort) {
+        if (needs_redraw()) {
             std::span tmp{draw_order_ptr(), count()};
 
-            const float* __restrict y_ptr{y_pos_ptr()};
-            const float* __restrict z_ptr{z_pos_ptr()};
+            const core::kinematics_t* __restrict y_ptr{y_pos_ptr()};
+            const core::kinematics_t* __restrict z_ptr{z_pos_ptr()};
 
             std::ranges::sort(tmp.begin(), tmp.end(),
                     [y_ptr, z_ptr](const core::index_t a,
                             const core::index_t b) noexcept -> bool {
-                        const float y_a{y_ptr[a]};
-                        const float y_b{y_ptr[b]};
-                        return std::isgreater(
-                                       std::abs(y_a - y_b), core::kEpsilon)
-                                ? std::isless(y_a, y_b)
-                                : std::isless(z_ptr[a], z_ptr[b]);
+                        const core::kinematics_t y_a{y_ptr[a]};
+                        const core::kinematics_t y_b{y_ptr[b]};
+                        return std::abs(y_a - y_b) > 0 ? y_a < y_b
+                                                       : z_ptr[a] < z_ptr[b];
                     });
 
-            draw_order_needs_sort = false;
+            status_ &= ~0x02UZ;
         }
     }
 
-    // Mutators
-
-    void entity_registry::reserve(const std::size_t n) noexcept
+    void entity_registry::spawn(const core::index_t i,
+            const core::kinematics_t x, const core::kinematics_t y,
+            const core::kinematics_t z) noexcept
     {
-        xform_buffer_.grow(device_, n);
-        index_buffer_.grow(device_, n);
+        assert(count() < kMaxEntityCount && "Cannot spawn more entities!");
+
+        const std::size_t new_idx{count()};
+
+        x_pos_ptr()[new_idx] = new_x_pos_ptr()[new_idx] = x;
+        y_pos_ptr()[new_idx] = new_y_pos_ptr()[new_idx] = y;
+        z_pos_ptr()[new_idx] = new_z_pos_ptr()[new_idx] = z;
+
+        x_vel_ptr()[new_idx] = y_vel_ptr()[new_idx] = z_vel_ptr()[new_idx] = 0;
+
+        sprite_index_ptr()[new_idx] = i;
+        draw_order_ptr()[new_idx] = new_idx;
+
+        const std::size_t is_swapped{swapped_channels() & 0x01UZ};
+        constexpr std::size_t needs_redraw{0x02UZ};
+        const std::size_t new_count{(count() + 1UZ) << 2U};
+        status_ = new_count | needs_redraw | is_swapped;
     }
 
-    void entity_registry::spawn(const core::index_t i, const float x,
-            const float y, const float z) noexcept
-    {
-        if (xform_buffer_.capacity <= xform_buffer_.count) [[unlikely]]
-            reserve(std::max(static_cast<std::size_t>(core::kCacheAlignment),
-                    capacity() * 2UZ));
-
-        const auto idx{static_cast<core::index_t>(count())};
-
-        x_pos_ptr()[idx] = new_x_pos_ptr()[idx] = x;
-        y_pos_ptr()[idx] = new_y_pos_ptr()[idx] = y;
-        z_pos_ptr()[idx] = new_z_pos_ptr()[idx] = z;
-
-        x_vel_ptr()[idx] = y_vel_ptr()[idx] = z_vel_ptr()[idx] = 0.0f;
-
-        sprite_index_ptr()[idx] = i;
-        draw_order_ptr()[idx] = idx;
-
-        ++xform_buffer_.count;
-        ++index_buffer_.count;
-        draw_order_needs_sort = true;
-    }
-
-    void entity_registry::spawn(const assets::sprite32_id i, const float x,
-            const float y, const float z) noexcept
+    void entity_registry::spawn(const assets::sprite32_id i,
+            const core::kinematics_t x, const core::kinematics_t y,
+            const core::kinematics_t z) noexcept
     {
         spawn(static_cast<core::index_t>(i), x, y, z);
     }
+
 } // namespace sc
-
-std::ostream& operator<<(std::ostream& out, const sc::entity_registry& registry)
-{
-    for (sc::core::index_t i{0U}; i < registry.count(); ++i) {
-        out << std::format(
-                "Entity {} (Sprite Index: {})\n\tpos ({:7.2f}, {:7.2f}, "
-                "{:7.2f})\n\tvec <{:7.2f}, {:7.2f}, {:7.2f}>\n\n",
-                i, registry.sprite_index_ptr()[i], registry.x_pos_ptr()[i],
-                registry.y_pos_ptr()[i], registry.z_pos_ptr()[i],
-                registry.x_vel_ptr()[i], registry.y_vel_ptr()[i],
-                registry.z_vel_ptr()[i]);
-    }
-
-    return out;
-}
