@@ -40,9 +40,3 @@ namespace sc::graphics {
     };
 
 } // namespace sc::graphics
-
-#ifndef __METAL_VERSION__
-
-std::ostream& operator<<(std::ostream&, const sc::graphics::palette&);
-
-#endif // __METAL_VERSION__
