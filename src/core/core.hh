@@ -22,6 +22,8 @@
 
 namespace sc::core {
 
+    // Constants
+
     inline SC_CONSTEXPR auto kMax2Bit{(1U << 2U) - 1U};
     inline SC_CONSTEXPR auto kMax4Bit{(1U << 4U) - 1U};
     inline SC_CONSTEXPR auto kMax5Bit{(1U << 5U) - 1U};
@@ -30,8 +32,8 @@ namespace sc::core {
     using ufp_t = uint32_t; // Fixed-point number
     inline SC_CONSTEXPR auto kFractionalBits{19U};
 
-    inline SC_CONSTEXPR SC_SIZE_T kAlignmentNeon{16UZ};
-    inline SC_CONSTEXPR SC_SIZE_T kAlignmentCache{128UZ};
+    inline SC_CONSTEXPR SC_SIZE_T kAlignmentNeon{16U};
+    inline SC_CONSTEXPR SC_SIZE_T kAlignmentCache{128U};
 
     using index_t = uint32_t;
     inline SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
@@ -120,7 +122,9 @@ constexpr T& operator^=(T& lhs, const T rhs) noexcept
     template<>                                                                \
     inline constexpr bool sc::core::enable_bitwise_ops_v<EnumType>{true};
 
-static_assert(std::has_single_bit(sc::core::kAlignmentNeon));
-static_assert(std::has_single_bit(sc::core::kAlignmentCache));
+static_assert(std::has_single_bit(sc::core::kAlignmentNeon),
+        "kAlignmentNeon is not a power of 2!");
+static_assert(std::has_single_bit(sc::core::kAlignmentCache),
+        "kAlignmentCache is not a power of 2!");
 
 #endif // __METAL_VERSION__

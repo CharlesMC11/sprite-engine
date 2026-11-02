@@ -273,7 +273,7 @@ namespace sc {
 static_assert(sizeof(sc::core::kinematics_t) == sizeof(sc::core::index_t),
         "Kinematics data size must match index data size!");
 
-static_assert(sc::kMaxEntityCount % sc::core::kCacheAlignment == 0UZ,
+static_assert(sc::kMaxEntityCount % sc::core::kAlignmentCache == 0UZ,
         "Number of entities must align with the cache!");
 
 inline constexpr auto kTotalChannelCount{
