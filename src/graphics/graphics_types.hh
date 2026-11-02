@@ -10,6 +10,7 @@
 
 namespace sc::graphics {
 
+    // A 2‑byte packed color.
     using packed_color_t = uint16_t;
 
     inline SC_CONSTEXPR uint32_t kMaxColorCount{16U};
@@ -24,7 +25,9 @@ namespace sc::graphics {
     inline SC_CONSTEXPR uint32_t kMaskEmission{1U << kShiftEmission};
 
     /**
-     * Distribution of color bits across a 2‑byte packed integer.
+     * @enum color_encoding
+     *
+     * Distribution of color bits across a 2‑byte packed color.
      */
     enum class color_encoding : uint8_t {
         neutral, // R5G6B5

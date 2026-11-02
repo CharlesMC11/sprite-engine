@@ -67,7 +67,7 @@ namespace sc {
         std::byte* buffer_{nullptr};
     };
 
-    // Constructors
+    // Constructor
 
     inline memory::memory() noexcept
     {
@@ -87,6 +87,8 @@ namespace sc {
 
 #endif // defined(__APPLE__) || defined(__linux__)
     }
+
+    // Destructor
 
     inline memory::~memory() noexcept
     {

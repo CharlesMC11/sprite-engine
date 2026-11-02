@@ -18,7 +18,7 @@ The binary layout contains:
         - Physics type (1 byte)
         - Color encoding (1 byte)
         - Palette index (1 byte), set to 0x3F (ASCII for '?') as a placeholder
-- Pixels (height×width bytes): 1‑byte packed values [*][E][AA][IIII]
+- Pixels (height×width bytes): 1‑byte packed pixel values [*][E][AA][IIII]
 - Footer (34 bytes): additional metadata
     - Color palette (32 bytes): 16 2‑byte unique colors
     - Width (1 byte): width in pixels
@@ -314,11 +314,11 @@ def _bake_pixels(
     """
     Bake the pixel components into a final 8‑bit format.
 
-    The Bit Mapping:
-    - [7] Unused.
-    - [6] Emission: Boolean signal (0 or 1).
+    The bit mapping:
+    - [0–3] Palette index: A color’s index in the 16‑color palette.
     - [4–5] Alpha: 2‑bit transparency (0–3).
-    - [0–3] Palette Index: Pointer to one of the 16 colors.
+    - [6] Emission: Boolean signal (0 or 1).
+    - [7] Unused.
 
     :param pixel_components: The components to bake.
     :param asset_name: The asset identifier.

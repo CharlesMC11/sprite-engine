@@ -228,7 +228,7 @@ namespace sc {
         std::size_t status_{0UZ};
     };
 
-    // Constructors
+    // Constructor
 
     [[nodiscard]] constexpr entity_registry::entity_registry(
             const memory& memory)
