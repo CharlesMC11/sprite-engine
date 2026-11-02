@@ -24,6 +24,8 @@ namespace sc {
             kStripedBankSize * kStripedBankCount +
             kUnstripedBankSize * kUnstripedBankCount};
 
+    inline constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000};
+
     /**
      * @class memory
      *
@@ -83,7 +85,7 @@ namespace sc {
 
 #else // defined(__APPLE__) || defined(__linux__)
 
-        buffer_ = reinterpret_cast<std::byte*>(0x2000'0000);
+        buffer_ = reinterpret_cast<std::byte*>(kRP2350SRAMBaseAddress);
 
 #endif // defined(__APPLE__) || defined(__linux__)
     }
