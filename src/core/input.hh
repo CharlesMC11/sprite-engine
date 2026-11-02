@@ -19,6 +19,8 @@ namespace sc::input {
         left = 1U << 2U,
         right = 1U << 3U,
         jump = 1U << 4U,
+        interact = 1U << 5U,
+        cancel = 1U << 6U,
     };
 
 } // namespace sc::input
