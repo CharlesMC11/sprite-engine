@@ -38,11 +38,13 @@ import numpy as np
 import numpy.typing as npt
 
 from pipeline import (
-    MAX_2_BIT,
-    MAX_5_BIT,
-    MAX_6_BIT,
-    MAX_PALETTE_SIZE,
-    NEON_ALIGNMENT,
+    ALIGNMENT_NEON,
+    MASK_PALETTE_INDEX,
+    MAX_2BIT,
+    MAX_8BIT,
+    MAX_COLOR_COUNT,
+    SHIFT_ALPHA,
+    SHIFT_EMISSION,
     SPRITE_MINIMUM_FILE_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
@@ -52,6 +54,7 @@ from pipeline import (
     ResourceLayoutWarning,
     SpriteMetadata,
     calculate_padding_needed,
+    convert_to_fixed_point,
     get_encoding_params,
     is_power_of_2,
     remap_from_8bit,
@@ -143,31 +146,31 @@ def ingest_asset(
     u_anchor, v_anchor = anchor
 
     if math.isnan(u_anchor):
-        u_anchor = _convert_to_fixed_point(width / 2.0)
+        u_anchor = convert_to_fixed_point(width / 2.0)
     elif u_anchor < u_min or u_anchor > u_max:
         raise ValueError(
             "U anchor point out of range! "
             f"Expected to be in [0, {width}), got {u_anchor}."
         )
     else:
-        u_anchor = _convert_to_fixed_point(u_anchor)
+        u_anchor = convert_to_fixed_point(u_anchor)
 
     if math.isnan(v_anchor):
-        v_anchor = _convert_to_fixed_point(height / 2.0)
+        v_anchor = convert_to_fixed_point(height / 2.0)
     elif v_anchor < v_min or v_anchor > v_max:
         raise ValueError(
             "V anchor point out of range! "
             f"Expected to be in [0, {height}), got {v_anchor}."
         )
     else:
-        v_anchor = _convert_to_fixed_point(v_anchor)
+        v_anchor = convert_to_fixed_point(v_anchor)
 
     # Validate depth
 
-    if depth < 0x00 or depth > 0xFF:
+    if depth < 0 or depth > MAX_8BIT:
         raise ValueError(
             "Depth out of or range! "
-            f"Expected to be in [{0x00}, {0xFF}], got {depth}."
+            f"Expected to be in [0, {MAX_8BIT}], got {depth}."
         )
 
     # Extract emission mask
@@ -218,18 +221,18 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
     pixels, palette = _bake_pixels(components, output_path.name)
     pixel_bytes = pixels.tobytes(order="C")
-    padding_needed = calculate_padding_needed(len(pixel_bytes), NEON_ALIGNMENT)
+    padding_needed = calculate_padding_needed(len(pixel_bytes), ALIGNMENT_NEON)
     pixel_bytes += b"\x00" * padding_needed
 
     palette_bytes = bytearray()
     palette_size = len(palette)
     packed_palette = _pack_colors_to_16bit(palette, meta.color_encoding)
-    for i in range(MAX_PALETTE_SIZE):
+    for i in range(MAX_COLOR_COUNT):
         if i < palette_size:
             color = packed_palette[i]
             palette_bytes.extend(struct.pack("<H", color))
         else:
-            palette_bytes.extend(struct.pack("<H", 0x0000))
+            palette_bytes.extend(struct.pack("<H", 0x00_00))
 
     footer_bytes = struct.pack("<BB", components.width, components.height)
 
@@ -254,16 +257,6 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
 
 # Protected helpers
-
-
-def _convert_to_fixed_point(value: float) -> int:
-    """
-    Convert the given value into a Q13.19 fixed point value.
-    :param value: The value to convert.
-    :return: The converted value in Q13.19 format.
-    """
-
-    return round(value * (1 << 19))
 
 
 def _calculate_bounding_box(mask: AlphaMask) -> tuple[int, int, int, int]:
@@ -335,24 +328,23 @@ def _bake_pixels(
 
     bgr_flat_array = pixel_components.bgr_image.reshape(-1, 3)
     palette = _extract_palette(bgr_flat_array, asset_name)
-    index = _index_colors(bgr_flat_array, palette) & 0x0F
+    index = _index_colors(bgr_flat_array, palette) & MASK_PALETTE_INDEX
 
-    width = pixel_components.width
-    height = pixel_components.height
+    total_pixels = pixel_components.width * pixel_components.height
 
     if pixel_components.alpha_mask is not None:
         flattened_alpha = pixel_components.alpha_mask.flatten(order="C")
-        alpha = remap_from_8bit(flattened_alpha.astype(np.uint16), MAX_2_BIT)
+        alpha = remap_from_8bit(flattened_alpha.astype(np.uint16), MAX_2BIT)
     else:
-        alpha = np.full(height * width, MAX_2_BIT, dtype=np.uint16)
+        alpha = np.full(total_pixels, MAX_2BIT, dtype=np.uint16)
 
     if pixel_components.emission_mask is not None:
         flattened_emission = pixel_components.emission_mask.flatten(order="C")
-        emission = (flattened_emission > 0x08) & 0x01
+        emission = flattened_emission > 0x08
     else:
-        emission = np.zeros(height * width, dtype=np.uint16)
+        emission = np.zeros(total_pixels, dtype=np.uint16)
 
-    baked_pixels = emission << 6 | alpha << 4 | index
+    baked_pixels = emission << SHIFT_EMISSION | alpha << SHIFT_ALPHA | index
     return baked_pixels.astype(np.uint8), palette
 
 
@@ -371,14 +363,14 @@ def _extract_palette(bgr_array: BGRImage, asset_name: str) -> Palette:
     )
 
     color_count = len(unique_colors)
-    if color_count > MAX_PALETTE_SIZE:
+    if color_count > MAX_COLOR_COUNT:
         warn(
             f"'{asset_name}' has {color_count} unique colors. "
-            f"It will be truncated to {MAX_PALETTE_SIZE}.",
+            f"It will be truncated to {MAX_COLOR_COUNT}.",
             ResourceLayoutWarning,
         )
 
-    top_indices = np.argsort(-per_color_pixel_count)[:MAX_PALETTE_SIZE]
+    top_indices = np.argsort(-per_color_pixel_count)[:MAX_COLOR_COUNT]
     top_colors = unique_colors[top_indices]
 
     sorted_indices = np.lexsort(

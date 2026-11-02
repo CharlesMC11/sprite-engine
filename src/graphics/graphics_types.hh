@@ -11,14 +11,17 @@
 namespace sc::graphics {
 
     using packed_color_t = uint16_t;
+
+    inline SC_CONSTEXPR uint32_t kMaxColorCount{16U};
+    using palette = packed_color_t[kMaxColorCount];
+
     using packed_pixel_t = uint8_t; // [*][E][AA][IIII]
+    inline SC_CONSTEXPR auto kShiftAlpha{4U};
+    inline SC_CONSTEXPR auto kShiftEmission{6U};
 
-    inline SC_CONSTEXPR uint32_t kMaxPaletteSize{16U};
-
-    inline SC_CONSTEXPR uint32_t kMaskPaletteIndex{0x0FU};
-    inline SC_CONSTEXPR uint32_t kMaskAlpha{0x30U};
-    inline SC_CONSTEXPR uint32_t kMaskEmission{0x40U};
-    inline SC_CONSTEXPR uint32_t kMaskSpecular{0x80U};
+    inline SC_CONSTEXPR uint32_t kMaskPaletteIndex{core::kMax4Bit};
+    inline SC_CONSTEXPR uint32_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
+    inline SC_CONSTEXPR uint32_t kMaskEmission{1U << kShiftEmission};
 
     /**
      * Distribution of color bits across a 2‑byte packed integer.

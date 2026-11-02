@@ -8,24 +8,31 @@ import numpy as np
 import numpy.typing as npt
 
 from pipeline._pipeline import (
-    CACHE_ALIGNMENT,
+    ALIGNMENT_CACHE,
+    ALIGNMENT_NEON,
+    FRACTIONAL_BITS,
     MASK_ALPHA,
     MASK_EMISSION,
     MASK_PALETTE_INDEX,
-    MAX_2_BIT,
-    MAX_5_BIT,
-    MAX_6_BIT,
-    MAX_PALETTE_SIZE,
-    NEON_ALIGNMENT,
+    MAX_2BIT,
+    MAX_4BIT,
+    MAX_5BIT,
+    MAX_6BIT,
+    MAX_COLOR_COUNT,
     PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
+    SHIFT_ALPHA,
+    SHIFT_EMISSION,
     BBox,
     ColorEncoding,
     PhysicsType,
+    convert_to_fixed_point,
 )
 from pipeline._pipeline import (
     SpriteMetadata as _SpriteMetadata,
 )
+
+MAX_8BIT = 0xFF
 
 # Graphics
 
@@ -257,13 +264,13 @@ def get_encoding_params(
     """
 
     if encoding == ColorEncoding.NEUTRAL:
-        return MAX_5_BIT, MAX_6_BIT, MAX_5_BIT, 11, 5
+        return MAX_5BIT, MAX_6BIT, MAX_5BIT, 11, 5
 
     elif encoding == ColorEncoding.WARM:
-        return MAX_6_BIT, MAX_5_BIT, MAX_5_BIT, 10, 5
+        return MAX_6BIT, MAX_5BIT, MAX_5BIT, 10, 5
 
     elif encoding == ColorEncoding.COOL:
-        return MAX_5_BIT, MAX_5_BIT, MAX_6_BIT, 11, 6
+        return MAX_5BIT, MAX_5BIT, MAX_6BIT, 11, 6
 
     raise ValueError("Invalid color encoding.")
 
@@ -278,7 +285,7 @@ def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
 
     :return: The remapped value/s.
     """
-    if src_max == 0x00 or dst_max == 0x00:
+    if not src_max or not dst_max:
         raise ValueError(
             "Source or destination maximum values cannot be 0x00."
         )
@@ -296,7 +303,7 @@ def remap_from_8bit[T: (int, npt.NDArray)](value: T, dst_max: int) -> T:
     :return: The remapped value/s.
     """
 
-    return remap(value, src_max=0xFF, dst_max=dst_max)
+    return remap(value, MAX_8BIT, dst_max)
 
 
 def remap_to_8bit[T: (int, npt.NDArray)](value: T, src_max: int) -> T:
@@ -309,4 +316,4 @@ def remap_to_8bit[T: (int, npt.NDArray)](value: T, src_max: int) -> T:
     :return: The remapped value/s.
     """
 
-    return remap(value, src_max=src_max, dst_max=0xFF)
+    return remap(value, src_max, MAX_8BIT)

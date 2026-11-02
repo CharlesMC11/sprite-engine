@@ -8,9 +8,13 @@
 
 namespace sc::physics {
 
-    inline constexpr float kGravity{9.8f};
-    inline constexpr float kFixedTimestep{1.0f / 120.0f};
-    inline constexpr float kMaxVelocity{500.0f};
+    inline constexpr core::ufp_t kFixedTimestep{
+            (1U << core::kFractionalBits) / 120U};
+
+    inline constexpr core::kinematics_t kGravity{
+            98 << (core::kFractionalBits - 1U)};
+    inline constexpr core::kinematics_t kMaxVelocity{
+            500 << core::kFractionalBits};
 
     /**
      * The laws of physics an entity obeys.

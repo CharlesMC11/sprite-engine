@@ -35,9 +35,12 @@ import numpy.typing as npt
 
 from pipeline import (
     FOOTER_SIZE_BYTES,
+    FRACTIONAL_BITS,
     MASK_ALPHA,
     MASK_PALETTE_INDEX,
-    MAX_2_BIT,
+    MAX_2BIT,
+    MAX_8BIT,
+    SHIFT_ALPHA,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
@@ -78,8 +81,8 @@ def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     pixels = np.frombuffer(pixels_blob, dtype=np.uint8)
     index_bits = pixels & MASK_PALETTE_INDEX
 
-    alpha_bits = ((pixels & MASK_ALPHA) >> 4).astype(np.uint16)
-    alpha_mask = remap_to_8bit(alpha_bits, MAX_2_BIT).reshape((height, width))
+    alpha_bits = ((pixels & MASK_ALPHA) >> SHIFT_ALPHA).astype(np.uint16)
+    alpha_mask = remap_to_8bit(alpha_bits, MAX_2BIT).reshape((height, width))
 
     palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
     image_bgr = palette[index_bits].reshape((height, width, 3))
@@ -150,20 +153,20 @@ if __name__ == "__main__":
             math.ceil((meta.bbox.u_max + 1) * scale_factor),
             math.ceil((meta.bbox.v_max + 1) * scale_factor),
         ),
-        color=(0x00, 0x00, 0xFF),
+        color=(0x00, 0x00, MAX_8BIT),
         thickness=1,
     )
 
-    u_anchor = meta.u_anchor / (1 << 19)
-    v_anchor = meta.v_anchor / (1 << 19)
+    u_anchor = meta.u_anchor / (1 << FRACTIONAL_BITS)
+    v_anchor = meta.v_anchor / (1 << FRACTIONAL_BITS)
     cv2.circle(
         image_resized,
         (
             math.floor(u_anchor * scale_factor),
-            math.floor((v_anchor + 1.0) * scale_factor),
+            math.floor(v_anchor * scale_factor),
         ),
         radius=0,
-        color=(0x00, 0xFF, 0x00),
+        color=(0x00, MAX_8BIT, 0x00),
         thickness=8,
     )
 

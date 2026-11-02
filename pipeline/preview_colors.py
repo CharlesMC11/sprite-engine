@@ -10,9 +10,10 @@ from collections import namedtuple
 from collections.abc import Iterable
 
 from pipeline import (
-    MAX_2_BIT,
-    MAX_5_BIT,
-    MAX_6_BIT,
+    MAX_2BIT,
+    MAX_4BIT,
+    MAX_5BIT,
+    MAX_6BIT,
     remap_from_8bit,
     remap_to_8bit,
 )
@@ -91,11 +92,11 @@ def print_16bit(color: Color) -> None:
     :param color: The original color value
     """
 
-    q6 = _quantize(color, dst_max=MAX_6_BIT)
-    e6 = _dequantize(q6, src_max=MAX_6_BIT)
+    q6 = _quantize(color, dst_max=MAX_6BIT)
+    e6 = _dequantize(q6, src_max=MAX_6BIT)
 
-    q5 = _quantize(color, dst_max=MAX_5_BIT)
-    e5 = _dequantize(q5, src_max=MAX_5_BIT)
+    q5 = _quantize(color, dst_max=MAX_5BIT)
+    e5 = _dequantize(q5, src_max=MAX_5BIT)
 
     _print_codes_16bit(color, q6, q5, e6, e5)
 
@@ -106,17 +107,16 @@ def print_8bit(color: Color) -> None:
     :param color: The original color value
     """
 
-    max3 = MAX_2_BIT << 1
-    max4 = max3 << 1
+    max3 = MAX_2BIT << 1
 
-    q4 = _quantize(color, dst_max=max4)
-    e4 = _dequantize(q4, src_max=max4)
+    q4 = _quantize(color, MAX_4BIT)
+    e4 = _dequantize(q4, MAX_4BIT)
 
-    q3 = _quantize(color, dst_max=max3)
-    e3 = _dequantize(q3, src_max=max3)
+    q3 = _quantize(color, max3)
+    e3 = _dequantize(q3, max3)
 
-    q2 = _quantize(color, dst_max=MAX_2_BIT)
-    e2 = _dequantize(q2, src_max=MAX_2_BIT)
+    q2 = _quantize(color, MAX_2BIT)
+    e2 = _dequantize(q2, MAX_2BIT)
 
     _print_codes_8bit(
         color,

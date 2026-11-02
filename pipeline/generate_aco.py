@@ -24,7 +24,7 @@ def generate_aco(name: str, hex_codes: Iterable[str]) -> None:
     v1_color_buf = bytearray()
     v2_color_buf = bytearray()
 
-    _expand_to_16bit = partial(remap_from_8bit, dst_max=0xFFFF)
+    _expand_to_16bit = partial(remap_from_8bit, dst_max=0xFF_FF)
     for code in filtered_codes:
         r, g, b = code
 
@@ -32,7 +32,7 @@ def generate_aco(name: str, hex_codes: Iterable[str]) -> None:
         g16 = _expand_to_16bit(g)
         b16 = _expand_to_16bit(b)
 
-        color_bytes = struct.pack(">HHHHH", 0, r16, g16, b16, 0x0000)
+        color_bytes = struct.pack(">HHHHH", 0, r16, g16, b16, 0x00_00)
         v1_color_buf.extend(color_bytes)
         v2_color_buf.extend(color_bytes)
 

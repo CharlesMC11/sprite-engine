@@ -21,25 +21,36 @@ NB_MODULE(_pipeline, m)
 
     // Core
 
-    m.attr("MAX_2_BIT") = sc::core::k2BitMax;
-    m.attr("MAX_5_BIT") = sc::core::k5BitMax;
-    m.attr("MAX_6_BIT") = sc::core::k6BitMax;
+    m.attr("MAX_2BIT") = sc::core::kMax2Bit;
+    m.attr("MAX_4BIT") = sc::core::kMax4Bit;
+    m.attr("MAX_5BIT") = sc::core::kMax5Bit;
+    m.attr("MAX_6BIT") = sc::core::kMax6Bit;
 
-    m.attr("NEON_ALIGNMENT") = sc::core::kNeonAlignment;
-    m.attr("CACHE_ALIGNMENT") = sc::core::kCacheAlignment;
+    m.attr("FRACTIONAL_BITS") = sc::core::kFractionalBits;
+
+    m.def("convert_to_fixed_point", &sc::math::convert_to_fixed_point, "n"_a,
+            "Convert the given value into a Q13.19 fixed point value.\n\n"
+            ":param n: The value to convert.\n\n"
+            ":return: The converted value in Q13.19 format.\n");
+
+    m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
+    m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
 
     // Sprites
 
-    m.attr("MAX_PALETTE_SIZE") = sc::graphics::kMaxPaletteSize;
+    m.attr("MAX_COLOR_COUNT") = sc::graphics::kMaxColorCount;
 
     m.attr("PACKED_COLOR_SIZE_BYTES") = sizeof(sc::graphics::packed_color_t);
 
-    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::kMaxPaletteSize *
+    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::kMaxColorCount *
             sizeof(sc::graphics::packed_color_t);
 
     m.attr("MASK_PALETTE_INDEX") = sc::graphics::kMaskPaletteIndex;
     m.attr("MASK_ALPHA") = sc::graphics::kMaskAlpha;
     m.attr("MASK_EMISSION") = sc::graphics::kMaskEmission;
+
+    m.attr("SHIFT_ALPHA") = sc::graphics::kShiftAlpha;
+    m.attr("SHIFT_EMISSION") = sc::graphics::kShiftEmission;
 
     nb::enum_<sc::graphics::color_encoding>(m, "ColorEncoding",
             "Distribution of color bits across a 2‑byte packed integer.",
@@ -100,9 +111,10 @@ NB_MODULE(_pipeline, m)
                     },
                     "buffer"_a)
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
-                         std::uint8_t, std::int32_t, std::int32_t,
-                         std::uint8_t, sc::core::physics_t,
-                         sc::graphics::color_encoding, std::uint8_t>{},
+                         std::uint8_t, sc::core::kinematics_t,
+                         sc::core::kinematics_t, std::uint8_t,
+                         sc::core::physics_t, sc::graphics::color_encoding,
+                         std::uint8_t>{},
                     "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
                     "color_encoding"_a, "palette_index"_a)

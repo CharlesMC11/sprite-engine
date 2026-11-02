@@ -1,14 +1,16 @@
-#ifndef SC_MATH_UTILS_HH
-#define SC_MATH_UTILS_HH
+#pragma once
 
+#include <cmath>
 #include <cstddef>
+
+#include "core/core.hh"
 
 namespace sc::math {
 
     /**
      * Aligns up a value to the specified power of 2.
      *
-     * @param val
+     * @param n
      * The value to align.
      *
      * @param alignment
@@ -18,11 +20,25 @@ namespace sc::math {
      * The aligned value.
      */
     [[nodiscard]] constexpr std::size_t align_up(
-            const std::size_t val, const std::size_t alignment) noexcept
+            const std::size_t n, const std::size_t alignment) noexcept
     {
-        return (val + alignment - 1UZ) & ~(alignment - 1UZ);
+        return (n + alignment - 1UZ) & ~(alignment - 1UZ);
+    }
+
+    /**
+     * Convert the given value into a Q13.19 fixed point value.
+     *
+     * @param n
+     * The value to convert.
+     *
+     * @return
+     * The converted value in Q13.19 format.
+     */
+    [[nodiscard]] constexpr core::kinematics_t convert_to_fixed_point(
+            const float n) noexcept
+    {
+        return static_cast<core::kinematics_t>(
+                std::round(n * (1 << core::kFractionalBits)));
     }
 
 } // namespace sc::math
-
-#endif // SC_MATH_UTILS_HH

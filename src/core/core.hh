@@ -22,20 +22,22 @@
 
 namespace sc::core {
 
-    inline SC_CONSTEXPR auto k2BitMax{(1U << 2U) - 1U};
-    inline SC_CONSTEXPR auto k5BitMax{(1U << 5U) - 1U};
-    inline SC_CONSTEXPR auto k6BitMax{(1U << 6U) - 1U};
+    inline SC_CONSTEXPR auto kMax2Bit{(1U << 2U) - 1U};
+    inline SC_CONSTEXPR auto kMax4Bit{(1U << 4U) - 1U};
+    inline SC_CONSTEXPR auto kMax5Bit{(1U << 5U) - 1U};
+    inline SC_CONSTEXPR auto kMax6Bit{(1U << 6U) - 1U};
 
-    inline SC_CONSTEXPR SC_SIZE_T kNeonAlignment{16UZ};
-    inline SC_CONSTEXPR SC_SIZE_T kCacheAlignment{128UZ};
+    using ufp_t = uint32_t; // Fixed-point number
+    inline SC_CONSTEXPR auto kFractionalBits{19U};
 
+    inline SC_CONSTEXPR SC_SIZE_T kAlignmentNeon{16UZ};
+    inline SC_CONSTEXPR SC_SIZE_T kAlignmentCache{128UZ};
 
     using index_t = uint32_t;
     inline SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
 
     using physics_t = uint8_t;
     using kinematics_t = int32_t;
-
 
 #ifndef __METAL_VERSION__
 
@@ -46,7 +48,7 @@ namespace sc::core {
      * CPU and GPU interpret the raw bytes identically.
      */
     template<typename T>
-    concept mappable = alignof(T) % kNeonAlignment == 0UZ &&
+    concept mappable = alignof(T) % kAlignmentNeon == 0UZ &&
             std::is_standard_layout_v<T> && !std::is_polymorphic_v<T>;
 
     template<typename T>
@@ -61,12 +63,6 @@ namespace sc::core {
     {
         return static_cast<std::underlying_type_t<T>>(val) != 0;
     }
-
-    using float_limits = std::numeric_limits<float>;
-
-    inline constexpr float kEpsilon{float_limits::epsilon()};
-    inline constexpr float kInfinity{float_limits::infinity()};
-    inline constexpr float kNaN{float_limits::quiet_NaN()};
 
 #endif // __METAL_VERSION__
 
@@ -124,7 +120,7 @@ constexpr T& operator^=(T& lhs, const T rhs) noexcept
     template<>                                                                \
     inline constexpr bool sc::core::enable_bitwise_ops_v<EnumType>{true};
 
-static_assert(std::has_single_bit(sc::core::kNeonAlignment));
-static_assert(std::has_single_bit(sc::core::kCacheAlignment));
+static_assert(std::has_single_bit(sc::core::kAlignmentNeon));
+static_assert(std::has_single_bit(sc::core::kAlignmentCache));
 
 #endif // __METAL_VERSION__
