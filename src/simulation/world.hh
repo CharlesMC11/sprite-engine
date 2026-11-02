@@ -1,35 +1,55 @@
-#ifndef SC_SIMULATION_WORLD_HH
-#define SC_SIMULATION_WORLD_HH
+#pragma once
 
-#include <Metal/Metal.hpp>
+#include <cstdint>
 
-#include "assets/atlas.hh"
 #include "core/input.hh"
-#include "core/mapped_view.hh"
-#include "graphics/metal_bridge.hh"
 #include "registry/entity_registry.hh"
-#include "simulation/spatial_grid.hh"
 
 namespace sc {
+
+    // Forward declarations
+
+    class memory;
+
+    enum class state : uint8_t {
+        home,
+        settings,
+        opening,
+        exploring,
+        pause,
+        battle,
+        event,
+    };
 
     class world final {
     public:
         // Constructors
 
-        [[nodiscard]] explicit world(MTL::Device* device);
+        explicit world(const memory& memory);
 
         // Public methods
 
-        void update(input::mask input, const MTL::Drawable* drawable);
+        // void update(input::mask input, const MTL::Drawable* drawable);
+
+        void tick() noexcept;
 
     private:
+        void tick_home(input::input_t) noexcept;
+        void tick_exploring(input::input_t in) noexcept;
+        void tick_paused(input::input_t in) noexcept;
+        void tick_battle(input::input_t in) noexcept;
+
+        /*
         physics::spatial_grid grid_;
         render::metal_bridge bridge_;
-        entity_registry registry_;
         core::mapped_view<assets::atlas> atlas_;
-        float ftime_accumulator_{0.0f};
+    */
+
+        const memory& memory_;
+        entity_registry registry_;
+        core::ufp_t ftime_{0U};
+        uint32_t menu_option_{0};
+        state state_{state::home};
     };
 
 } // namespace sc
-
-#endif // SC_SIMULATION_WORLD_HH
