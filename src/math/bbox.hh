@@ -1,5 +1,4 @@
-#ifndef SC_MATH_BBOX_HH
-#define SC_MATH_BBOX_HH
+#pragma once
 
 #ifndef __METAL_VERSION__
 
@@ -32,28 +31,29 @@ namespace sc::geometry {
         // Operators
 
         template<typename U>
-        [[nodiscard]] explicit constexpr operator bbox<U>() const noexcept;
+        [[nodiscard]] explicit constexpr operator bbox<U>() const;
 
         // Accessors
 
-        [[nodiscard]] constexpr T width() const noexcept;
-        [[nodiscard]] constexpr T height() const noexcept;
+        [[nodiscard]] constexpr T width() const;
+        [[nodiscard]] constexpr T height() const;
     };
 
     // Operators
 
     template<typename T>
     template<typename U>
-    [[nodiscard]] constexpr bbox<T>::operator bbox<U>() const noexcept
+    [[nodiscard]] constexpr bbox<T>::operator bbox<U>() const
     {
         return {static_cast<U>(u_min), static_cast<U>(u_max),
                 static_cast<U>(v_min), static_cast<U>(v_max)};
     }
 
+#ifndef __METAL_VERSION__
+
     template<>
     template<>
-    [[nodiscard]] constexpr bbox<>::operator bbox<core::kinematics_t>()
-            const noexcept
+    [[nodiscard]] constexpr bbox<>::operator bbox<core::kinematics_t>() const
     {
         return {.u_min = math::convert_to_fixed_point(u_min),
                 .u_max = math::convert_to_fixed_point(u_max),
@@ -61,20 +61,20 @@ namespace sc::geometry {
                 .v_max = math::convert_to_fixed_point(v_max)};
     }
 
+#endif // __METAL_VERSION__
+
     // Accessors
 
     template<typename T>
-    [[nodiscard]] constexpr T bbox<T>::width() const noexcept
+    [[nodiscard]] constexpr T bbox<T>::width() const
     {
         return u_max - u_min;
     }
 
     template<typename T>
-    [[nodiscard]] constexpr T bbox<T>::height() const noexcept
+    [[nodiscard]] constexpr T bbox<T>::height() const
     {
         return v_max - v_min;
     }
 
 } // namespace sc::geometry
-
-#endif // SC_MATH_BBOX_HH

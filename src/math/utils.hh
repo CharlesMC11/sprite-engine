@@ -1,7 +1,11 @@
 #pragma once
 
+#ifndef __METAL_VERSION__
+
 #include <cmath>
 #include <cstddef>
+
+#endif
 
 #include "core/core.hh"
 
@@ -19,11 +23,13 @@ namespace sc::math {
      * @return
      * The aligned value.
      */
-    [[nodiscard]] constexpr auto align_up(const std::size_t n,
-            const std::size_t alignment) noexcept -> std::size_t
+    [[nodiscard]] constexpr auto align_up(
+            const size_t n, const size_t alignment) -> size_t
     {
-        return (n + alignment - 1UZ) & ~(alignment - 1UZ);
+        return (n + alignment - 1U) & ~(alignment - 1U);
     }
+
+#ifndef __METAL_VERSION__
 
     /**
      * Convert the given value into a Q13.19 fixed point value.
@@ -40,5 +46,7 @@ namespace sc::math {
         return static_cast<core::kinematics_t>(
                 std::round(n * (1 << core::kFractionalBits)));
     }
+
+#endif // __METAL_VERSION__
 
 } // namespace sc::math
