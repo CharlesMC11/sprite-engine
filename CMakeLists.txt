@@ -13,8 +13,6 @@ option(ENABLE_LTO "Enable ThinLTO in Release builds" ON)
 
 set(COMMON_COMPILE_OPTIONS
         -D_FORTIFY_SOURCE=2
-        -mbranch-protection=standard
-        -falign-functions=16
         -fcolor-diagnostics
         -fstrict-aliasing
         -Wall
@@ -22,8 +20,14 @@ set(COMMON_COMPILE_OPTIONS
         -Wpedantic
 )
 
+if (NOT CMAKE_SYSTEM_NAME STREQUAL "Generic")
+  list(APPEND COMMON_COMPILE_OPTIONS
+          -falign-functions=16
+          -mbranch-protection=standard
+  )
+endif ()
+
 set(COMMON_LINK_OPTIONS
-        -Wl,-dead_strip
         -Wl,-no_warn_duplicate_libraries
 )
 
@@ -40,7 +44,13 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(GET_TASK_ALLOW true)
 else ()
   add_compile_definitions(NDEBUG)
-  list(APPEND COMMON_COMPILE_OPTIONS -Os -fomit-frame-pointer)
+  list(APPEND COMMON_COMPILE_OPTIONS
+          -O2
+          -fomit-frame-pointer
+  )
+  list(APPEND COMMON_LINK_OPTIONS
+          -Wl,-dead_strip
+  )
   if (ENABLE_LTO)
     check_ipo_supported(RESULT ipo_supported)
     if (ipo_supported)
