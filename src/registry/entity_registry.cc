@@ -38,6 +38,7 @@ namespace sc {
                             const core::index_t b) noexcept -> bool {
                         const core::kinematics_t y_a{y_ptr[a]};
                         const core::kinematics_t y_b{y_ptr[b]};
+
                         return std::abs(y_a - y_b) > 0 ? y_a < y_b
                                                        : z_ptr[a] < z_ptr[b];
                     });

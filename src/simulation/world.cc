@@ -143,7 +143,7 @@ namespace sc {
             case 2: // Settings
                 // So we remember which menu we came from
                 memory_.striped_bank<1UZ>()[0UZ] =
-                        static_cast<std::byte>(0xFF);
+                        static_cast<std::byte>(0x02);
                 state_ = state::settings;
                 break;
             default:
@@ -178,4 +178,5 @@ namespace sc {
             ftime_ -= physics::kFixedTimestep;
         }
     }
+
 } // namespace sc

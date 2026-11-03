@@ -35,9 +35,9 @@ namespace sc {
 
     private:
         void tick_home(input::input_t) noexcept;
-        void tick_exploring(input::input_t in) noexcept;
-        void tick_paused(input::input_t in) noexcept;
-        void tick_battle(input::input_t in) noexcept;
+        void tick_exploring(input::input_t) noexcept;
+        void tick_paused(input::input_t) noexcept;
+        void tick_battle(input::input_t) noexcept;
 
         /*
         physics::spatial_grid grid_;
