@@ -92,10 +92,8 @@ namespace sc {
 
     */
 
-    void world::tick() noexcept
+    void world::tick(input::input_t in) noexcept
     {
-        const input::input_t in{input::poll()};
-
         switch (state_) {
         case state::home:
             tick_home(in);

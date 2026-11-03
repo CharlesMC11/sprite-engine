@@ -31,7 +31,7 @@ namespace sc {
 
         // void update(input::mask input, const MTL::Drawable* drawable);
 
-        void tick() noexcept;
+        void tick(input::input_t in) noexcept;
 
     private:
         void tick_home(input::input_t) noexcept;
