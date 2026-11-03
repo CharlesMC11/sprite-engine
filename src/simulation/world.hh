@@ -25,7 +25,7 @@ namespace sc {
     public:
         // Constructors
 
-        explicit world(const memory& memory);
+        explicit world(const memory& memory) noexcept;
 
         // Public methods
 

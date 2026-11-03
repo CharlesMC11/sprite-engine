@@ -48,7 +48,10 @@ namespace sc {
 
 */
 
-    world::world(const memory& memory) : memory_{memory}, registry_{memory} {}
+    world::world(const memory& memory) noexcept
+        : memory_{memory}, registry_{memory.striped_bank<>().data()}
+    {
+    }
 
     /*
 
