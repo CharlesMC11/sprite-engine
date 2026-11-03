@@ -51,8 +51,9 @@ from pipeline import (
     remap_to_8bit,
 )
 
-TARGET_HEIGHT: int = 512
-
+TARGET_HEIGHT: int = 0x20
+BBOX_THICKNESS: int = 0b1
+ANCHOR_THICKNESS: int = 0b1
 
 def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     """
@@ -154,7 +155,7 @@ if __name__ == "__main__":
             math.ceil((meta.bbox.v_max + 1) * scale_factor),
         ),
         color=(0x00, 0x00, MAX_8BIT),
-        thickness=1,
+        thickness=BBOX_THICKNESS,
     )
 
     u_anchor = meta.u_anchor / (1 << FRACTIONAL_BITS)
@@ -167,8 +168,8 @@ if __name__ == "__main__":
         ),
         radius=0,
         color=(0x00, MAX_8BIT, 0x00),
-        thickness=8,
+        thickness=ANCHOR_THICKNESS,
     )
 
-    cv2.imshow(f"Preview: {path.name}", image_resized)
+    cv2.imshow(f"SC::Preview - {path.name}", image_resized)
     cv2.waitKey(0)
