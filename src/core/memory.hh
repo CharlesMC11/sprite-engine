@@ -25,7 +25,10 @@ namespace sc {
             kStripedBankSize * kStripedBankCount +
             kUnstripedBankSize * kUnstripedBankCount};
 
+    inline constexpr std::size_t kQSPISize{0x20'0000};
+
     inline constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000};
+    inline constexpr std::size_t kRP2350QSPIBaseAddress{0x1000'0000};
 
     /**
      * @class memory
@@ -43,11 +46,11 @@ namespace sc {
         auto operator=(const memory&) -> memory& = delete;
         auto operator=(memory&&) -> memory& = delete;
 
-        template<std::size_t Index>
+        template<std::size_t Index = 0UZ>
         [[nodiscard]] constexpr auto striped_bank() const noexcept
                 -> std::span<std::byte>;
 
-        template<std::size_t Index>
+        template<std::size_t Index = 0UZ>
         [[nodiscard]] constexpr auto unstriped_bank() const noexcept
                 -> std::span<std::byte>;
 
@@ -61,17 +64,17 @@ namespace sc {
     {
 #if defined(__APPLE__) || defined(__linux__)
 
-        void* addr{::mmap(nullptr, kSRAMSize, PROT_READ | PROT_WRITE,
+        void* const addr{::mmap(nullptr, kSRAMSize, PROT_READ | PROT_WRITE,
                 MAP_ANON | MAP_PRIVATE, -1, 0)};
         if (addr == MAP_FAILED) {
             std::exit(EX_OSERR);
         }
 
-        buffer_ = static_cast<std::byte*>(addr);
+        buffer_ = static_cast<std::byte* const>(addr);
 
 #else // defined(__APPLE__) || defined(__linux__)
 
-        buffer_ = reinterpret_cast<std::byte*>(kRP2350SRAMBaseAddress);
+        buffer_ = reinterpret_cast<std::byte* const>(kRP2350SRAMBaseAddress);
 
 #endif // defined(__APPLE__) || defined(__linux__)
     }
