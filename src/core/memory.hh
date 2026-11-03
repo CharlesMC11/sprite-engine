@@ -1,11 +1,5 @@
 #pragma once
 
-#if defined(__APPLE__) || defined(__linux__)
-#include <sys/mman.h>
-#endif // defined(__APPLE__) || defined(__linux__)
-
-#include <sysexits.h>
-
 #include <cstddef>
 #include <cstdlib>
 #include <span>
@@ -37,7 +31,9 @@ namespace sc {
      */
     class memory final {
     public:
-        constexpr memory() noexcept;
+        // Constructors
+
+        memory() noexcept;
         ~memory() noexcept;
 
         memory(const memory&) = delete;
@@ -45,6 +41,8 @@ namespace sc {
 
         auto operator=(const memory&) -> memory& = delete;
         auto operator=(memory&&) -> memory& = delete;
+
+        // Accessors
 
         template<typename T, std::size_t Index = 0UZ>
         [[nodiscard]] constexpr auto striped_bank() const noexcept
@@ -57,39 +55,17 @@ namespace sc {
         template<typename T>
         [[nodiscard]] constexpr auto rom() const noexcept -> std::span<T>;
 
+#if defined(__APPLE__) || defined(__linux__)
+
+        // Mutators
+
+        void load_file(const char* file_path) const noexcept;
+
+#endif
+
     private:
         std::byte* buffer_{nullptr};
     };
-
-    // Constructor
-
-    constexpr memory::memory() noexcept
-    {
-#if defined(__APPLE__) || defined(__linux__)
-
-        void* const addr{::mmap(nullptr, kRP2350TotalMemorySize,
-                PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0)};
-        if (addr == MAP_FAILED) [[unlikely]] {
-            std::exit(EX_OSERR);
-        }
-
-        buffer_ = static_cast<std::byte* const>(addr);
-
-#else
-        buffer_ = reinterpret_cast<std::byte* const>(kRP2350SRAMBaseAddress);
-#endif
-    }
-
-    // Destructor
-
-    inline memory::~memory() noexcept
-    {
-#if defined(__APPLE__) || defined(__linux__)
-        if (buffer_) [[unlikely]] {
-            ::munmap(buffer_, kRP2350TotalMemorySize);
-        }
-#endif // defined(__APPLE__) || defined(__linux__)
-    }
 
     // Accessors
 
