@@ -10,12 +10,18 @@
 
 namespace sc {
 
-    void entity_registry::update(const core::kinematics_t dt) noexcept
+    void entity_registry::update(const core::dkinematics_t dt) noexcept
     {
         for (std::size_t i{0UZ}; i < count(); ++i) {
-            new_x_pos_ptr()[i] = x_vel_ptr()[i] * dt + x_pos_ptr()[i];
-            new_y_pos_ptr()[i] = y_vel_ptr()[i] * dt + y_pos_ptr()[i];
-            new_z_pos_ptr()[i] = z_vel_ptr()[i] * dt + z_pos_ptr()[i];
+            new_x_pos_ptr()[i] =
+                    ((x_vel_ptr()[i] * dt) >> core::kFractionalBits) +
+                    x_pos_ptr()[i];
+            new_y_pos_ptr()[i] =
+                    ((y_vel_ptr()[i] * dt) >> core::kFractionalBits) +
+                    y_pos_ptr()[i];
+            new_z_pos_ptr()[i] =
+                    ((z_vel_ptr()[i] * dt) >> core::kFractionalBits) +
+                    z_pos_ptr()[i];
         }
     }
 

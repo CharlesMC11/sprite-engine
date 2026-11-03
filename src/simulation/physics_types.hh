@@ -8,7 +8,7 @@
 
 namespace sc::physics {
 
-    inline constexpr core::ufp_t kFixedTimestep{
+    inline constexpr core::ukinematics_t kFixedTimestep{
             (1U << core::kFractionalBits) / 120U};
 
     inline constexpr core::kinematics_t kGravity{

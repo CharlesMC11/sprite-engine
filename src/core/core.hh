@@ -27,9 +27,6 @@ namespace sc::core {
     inline SC_CONSTEXPR size_t kMax5Bit{(1U << 5U) - 1U};
     inline SC_CONSTEXPR size_t kMax6Bit{(1U << 6U) - 1U};
 
-    using ufp_t = uint32_t; // Fixed-point number
-    inline SC_CONSTEXPR size_t kFractionalBits{19U};
-
     inline SC_CONSTEXPR size_t kAlignmentNeon{16U};
     inline SC_CONSTEXPR size_t kAlignmentCache{128U};
 
@@ -38,6 +35,9 @@ namespace sc::core {
 
     using physics_t = uint8_t;
     using kinematics_t = int32_t;
+    using ukinematics_t = uint32_t;
+    using dkinematics_t = int64_t;
+    inline SC_CONSTEXPR size_t kFractionalBits{19U};
 
 #ifndef __METAL_VERSION__
 

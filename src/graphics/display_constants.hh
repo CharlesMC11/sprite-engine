@@ -16,8 +16,8 @@ namespace sc::display {
     inline SC_CONSTEXPR float kDefaultG{0.50f};
     inline SC_CONSTEXPR float kDefaultB{0.50f};
 
-    inline SC_CONSTEXPR core::ufp_t kTargetFPS{60U};
-    inline SC_CONSTEXPR core::ufp_t kFrameTime{
+    inline SC_CONSTEXPR core::ukinematics_t kTargetFPS{60U};
+    inline SC_CONSTEXPR core::ukinematics_t kFrameTime{
             (1U << core::kFractionalBits) / kTargetFPS};
 
 } // namespace sc::display

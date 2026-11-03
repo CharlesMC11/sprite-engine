@@ -158,7 +158,7 @@ namespace sc {
          * @param dt
          * The delta time.
          */
-        void update(core::kinematics_t dt) noexcept;
+        void update(core::dkinematics_t dt) noexcept;
 
         /**
          * Commit the changes to the registry.
