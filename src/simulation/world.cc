@@ -161,14 +161,18 @@ namespace sc {
         while (ftime_ >= physics::kFixedTimestep) {
             registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] = 0;
             constexpr core::kinematics_t vel{200 << core::kFractionalBits};
-            if (in & static_cast<input::input_t>(input::mask::up))
+            if (core::any(input::mask::up & in)) {
                 registry_.y_vel_ptr()[0UZ] -= vel;
-            if (in & static_cast<input::input_t>(input::mask::down))
+            }
+            if (core::any(input::mask::down & in)) {
                 registry_.y_vel_ptr()[0UZ] += vel;
-            if (in & static_cast<input::input_t>(input::mask::left))
+            }
+            if (core::any(input::mask::left & in)) {
                 registry_.x_vel_ptr()[0UZ] -= vel;
-            if (in & static_cast<input::input_t>(input::mask::right))
+            }
+            if (core::any(input::mask::right & in)) {
                 registry_.x_vel_ptr()[0UZ] += vel;
+            }
 
             registry_.update(physics::kFixedTimestep);
             // grid_.update(registry_);
