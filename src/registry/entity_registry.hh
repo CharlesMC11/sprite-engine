@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cassert>
 #include <cstddef>
+#include <cstdlib>
 #include <span>
 
 #include "assets/asset_ids.hh"
@@ -99,9 +101,17 @@ namespace sc {
      */
     class entity_registry final {
     public:
+        // Static accessors
+
+        [[nodiscard]] static constexpr auto offset(xform_channel) noexcept
+                -> std::size_t;
+
+        [[nodiscard]] static constexpr auto offset(index_channel) noexcept
+                -> std::size_t;
+
         // Constructors
 
-        explicit constexpr entity_registry(const memory& memory);
+        explicit constexpr entity_registry(std::byte* address) noexcept;
 
         entity_registry(const entity_registry&) = delete;
         entity_registry& operator=(const entity_registry&) = delete;
@@ -129,26 +139,10 @@ namespace sc {
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(draw_order)
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(next_in_cell)
 
-        [[nodiscard]] constexpr auto buffer() const noexcept -> std::byte*
-        {
-            return std::as_writable_bytes(buffer_).data();
-        }
-
         [[nodiscard]] constexpr auto count() const noexcept -> std::size_t
         {
             return status_ >> 2U;
         }
-
-        [[nodiscard]] constexpr auto capacity() const noexcept -> std::size_t
-        {
-            return buffer_.size();
-        }
-
-        [[nodiscard]] constexpr auto offset(xform_channel) const noexcept
-                -> std::size_t;
-
-        [[nodiscard]] constexpr auto offset(index_channel) const noexcept
-                -> std::size_t;
 
         // Public mutators
 
@@ -219,8 +213,7 @@ namespace sc {
 
         // Private attributes
 
-        std::span<core::index_t, kStripedBankSize / sizeof(core::index_t)>
-                buffer_;
+        std::byte* const buffer_{nullptr};
 
         /**
          * Bit-mapped information on the registry.
@@ -236,27 +229,26 @@ namespace sc {
     // Constructor
 
     [[nodiscard]] constexpr entity_registry::entity_registry(
-            const memory& memory)
-        : buffer_{reinterpret_cast<core::index_t*>(
-                          memory.striped_bank<0UZ>().data()),
-                  memory.striped_bank<0UZ>().size() / sizeof(core::index_t)}
+            std::byte* const address) noexcept
+        : buffer_{address}
     {
+        assert(address && "Memory address cannot be null!");
     }
 
     // Accessors
 
     [[nodiscard]] constexpr auto entity_registry::offset(
-            xform_channel channel) const noexcept -> std::size_t
+            xform_channel channel) noexcept -> std::size_t
     {
-        return sizeof(buffer_[0UZ]) * kMaxEntityCount *
+        return sizeof(core::kinematics_t) * kMaxEntityCount *
                 static_cast<std::size_t>(channel);
     }
 
     [[nodiscard]] constexpr auto entity_registry::offset(
-            index_channel channel) const noexcept -> std::size_t
+            index_channel channel) noexcept -> std::size_t
     {
         return offset(xform_channel::count) +
-                sizeof(buffer_[0UZ]) * kMaxEntityCount *
+                sizeof(core::index_t) * kMaxEntityCount *
                 static_cast<std::size_t>(channel);
     }
 
@@ -264,8 +256,7 @@ namespace sc {
     [[nodiscard]] constexpr auto entity_registry::get_ptr(
             EnumType channel) const noexcept -> ptr_t<T, IsConst> __restrict
     {
-        return reinterpret_cast<T*>(
-                buffer_.data() + offset(channel) / sizeof(T));
+        return reinterpret_cast<ptr_t<T, IsConst>>(buffer_ + offset(channel));
     }
 
 } // namespace sc
