@@ -46,16 +46,16 @@ namespace sc {
         auto operator=(const memory&) -> memory& = delete;
         auto operator=(memory&&) -> memory& = delete;
 
-        template<std::size_t Index = 0UZ>
+        template<typename T, std::size_t Index = 0UZ>
         [[nodiscard]] constexpr auto striped_bank() const noexcept
-                -> std::span<std::byte>;
+                -> std::span<T>;
 
-        template<std::size_t Index = 0UZ>
+        template<typename T, std::size_t Index = 0UZ>
         [[nodiscard]] constexpr auto unstriped_bank() const noexcept
-                -> std::span<std::byte>;
+                -> std::span<T>;
 
-        [[nodiscard]] constexpr auto rom() const noexcept
-                -> std::span<std::byte>;
+        template<typename T>
+        [[nodiscard]] constexpr auto rom() const noexcept -> std::span<T>;
 
     private:
         std::byte* buffer_{nullptr};
@@ -93,37 +93,38 @@ namespace sc {
 
     // Accessors
 
-    template<std::size_t Index>
+    template<typename T, std::size_t Index>
     [[nodiscard]] constexpr auto memory::striped_bank() const noexcept
-            -> std::span<std::byte>
+            -> std::span<T>
     {
         static_assert(
                 Index < kStripedBankCount, "Memory bank index out of range!");
 
-        return {buffer_ + kStripedBankSize * Index, kStripedBankSize};
+        return {reinterpret_cast<T*>(buffer_ + kStripedBankSize * Index),
+                kStripedBankSize / sizeof(T)};
     }
 
-    template<std::size_t Index>
+    template<typename T, std::size_t Index>
     [[nodiscard]] constexpr auto memory::unstriped_bank() const noexcept
-            -> std::span<std::byte>
+            -> std::span<T>
     {
         static_assert(Index < kUnstripedBankCount,
                 "Memory bank index out of range!");
 
-        constexpr std::size_t striped_offset{
-                kStripedBankSize * kStripedBankCount};
-        return {buffer_ + striped_offset + kUnstripedBankSize * Index,
-                kUnstripedBankSize};
+        constexpr std::size_t offset{kStripedBankSize * kStripedBankCount +
+                kUnstripedBankSize * Index};
+        return {reinterpret_cast<T*>(buffer_ + offset),
+                kUnstripedBankSize / sizeof(T)};
     }
 
-    [[nodiscard]] constexpr auto memory::rom() const noexcept
-            -> std::span<std::byte>
+    template<typename T>
+    [[nodiscard]] constexpr auto memory::rom() const noexcept -> std::span<T>
     {
 #if defined(__APPLE__) || defined(__linux__)
-        return {buffer_ + kSRAMSize, kQSPISize};
+        return {buffer_ + kSRAMSize, kQSPISize / sizeof(T)};
 #else
-        return {reinterpret_cast<std::byte*>(kRP2350QSPIBaseAddress),
-                kQSPISize};
+        return {reinterpret_cast<T*>(kRP2350QSPIBaseAddress),
+                kQSPISize / sizeof(T)};
 #endif
     }
 
