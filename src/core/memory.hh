@@ -1,9 +1,7 @@
 #pragma once
 
 #if defined(__APPLE__) || defined(__linux__)
-
 #include <sys/mman.h>
-
 #endif // defined(__APPLE__) || defined(__linux__)
 
 #include <sysexits.h>
@@ -26,6 +24,8 @@ namespace sc {
             kUnstripedBankSize * kUnstripedBankCount};
 
     inline constexpr std::size_t kQSPISize{0x20'0000};
+
+    inline constexpr std::size_t kRP2350TotalMemorySize{kSRAMSize + kQSPISize};
 
     inline constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000};
     inline constexpr std::size_t kRP2350QSPIBaseAddress{0x1000'0000};
@@ -54,6 +54,9 @@ namespace sc {
         [[nodiscard]] constexpr auto unstriped_bank() const noexcept
                 -> std::span<std::byte>;
 
+        [[nodiscard]] constexpr auto rom() const noexcept
+                -> std::span<std::byte>;
+
     private:
         std::byte* buffer_{nullptr};
     };
@@ -64,19 +67,17 @@ namespace sc {
     {
 #if defined(__APPLE__) || defined(__linux__)
 
-        void* const addr{::mmap(nullptr, kSRAMSize, PROT_READ | PROT_WRITE,
-                MAP_ANON | MAP_PRIVATE, -1, 0)};
-        if (addr == MAP_FAILED) {
+        void* const addr{::mmap(nullptr, kRP2350TotalMemorySize,
+                PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0)};
+        if (addr == MAP_FAILED) [[unlikely]] {
             std::exit(EX_OSERR);
         }
 
         buffer_ = static_cast<std::byte* const>(addr);
 
-#else // defined(__APPLE__) || defined(__linux__)
-
+#else
         buffer_ = reinterpret_cast<std::byte* const>(kRP2350SRAMBaseAddress);
-
-#endif // defined(__APPLE__) || defined(__linux__)
+#endif
     }
 
     // Destructor
@@ -84,11 +85,9 @@ namespace sc {
     inline memory::~memory() noexcept
     {
 #if defined(__APPLE__) || defined(__linux__)
-
-        if (buffer_) {
-            ::munmap(buffer_, kSRAMSize);
+        if (buffer_) [[unlikely]] {
+            ::munmap(buffer_, kRP2350TotalMemorySize);
         }
-
 #endif // defined(__APPLE__) || defined(__linux__)
     }
 
@@ -115,6 +114,17 @@ namespace sc {
                 kStripedBankSize * kStripedBankCount};
         return {buffer_ + striped_offset + kUnstripedBankSize * Index,
                 kUnstripedBankSize};
+    }
+
+    [[nodiscard]] constexpr auto memory::rom() const noexcept
+            -> std::span<std::byte>
+    {
+#if defined(__APPLE__) || defined(__linux__)
+        return {buffer_ + kSRAMSize, kQSPISize};
+#else
+        return {reinterpret_cast<std::byte*>(kRP2350QSPIBaseAddress),
+                kQSPISize};
+#endif
     }
 
 } // namespace sc
