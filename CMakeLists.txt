@@ -89,7 +89,6 @@ nanobind_add_module(_pipeline
 target_include_directories(_pipeline PRIVATE
         .venv/
         src/
-        vendor/metal-cpp/
 )
 
 target_compile_options(_pipeline PRIVATE
