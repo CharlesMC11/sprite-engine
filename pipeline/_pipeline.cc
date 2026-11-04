@@ -2,7 +2,6 @@
 
 #include <format>
 #include <stdexcept>
-#include <utility>
 
 #include "assets/atlas.hh"
 #include "assets/sprite.hh"
