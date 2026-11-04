@@ -33,7 +33,10 @@ namespace sc::assets {
         const graphics::packed_pixel_t pixels[Height * Width]{0U};
     };
 
+    // A 16 × 16
     using sprite16 = sprite<16U>;
+
+    // A 32 × 32 sprite
     using sprite32 = sprite<>;
 
 } // namespace sc::assets
