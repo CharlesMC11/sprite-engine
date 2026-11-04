@@ -33,7 +33,9 @@ from pipeline._pipeline import (
     convert_to_fixed_point,
 )
 
-MAX_8BIT = 0xFF
+# Core
+
+MAX_8BIT: int = 0xFF
 
 # Graphics
 
@@ -187,7 +189,7 @@ def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
             "Source or destination maximum values cannot be 0x00."
         )
 
-    return (value * dst_max + (src_max >> 1)) // src_max
+    return (value * dst_max + (src_max // 2)) // src_max
 
 
 def remap_from_8bit[T: (int, npt.NDArray)](value: T, dst_max: int) -> T:

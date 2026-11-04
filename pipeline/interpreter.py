@@ -55,6 +55,7 @@ TARGET_HEIGHT: int = 0x20
 BBOX_THICKNESS: int = 0b1
 ANCHOR_THICKNESS: int = 0b1
 
+
 def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     """
     Decompile the asset into a viewable image.

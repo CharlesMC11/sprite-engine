@@ -11,3 +11,7 @@ trim_trailing_whitespace = true
 
 [{*.toml,CMakeLists.txt}]
 indent_size = 2
+
+[*.{S,s}]
+indent_style = tab
+tab_width = 8

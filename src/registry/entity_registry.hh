@@ -112,14 +112,13 @@ namespace sc {
         // Constructors
 
         explicit constexpr entity_registry(std::byte* address) noexcept;
+        ~entity_registry() = default;
 
         entity_registry(const entity_registry&) = delete;
         entity_registry& operator=(const entity_registry&) = delete;
 
         entity_registry(entity_registry&&) = delete;
         entity_registry& operator=(entity_registry&&) = delete;
-
-        ~entity_registry() = default;
 
         // Public accessors
 
