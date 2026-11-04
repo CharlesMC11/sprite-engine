@@ -49,7 +49,7 @@ namespace sc {
 */
 
     world::world(const memory& memory) noexcept
-        : memory_{memory}, registry_{memory.striped_bank<>().data()}
+        : memory_{memory}, registry_{memory.striped_bank<std::byte>().data()}
     {
     }
 
