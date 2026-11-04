@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "assets/atlas.hh"
 #include "assets/sprite.hh"
 #include "core/core.hh"
 #include "graphics/graphics_types.hh"
@@ -105,8 +106,6 @@ NB_MODULE(_pipeline, m)
 
     // Sprite
 
-    m.attr("ASSET_STANDARD") = nb::bytes{&sc::assets::kAssetStandard, 1UZ};
-
     nb::class_<sc::assets::sprite<>::metadata>{m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
             "Contains information regarding a sprite’s bounding box, anchor "
@@ -200,4 +199,9 @@ NB_MODULE(_pipeline, m)
                                 sizeof self);
                         return nb::bytes{buffer, kSpriteMetadataSize};
                     });
+
+    // Atlas
+
+    m.attr("ATLAS_MAGIC_BYTES") =
+            nb::bytes{&sc::assets::kAtlasMagicBytes, 8UZ};
 }

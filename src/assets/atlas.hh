@@ -1,9 +1,7 @@
-#ifndef SC_ASSETS_ATLAS_HH
-#define SC_ASSETS_ATLAS_HH
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
-#include <ostream>
 #include <span>
 
 #include "assets/asset_ids.hh"
@@ -13,14 +11,23 @@
 
 namespace sc::assets {
 
-    inline constexpr std::uint64_t kAtlasMagicBytes{0x3676205441204353ULL};
+    inline constexpr char kAssetStandard{'7'};
+
+    union atlas_magic_bytes {
+        const char as_array[8UZ];
+        const std::uint64_t as_uint;
+    };
+
+    constexpr atlas_magic_bytes kAtlasMagicBytes{
+            {'S', 'C', ' ', 'A', 'T', ' ', 'v', kAssetStandard}};
 
     /**
      * A contiguous collection of sprites.
      *
-     * This class is designed to memory-mapped by `sc::core::mapped_view`.
+     * This class is designed to loaded by `sc::memory`.
      */
-    struct alignas(core::kNeonAlignment) atlas final {
+    struct alignas(core::kAlignmentNeon) atlas final {
+
         // Static methods
 
         [[nodiscard]] static constexpr bool validate(
@@ -62,9 +69,9 @@ namespace sc::assets {
 
         // Attributes
 
-        struct alignas(core::kNeonAlignment) metadata final {
+        const struct alignas(core::kAlignmentNeon) metadata final {
             const std::uint64_t magic{0ULL};
-            const std::uint32_t sprite16_count{0U};
+            const std::uint32_t sprite16_count{0UL};
             const std::uint16_t sprite32_count{0U};
             const std::uint16_t palette_count{0U};
         } meta;
@@ -84,10 +91,10 @@ namespace sc::assets {
 
         const auto [magic, sprite16_count, sprite32_count, palette_count]{
                 static_cast<const atlas*>(ptr)->meta};
-        if (magic != kAtlasMagicBytes) [[unlikely]]
+        if (magic != kAtlasMagicBytes.as_uint) [[unlikely]]
             return false;
 
-        const std::size_t expected_size{sizeof(metadata) +
+        const std::size_t expected_size{sizeof(meta) +
                 sizeof(graphics::palette) * palette_count +
                 sizeof(sprite16) * sprite16_count +
                 sizeof(sprite32) * sprite32_count};
@@ -120,7 +127,7 @@ namespace sc::assets {
             -> std::span<const graphics::palette>
     {
         return {reinterpret_cast<const graphics::palette*>(data()),
-                sizeof(graphics::palette) * meta.palette_count};
+                meta.palette_count};
     }
 
     [[nodiscard]] constexpr auto atlas::sprite16_span() const noexcept
@@ -128,7 +135,7 @@ namespace sc::assets {
     {
         return {reinterpret_cast<const sprite16*>(data() +
                         sizeof(graphics::palette) * meta.palette_count),
-                sizeof(sprite16) * meta.sprite16_count};
+                meta.sprite16_count};
     }
 
     [[nodiscard]] constexpr auto atlas::sprite32_span() const noexcept
@@ -137,7 +144,7 @@ namespace sc::assets {
         return {reinterpret_cast<const sprite32*>(data() +
                         sizeof(graphics::palette) * meta.palette_count +
                         sizeof(sprite16) * meta.sprite16_count),
-                sizeof(sprite32) * meta.sprite32_count};
+                meta.sprite32_count};
     }
 
     // Private helpers

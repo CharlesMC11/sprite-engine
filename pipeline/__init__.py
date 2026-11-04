@@ -10,6 +10,8 @@ import numpy.typing as npt
 from pipeline._pipeline import (
     ALIGNMENT_CACHE,
     ALIGNMENT_NEON,
+    ASSET_STANDARD,
+    ATLAS_MAGIC_BYTES,
     FRACTIONAL_BITS,
     MASK_ALPHA,
     MASK_EMISSION,
@@ -30,9 +32,6 @@ from pipeline._pipeline import (
     SpriteMetadata,
     convert_to_fixed_point,
 )
-from pipeline._pipeline import (
-    SpriteMetadata as _SpriteMetadata,
-)
 
 MAX_8BIT = 0xFF
 
@@ -41,7 +40,6 @@ MAX_8BIT = 0xFF
 type BGRImage = npt.NDArray[np.uint8]
 type Palette = npt.NDArray[np.uint8]
 
-ASSET_LAYOUT_VERSION: bytes = b"7"
 
 SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
 """The total size of the sprite dimensions in bytes."""
@@ -125,7 +123,7 @@ class AtlasMetadata(Metadata):
 
     # Public class constants
 
-    MAGIC: ClassVar[Final[bytes]] = b"SC AT v" + ASSET_LAYOUT_VERSION
+    MAGIC: ClassVar[Final[bytes]] = ATLAS_MAGIC_BYTES
 
     STRUCT: ClassVar[Final[Struct]] = Struct("<LHH")
     """The layout of an 8‑byte atlas metadata.
