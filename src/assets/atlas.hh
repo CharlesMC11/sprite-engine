@@ -22,6 +22,8 @@ namespace sc::assets {
             {'S', 'C', ' ', 'A', 'T', ' ', 'v', kAssetStandard}};
 
     /**
+     * @struct atlas
+     *
      * A contiguous collection of sprites.
      *
      * This class is designed to loaded by `sc::memory`.
@@ -38,9 +40,9 @@ namespace sc::assets {
         atlas() = delete;
 
         atlas(const atlas&) = delete;
-        atlas& operator=(const atlas&) = delete;
-
         atlas(atlas&&) = delete;
+
+        atlas& operator=(const atlas&) = delete;
         atlas& operator=(atlas&&) = delete;
 
         ~atlas() = default;
@@ -69,6 +71,12 @@ namespace sc::assets {
 
         // Attributes
 
+        /**
+         * @struct atlas::metadata
+         * An atlas’s metadata.
+         *
+         * Contains information on the number of sprites and palettes.
+         */
         const struct alignas(core::kAlignmentNeon) metadata final {
             const std::uint64_t magic{0ULL};
             const std::uint32_t sprite16_count{0UL};
