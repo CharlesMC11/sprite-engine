@@ -114,10 +114,8 @@ find_library(QUARTZ_LIB QuartzCore REQUIRED)
 add_executable(sprite-engine
         src/assets/asset_constants.hh
         src/assets/asset_ids.hh
-        src/assets/atlas.cc
-        src/assets/sprite.cc
         src/core/input.hh
-        src/core/mapped_view.hh
+        src/core/memory.cc
         src/core/memory.hh
         src/graphics/display_constants.hh
         src/graphics/graphics_types.cc
