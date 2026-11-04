@@ -13,6 +13,8 @@ namespace sc::assets {
     template<size_t Width = 32U, size_t Height = Width>
     struct alignas(core::kAlignmentNeon) sprite final {
 
+        // Attributes
+
         /**
          * @struct sprite::metadata
          * A sprite’s metadata.
@@ -31,6 +33,18 @@ namespace sc::assets {
 
         // Row-major pixels
         const graphics::packed_pixel_t pixels[Height * Width]{0U};
+
+        // Delete constructors because a sprite is never constructed.
+
+        sprite() = delete;
+
+        sprite(const sprite&) = delete;
+        sprite(sprite&&) = delete;
+
+        auto operator=(const sprite&) -> sprite& = delete;
+        auto operator=(sprite&&) -> sprite& = delete;
+
+        ~sprite() = default;
     };
 
     // A 16 × 16
