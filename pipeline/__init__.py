@@ -1,16 +1,9 @@
-import dataclasses
-from collections.abc import Callable
-from dataclasses import dataclass
-from struct import Struct
-from typing import ClassVar, Final, Protocol, Self
-
 import numpy as np
 import numpy.typing as npt
 
 from pipeline._pipeline import (
     ALIGNMENT_CACHE,
     ALIGNMENT_NEON,
-    ASSET_STANDARD,
     ATLAS_MAGIC_BYTES,
     FRACTIONAL_BITS,
     MASK_ALPHA,
@@ -21,10 +14,12 @@ from pipeline._pipeline import (
     MAX_5BIT,
     MAX_6BIT,
     MAX_COLOR_COUNT,
+    MAX_ROM_SIZE,
     PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
     SHIFT_ALPHA,
     SHIFT_EMISSION,
+    AtlasMetadata,
     BBox,
     ColorEncoding,
     ColorEncodingParams,
@@ -56,92 +51,10 @@ class ResourceLayoutError(Exception): ...
 class ResourceLayoutWarning(UserWarning): ...
 
 
-class Serializable(Protocol):
-    @classmethod
-    def from_bytes(cls, buffer: bytes) -> Self: ...
-
-    def to_bytes(self) -> bytes: ...
-
-
-class Metadata:
-    # Type annotations
-
-    _internal: Serializable
-    _from_bytes: ClassVar[Callable[[bytes], Self]]
-
-    # Public class constants
-
-    MAGIC: ClassVar[bytes]
-    STRUCT: ClassVar[Struct]
-    EXPECTED_SIZE_BYTES: ClassVar[int]
-
-    # Public class methods
-
-    @classmethod
-    def from_bytes(cls, buffer: bytes) -> Self:
-
-        expected_size = cls.EXPECTED_SIZE_BYTES
-        err_msg = (
-            f"Buffer size too small for {cls.__name__}. "
-            f"Expected {expected_size} bytes, got"
-        )
-
-        buffer_size = len(buffer)
-        if buffer_size < expected_size:
-            raise ResourceLayoutError(f"{err_msg} {buffer_size}.")
-
-        magic_size = len(cls.MAGIC)
-        magic = buffer[:magic_size]
-        if magic != cls.MAGIC:
-            raise ResourceLayoutError(
-                "Invalid magic bytes! "
-                f"Expected '{cls.MAGIC}' bytes, got {magic}."
-            )
-
-        try:
-            return cls._from_bytes(buffer[magic_size:expected_size])
-        except Exception:
-            raise ResourceLayoutError(f"{err_msg} {len(buffer)}.")
-
-    # Public methods
-
-    def to_bytes(self) -> bytes:
-        return self.MAGIC + self._internal.to_bytes()
-
-
-SPRITE_MINIMUM_FILE_SIZE_BYTES: Final[int] = (
+SPRITE_MINIMUM_FILE_SIZE_BYTES: int = (
     SpriteMetadata.EXPECTED_SIZE_BYTES + FOOTER_SIZE_BYTES
 )
 """The minimum file size of a sprite file in bytes."""
-
-
-@dataclass(slots=True)
-class AtlasMetadata(Metadata):
-    # Type annotations
-
-    sprite16_count: int
-    sprite32_count: int
-    palette_count: int
-
-    # Public class constants
-
-    MAGIC: ClassVar[Final[bytes]] = ATLAS_MAGIC_BYTES
-
-    STRUCT: ClassVar[Final[Struct]] = Struct("<LHH")
-    """The layout of an 8‑byte atlas metadata.
-
-    - magic
-    - sprite16_count (uint32)
-    - sprite32_count (uint16)
-    - palette_count (uint16)
-    """
-
-    EXPECTED_SIZE_BYTES: ClassVar[Final[int]] = STRUCT.size + len(MAGIC)
-
-    def to_bytes(self) -> bytes:
-        return self.MAGIC + self.__class__.STRUCT.pack(
-            *dataclasses.astuple(self)
-        )
 
 
 # Public functions

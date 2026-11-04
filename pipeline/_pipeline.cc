@@ -13,11 +13,41 @@
 namespace nb = nanobind;
 using nb::literals::operator""_a;
 
-inline constexpr char kSpriteMagic[]{
-        'S', 'C', ' ', 'S', 'P', ' ', 'v', sc::assets::kAssetStandard};
+namespace sc::assets {
 
-inline constexpr std::size_t kSpriteMetadataSize{
-        sizeof kSpriteMagic + sizeof(sc::assets::sprite<>::metadata)};
+    // Sprite
+
+    inline constexpr char kSpriteMagicBytes[]{
+            'S', 'C', ' ', 'S', 'P', ' ', 'v', kAssetStandard};
+
+    inline constexpr std::size_t kSpriteMetadataSize{
+            sizeof kSpriteMagicBytes + sizeof(sprite<>::metadata)};
+
+    static constexpr auto make_sprite_metadata(std::uint8_t u_min,
+            std::uint8_t u_max, std::uint8_t v_min, std::uint8_t v_max,
+            core::kinematics_t u_anchor, core::kinematics_t v_anchor,
+            std::uint8_t depth, physics::type physics_type,
+            graphics::color_encoding color_encoding,
+            std::uint8_t palette_index) -> sprite<>::metadata;
+
+    static constexpr auto serialize_sprite_metadata(
+            sprite<>::metadata meta) noexcept -> nb::bytes;
+
+    static constexpr auto deserialize_sprite_metadata(const nb::bytes& buffer)
+            -> sprite<>::metadata;
+
+    // Atlas
+
+    inline constexpr std::size_t kAtlasMetadataSize{sizeof(atlas::metadata)};
+
+    static constexpr auto make_atlas_metadata(std::uint32_t sprite16_count,
+            std::uint16_t sprite32_count, std::uint16_t palette_count)
+            -> atlas::metadata;
+
+    static constexpr auto serialize_atlas_metadata(
+            atlas::metadata meta) noexcept -> nb::bytes;
+
+} // namespace sc::assets
 
 NB_MODULE(_pipeline, m)
 {
@@ -34,6 +64,8 @@ NB_MODULE(_pipeline, m)
 
     m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
     m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
+
+    m.attr("MAX_ROM_SIZE") = sc::kQSPISize;
 
     // Math
 
@@ -69,7 +101,7 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
             .def("__iter__",
-                    [](const sc::graphics::color_encoding_params& self)
+                    [](const sc::graphics::color_encoding_params self)
                             -> nb::iterator {
                         return nb::iter(nb::make_tuple(self.r_max, self.g_max,
                                 self.b_max, self.r_shift, self.g_shift));
@@ -121,58 +153,19 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def_prop_ro_static("MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
-                        return nb::bytes{&kSpriteMagic, sizeof kSpriteMagic};
+                        return nb::bytes{&sc::assets::kSpriteMagicBytes,
+                                sizeof sc::assets::kSpriteMagicBytes};
                     })
-            .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
+            .def_ro_static(
+                    "EXPECTED_SIZE_BYTES", &sc::assets::kSpriteMetadataSize)
             .def_prop_ro_static("PALETTE_INDEX",
                     []([[maybe_unused]] nb::handle) -> std::size_t {
-                        return kSpriteMetadataSize - 1UZ;
+                        return sc::assets::kSpriteMetadataSize - 1UZ;
                     })
-            .def_static(
-                    "from_bytes",
-                    [](const nb::bytes& buffer)
-                            -> sc::assets::sprite<>::metadata {
-                        if (buffer.size() < kSpriteMetadataSize) {
-                            throw std::runtime_error{std::format(
-                                    "Buffer size too small for "
-                                    "SpriteMetadata. Expected "
-                                    "{} bytes, got {}.",
-                                    kSpriteMetadataSize, buffer.size())};
-                        }
-
-                        sc::assets::sprite<>::metadata cls;
-                        std::memcpy(&cls,
-                                static_cast<const char*>(buffer.data()) +
-                                        sizeof kSpriteMagic,
-                                kSpriteMetadataSize - sizeof kSpriteMagic);
-                        return cls;
-                    },
+            .def_static("from_bytes", sc::assets::deserialize_sprite_metadata,
                     "buffer"_a)
-            .def(nb::new_{[](const std::uint8_t u_min,
-                                  const std::uint8_t u_max,
-                                  const std::uint8_t v_min,
-                                  const std::uint8_t v_max,
-                                  const sc::core::kinematics_t u_anchor,
-                                  const sc::core::kinematics_t v_anchor,
-                                  const std::uint8_t depth,
-                                  const sc::physics::type physics_type,
-                                  const sc::graphics::color_encoding
-                                          color_encoding,
-                                  const std::uint8_t palette_index)
-                                  -> sc::assets::sprite<>::metadata {
-                return {.bbox = {.u_min = u_min,
-                                .u_max = u_max,
-                                .v_min = v_min,
-                                .v_max = v_max},
-                        .u_anchor = u_anchor,
-                        .v_anchor = v_anchor,
-                        .depth = depth,
-                        .physics_type =
-                                static_cast<sc::core::physics_t>(physics_type),
-                        .color_encoding = color_encoding,
-                        .palette_index = palette_index};
-            }},
-                    "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
+            .def(nb::new_{&sc::assets::make_sprite_metadata}, "u_min"_a,
+                    "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
                     "color_encoding"_a, "palette_index"_a = 0x3F)
             .def_ro("bbox", &sc::assets::sprite<>::metadata::bbox)
@@ -180,7 +173,7 @@ NB_MODULE(_pipeline, m)
             .def_ro("v_anchor", &sc::assets::sprite<>::metadata::v_anchor)
             .def_ro("depth", &sc::assets::sprite<>::metadata::depth)
             .def_prop_ro("physics_type",
-                    [](const sc::assets::sprite<>::metadata& self)
+                    [](const sc::assets::sprite<>::metadata self)
                             -> sc::physics::type {
                         return static_cast<sc::physics::type>(
                                 self.physics_type);
@@ -189,18 +182,103 @@ NB_MODULE(_pipeline, m)
                     &sc::assets::sprite<>::metadata::color_encoding)
             .def_rw("palette_index",
                     &sc::assets::sprite<>::metadata::palette_index, "index"_a)
-            .def("to_bytes",
-                    [](const sc::assets::sprite<>::metadata& self)
-                            -> nb::bytes {
-                        std::byte buffer[kSpriteMetadataSize];
-                        std::memcpy(buffer, kSpriteMagic, sizeof kSpriteMagic);
-                        std::memcpy(buffer + sizeof kSpriteMagic, &self,
-                                sizeof self);
-                        return nb::bytes{buffer, kSpriteMetadataSize};
-                    });
+            .def("to_bytes", &sc::assets::serialize_sprite_metadata);
 
     // Atlas
 
     m.attr("ATLAS_MAGIC_BYTES") =
             nb::bytes{&sc::assets::kAtlasMagicBytes, 8UZ};
+
+    nb::class_<sc::assets::atlas::metadata>{m, "AtlasMetadata",
+            "An atlas’s metadata.\n\n"
+            "Contains information on the number of sprites and palettes.\n\n"
+            "- magic (8 bytes)\n"
+            "- 16 × 16 sprite count (4 bytes)"
+            "- 32 × 32 sprite count (2 bytes)"
+            "- Palette count (2 bytes)",
+            nb::is_final{}}
+            .def_prop_ro_static("MAGIC",
+                    []([[maybe_unused]] nb::handle) -> nb::bytes {
+                        return nb::bytes{&sc::assets::kAtlasMagicBytes,
+                                sizeof sc::assets::kAtlasMagicBytes};
+                    })
+            .def_ro_static(
+                    "EXPECTED_SIZE_BYTES", &sc::assets::kAtlasMetadataSize)
+            .def(nb::new_{&sc::assets::make_atlas_metadata},
+                    "sprite16_count"_a, "sprite32_count"_a, "palette_count"_a)
+            .def_ro("sprite16_count",
+                    &sc::assets::atlas::metadata::sprite16_count)
+            .def_ro("sprite32_count",
+                    &sc::assets::atlas::metadata::sprite32_count)
+            .def_ro("palette_count",
+                    &sc::assets::atlas::metadata::palette_count)
+            .def("to_bytes", &sc::assets::serialize_atlas_metadata);
+}
+
+// Sprite
+
+constexpr auto sc::assets::make_sprite_metadata(const std::uint8_t u_min,
+        const std::uint8_t u_max, const std::uint8_t v_min,
+        const std::uint8_t v_max, const core::kinematics_t u_anchor,
+        const core::kinematics_t v_anchor, const std::uint8_t depth,
+        const physics::type physics_type,
+        const graphics::color_encoding color_encoding,
+        const std::uint8_t palette_index) -> sprite<>::metadata
+{
+    return {.bbox = {.u_min = u_min,
+                    .u_max = u_max,
+                    .v_min = v_min,
+                    .v_max = v_max},
+            .u_anchor = u_anchor,
+            .v_anchor = v_anchor,
+            .depth = depth,
+            .physics_type = static_cast<core::physics_t>(physics_type),
+            .color_encoding = color_encoding,
+            .palette_index = palette_index};
+}
+
+constexpr auto sc::assets::serialize_sprite_metadata(
+        const sprite<>::metadata meta) noexcept -> nb::bytes
+{
+    std::byte buffer[kSpriteMetadataSize];
+    std::memcpy(buffer, kSpriteMagicBytes, sizeof kSpriteMagicBytes);
+    std::memcpy(buffer + sizeof kSpriteMagicBytes, &meta, sizeof meta);
+    return nb::bytes{buffer, kSpriteMetadataSize};
+}
+
+constexpr auto sc::assets::deserialize_sprite_metadata(const nb::bytes& buffer)
+        -> sprite<>::metadata
+{
+    if (buffer.size() < kSpriteMetadataSize) {
+        throw std::runtime_error{std::format("Buffer size too small for "
+                                             "SpriteMetadata. Expected "
+                                             "{} bytes, got {}.",
+                kSpriteMetadataSize, buffer.size())};
+    }
+
+    sprite<>::metadata meta;
+    std::memcpy(&meta,
+            static_cast<const char*>(buffer.data()) + sizeof kSpriteMagicBytes,
+            kSpriteMetadataSize - sizeof kSpriteMagicBytes);
+    return meta;
+}
+
+// Atlas
+
+constexpr auto sc::assets::make_atlas_metadata(
+        const std::uint32_t sprite16_count, const std::uint16_t sprite32_count,
+        const std::uint16_t palette_count) -> atlas::metadata
+{
+    return {.magic = kAtlasMagicBytes.as_uint,
+            .sprite16_count = sprite16_count,
+            .sprite32_count = sprite32_count,
+            .palette_count = palette_count};
+}
+
+constexpr auto sc::assets::serialize_atlas_metadata(
+        const atlas::metadata meta) noexcept -> nb::bytes
+{
+    std::byte buffer[kAtlasMetadataSize];
+    std::memcpy(buffer, &meta, kAtlasMetadataSize);
+    return nb::bytes{buffer, kAtlasMetadataSize};
 }

@@ -6,13 +6,13 @@ Assembles multiple asset files into a single memory-mappable atlas binary.
 The binary layout contains:
 - Header (16 bytes): atlas metadata
     - Magic (8 bytes)
-    - 16×16 sprite count (4 bytes)
-    - 32×32 sprite count (2 bytes)
+    - 16 × 16 sprite count (4 bytes)
+    - 32 × 32 sprite count (2 bytes)
     - Palette count (2 bytes)
 - Data (n bytes): contiguous arrays of palette and sprite structures
     - Color palettes (32 × palette count bytes)
-    - 16×16 sprites (272 × 16×16 sprite count bytes)
-    - 32×32 sprites (1,040 × 32×32 sprite count bytes)
+    - 16 × 16 sprites (272 × 16 × 16 sprite count bytes)
+    - 32 × 32 sprites (1,040 × 32 × 32 sprite count bytes)
 """
 
 import re
@@ -24,6 +24,7 @@ from typing import Any
 
 from pipeline import (
     FOOTER_SIZE_BYTES,
+    MAX_ROM_SIZE,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     AtlasMetadata,
     ResourceLayoutError,
@@ -204,6 +205,12 @@ class AssetLinker:
             len(self._asset_registry[32, 32][1]),
             len(self._palette_registry),
         ).to_bytes()
+
+        if (total_bytes := metadata_bytes + assets_bytes) > MAX_ROM_SIZE:
+            raise ResourceLayoutError(
+                f"Atlas size too large! Maximum is {MAX_ROM_SIZE} bytes, "
+                f"got {len(total_bytes)}."
+            )
 
         output_path.write_bytes(metadata_bytes + assets_bytes)
         header_path.write_text("\n".join(header_lines))
