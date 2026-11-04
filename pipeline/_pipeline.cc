@@ -37,7 +37,7 @@ NB_MODULE(_pipeline, m)
 
     // Math
 
-    nb::class_<sc::geometry::bbox<>>(m, "BBox", "A bounding box.")
+    nb::class_<sc::geometry::bbox<>>{m, "BBox", "A bounding box."}
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
                          std::uint8_t>{},
                     "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a)
@@ -57,15 +57,16 @@ NB_MODULE(_pipeline, m)
 
     m.attr("MAX_COLOR_COUNT") = sc::graphics::kMaxColorCount;
 
-    nb::enum_<sc::graphics::color_encoding>(m, "ColorEncoding",
+    nb::enum_<sc::graphics::color_encoding>{m, "ColorEncoding",
             "Distribution of color bits across a 2‑byte packed integer.",
-            nb::is_arithmetic())
+            nb::is_arithmetic{}}
             .value("NEUTRAL", sc::graphics::color_encoding::neutral, "R5G6B5")
             .value("WARM", sc::graphics::color_encoding::warm, "R6G5B5")
             .value("COOL", sc::graphics::color_encoding::cool, "R5G5B6");
 
-    nb::class_<sc::graphics::color_encoding_params>(m, "ColorEncodingParams",
-            "Parameters of how a 2‑byte color is packed or unpacked.\n")
+    nb::class_<sc::graphics::color_encoding_params>{m, "ColorEncodingParams",
+            "Parameters of how a 2‑byte color is packed or unpacked.\n",
+            nb::is_final{}}
             .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
             .def("__iter__",
                     [](const sc::graphics::color_encoding_params& self) {
@@ -91,9 +92,9 @@ NB_MODULE(_pipeline, m)
 
     // Physics
 
-    nb::enum_<sc::physics::type>(m, "PhysicsType",
-            "The laws of physics an entity obeys.", nb::is_arithmetic(),
-            nb::is_flag())
+    nb::enum_<sc::physics::type>{m, "PhysicsType",
+            "The laws of physics an entity obeys.", nb::is_arithmetic{},
+            nb::is_flag{}}
             .value("UNDEFINED", sc::physics::type::UNDEFINED)
             .value("NONE", sc::physics::type::NONE)
             .value("ACTOR", sc::physics::type::ACTOR)
