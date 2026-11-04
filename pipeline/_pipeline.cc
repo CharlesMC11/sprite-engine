@@ -2,6 +2,7 @@
 
 #include <format>
 #include <stdexcept>
+#include <utility>
 
 #include "assets/sprite.hh"
 #include "core/core.hh"
@@ -12,8 +13,11 @@
 namespace nb = nanobind;
 using nb::literals::operator""_a;
 
+inline constexpr char kSpriteMagic[]{
+        'S', 'C', ' ', 'S', 'P', ' ', 'v', sc::assets::kAssetStandard};
+
 inline constexpr std::size_t kSpriteMetadataSize{
-        sizeof(sc::assets::sprites::metadata)};
+        sizeof kSpriteMagic + sizeof(sc::assets::sprite<>::metadata)};
 
 NB_MODULE(_pipeline, m)
 {
@@ -97,9 +101,11 @@ NB_MODULE(_pipeline, m)
             .value("SENSOR", sc::physics::type::SENSOR)
             .value("PROJECTILE", sc::physics::type::PROJECTILE);
 
-    // Sprites
+    // Sprite
 
-    nb::class_<sc::assets::sprites::metadata>(m, "SpriteMetadata",
+    m.attr("ASSET_STANDARD") = nb::bytes{&sc::assets::kAssetStandard, 1UZ};
+
+    nb::class_<sc::assets::sprite<>::metadata>{m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
             "Contains information regarding a sprite’s bounding box, anchor "
             "point,\ndepth, color encoding, and physics type.\n\n"
@@ -111,11 +117,21 @@ NB_MODULE(_pipeline, m)
             "- depth (uint8)\n"
             "- physics_type (uint8)\n"
             "- color_encoding (uint8)\n"
-            "- palette_index (uint8)\n")
+            "- palette_index (uint8)\n",
+            nb::is_final{}}
+            .def_prop_ro_static("MAGIC",
+                    []([[maybe_unused]] nb::handle) -> nb::bytes {
+                        return nb::bytes{&kSpriteMagic, sizeof kSpriteMagic};
+                    })
             .def_ro_static("EXPECTED_SIZE_BYTES", &kSpriteMetadataSize)
+            .def_prop_ro_static("PALETTE_INDEX",
+                    []([[maybe_unused]] nb::handle) -> std::size_t {
+                        return kSpriteMetadataSize - 1UZ;
+                    })
             .def_static(
                     "from_bytes",
-                    [](const nb::bytes& buffer) {
+                    [](const nb::bytes& buffer)
+                            -> sc::assets::sprite<>::metadata {
                         if (buffer.size() < kSpriteMetadataSize) {
                             throw std::runtime_error{std::format(
                                     "Buffer size too small for "
@@ -124,33 +140,62 @@ NB_MODULE(_pipeline, m)
                                     kSpriteMetadataSize, buffer.size())};
                         }
 
-                        sc::assets::sprites::metadata cls;
-                        std::memcpy(&cls, buffer.data(), kSpriteMetadataSize);
+                        sc::assets::sprite<>::metadata cls;
+                        std::memcpy(&cls,
+                                static_cast<const char*>(buffer.data()) +
+                                        sizeof kSpriteMagic,
+                                kSpriteMetadataSize - sizeof kSpriteMagic);
                         return cls;
                     },
                     "buffer"_a)
-            .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
-                         std::uint8_t, sc::core::kinematics_t,
-                         sc::core::kinematics_t, std::uint8_t,
-                         sc::core::physics_t, sc::graphics::color_encoding,
-                         std::uint8_t>{},
+            .def(nb::new_{[](const std::uint8_t u_min,
+                                  const std::uint8_t u_max,
+                                  const std::uint8_t v_min,
+                                  const std::uint8_t v_max,
+                                  const sc::core::kinematics_t u_anchor,
+                                  const sc::core::kinematics_t v_anchor,
+                                  const std::uint8_t depth,
+                                  const sc::physics::type physics_type,
+                                  const sc::graphics::color_encoding
+                                          color_encoding,
+                                  const std::uint8_t palette_index)
+                                  -> sc::assets::sprite<>::metadata {
+                return {.bbox = {.u_min = u_min,
+                                .u_max = u_max,
+                                .v_min = v_min,
+                                .v_max = v_max},
+                        .u_anchor = u_anchor,
+                        .v_anchor = v_anchor,
+                        .depth = depth,
+                        .physics_type =
+                                static_cast<sc::core::physics_t>(physics_type),
+                        .color_encoding = color_encoding,
+                        .palette_index = palette_index};
+            }},
                     "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
-                    "color_encoding"_a, "palette_index"_a)
-            .def_ro("bbox", &sc::assets::sprites::metadata::bbox)
-            .def_ro("u_anchor", &sc::assets::sprites::metadata::u_anchor)
-            .def_ro("v_anchor", &sc::assets::sprites::metadata::v_anchor)
-            .def_ro("depth", &sc::assets::sprites::metadata::depth)
+                    "color_encoding"_a, "palette_index"_a = 0x3F)
+            .def_ro("bbox", &sc::assets::sprite<>::metadata::bbox)
+            .def_ro("u_anchor", &sc::assets::sprite<>::metadata::u_anchor)
+            .def_ro("v_anchor", &sc::assets::sprite<>::metadata::v_anchor)
+            .def_ro("depth", &sc::assets::sprite<>::metadata::depth)
             .def_prop_ro("physics_type",
-                    [](const sc::assets::sprites::metadata& self) {
+                    [](const sc::assets::sprite<>::metadata& self)
+                            -> sc::physics::type {
                         return static_cast<sc::physics::type>(
                                 self.physics_type);
                     })
             .def_ro("color_encoding",
-                    &sc::assets::sprites::metadata::color_encoding)
+                    &sc::assets::sprite<>::metadata::color_encoding)
             .def_rw("palette_index",
-                    &sc::assets::sprites::metadata::palette_index, "index"_a)
-            .def("to_bytes", [](const sc::assets::sprites::metadata& self) {
-                return nb::bytes{&self, kSpriteMetadataSize};
-            });
+                    &sc::assets::sprite<>::metadata::palette_index, "index"_a)
+            .def("to_bytes",
+                    [](const sc::assets::sprite<>::metadata& self)
+                            -> nb::bytes {
+                        std::byte buffer[kSpriteMetadataSize];
+                        std::memcpy(buffer, kSpriteMagic, sizeof kSpriteMagic);
+                        std::memcpy(buffer + sizeof kSpriteMagic, &self,
+                                sizeof self);
+                        return nb::bytes{buffer, kSpriteMetadataSize};
+                    });
 }

@@ -6,35 +6,31 @@
 
 namespace sc::assets {
 
-    namespace sprites {
-
-        inline SC_CONSTEXPR size_t kDefaultSize{32U};
+    /**
+     * @struct sprite
+     * A hardware-aware sprite definition.
+     */
+    template<size_t Width = 32U, size_t Height = Width>
+    struct alignas(core::kAlignmentNeon) sprite final {
 
         /**
+         * @struct sprite::metadata
          * A sprite’s metadata.
          *
          * Contains information regarding a sprite’s bounding box, anchor
          * point, depth, physics type, color encoding, and palette index.
          */
-        struct alignas(core::kAlignmentNeon) metadata final {
+        const struct alignas(core::kAlignmentNeon) metadata final {
             geometry::bbox<> bbox;
             core::kinematics_t u_anchor{0}, v_anchor{0};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
             graphics::color_encoding color_encoding{0U};
             uint8_t palette_index{0U};
-        };
+        } meta;
 
-    } // namespace sprites
-
-    /**
-     * A hardware-aware sprite definition.
-     */
-    template<size_t Width = sprites::kDefaultSize, size_t Height = Width>
-    struct alignas(core::kAlignmentNeon) sprite final {
-        sprites::metadata meta;
-        graphics::packed_pixel_t pixels[Height * Width]{
-                0U}; // Row-major pixels
+        // Row-major pixels
+        const graphics::packed_pixel_t pixels[Height * Width]{0U};
     };
 
     using sprite16 = sprite<16U>;
@@ -43,7 +39,7 @@ namespace sc::assets {
 } // namespace sc::assets
 
 static_assert(
-        sizeof(sc::assets::sprites::metadata) == sc::core::kAlignmentNeon,
+        sizeof(sc::assets::sprite<>::metadata) == sc::core::kAlignmentNeon,
         "Sprite metadata must be 16 B.");
 static_assert(sizeof(sc::assets::sprite16) == 272U, "Sprite16 must be 272 B!");
 static_assert(

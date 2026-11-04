@@ -27,6 +27,7 @@ from pipeline._pipeline import (
     ColorEncoding,
     ColorEncodingParams,
     PhysicsType,
+    SpriteMetadata,
     convert_to_fixed_point,
 )
 from pipeline._pipeline import (
@@ -106,83 +107,6 @@ class Metadata:
 
     def to_bytes(self) -> bytes:
         return self.MAGIC + self._internal.to_bytes()
-
-
-class SpriteMetadata(Metadata):
-    __doc__ = _SpriteMetadata.__doc__
-
-    # Type annotations
-
-    _internal: _SpriteMetadata
-    _from_bytes = _SpriteMetadata.from_bytes
-
-    # Public class constants
-
-    MAGIC: ClassVar[bytes] = b"SC SP v" + ASSET_LAYOUT_VERSION
-    EXPECTED_SIZE_BYTES = len(MAGIC) + _SpriteMetadata.EXPECTED_SIZE_BYTES
-    PALETTE_INDEX_OFFSET = EXPECTED_SIZE_BYTES - 1
-
-    # Magic methods
-
-    def __init__(
-        self,
-        u_min: int,
-        u_max: int,
-        v_min: int,
-        v_max: int,
-        u_anchor: int,
-        v_anchor: int,
-        depth: int,
-        physics_type: PhysicsType,
-        color_encoding: ColorEncoding,
-        palette_index: int = 0x3F,
-    ):
-        self._internal = _SpriteMetadata(
-            u_min,
-            u_max,
-            v_min,
-            v_max,
-            u_anchor,
-            v_anchor,
-            depth,
-            physics_type,
-            color_encoding,
-            palette_index,
-        )
-
-    # Properties
-
-    @property
-    def bbox(self) -> BBox:
-        return self._internal.bbox
-
-    @property
-    def u_anchor(self) -> int:
-        return self._internal.u_anchor
-
-    @property
-    def v_anchor(self) -> int:
-        return self._internal.v_anchor
-
-    @property
-    def depth(self) -> int:
-        return self._internal.depth
-
-    @property
-    def physics_type(self) -> PhysicsType:
-        return self._internal.physics_type
-
-    @property
-    def color_encoding(self) -> ColorEncoding:
-        return self._internal.color_encoding
-
-    @property
-    def palette_index(self) -> int:
-        return self._internal.palette_index
-
-    @palette_index.setter
-    def palette_index(self, index: int) -> None:
-        self._internal.palette_index = index
 
 
 SPRITE_MINIMUM_FILE_SIZE_BYTES: Final[int] = (
