@@ -29,8 +29,6 @@ namespace sc {
 
         // Public methods
 
-        // void update(input::mask input, const MTL::Drawable* drawable);
-
         void tick(input::input_t in) noexcept;
 
     private:
@@ -43,7 +41,7 @@ namespace sc {
         physics::spatial_grid grid_;
         render::metal_bridge bridge_;
         core::mapped_view<assets::atlas> atlas_;
-    */
+        */
 
         const memory& memory_;
         entity_registry registry_;
