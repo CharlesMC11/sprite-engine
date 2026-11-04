@@ -1,4 +1,4 @@
-from pipeline.preview_colors import Color, hex_str, filter_hex_codes
+from pipeline.preview_colors import Color, filter_hex_codes, hex_str
 
 
 def test_filter_hex_codes() -> None:
