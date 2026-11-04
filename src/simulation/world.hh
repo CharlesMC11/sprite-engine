@@ -47,8 +47,8 @@ namespace sc {
 
         const memory& memory_;
         entity_registry registry_;
-        core::ukinematics_t ftime_{0U};
-        uint32_t menu_option_{0};
+        core::ukinematics_t ftime_{0UL};
+        std::uint_least8_t menu_option_{0U};
         state state_{state::home};
     };
 

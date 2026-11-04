@@ -8,21 +8,21 @@ namespace sc {
 
     // Constants
 
-    inline constexpr std::size_t kStripedBankSize{0x1'0000};
+    inline constexpr std::size_t kStripedBankSize{0x1'0000UZ};
     inline constexpr std::size_t kStripedBankCount{8UZ};
-    inline constexpr std::size_t kUnstripedBankSize{0x1000};
+    inline constexpr std::size_t kUnstripedBankSize{0x1000UZ};
     inline constexpr std::size_t kUnstripedBankCount{2UZ};
 
     inline constexpr std::size_t kSRAMSize{
             kStripedBankSize * kStripedBankCount +
             kUnstripedBankSize * kUnstripedBankCount};
 
-    inline constexpr std::size_t kQSPISize{0x20'0000};
+    inline constexpr std::size_t kQSPISize{0x20'0000UZ};
 
     inline constexpr std::size_t kRP2350TotalMemorySize{kSRAMSize + kQSPISize};
 
-    inline constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000};
-    inline constexpr std::size_t kRP2350QSPIBaseAddress{0x1000'0000};
+    inline constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000UZ};
+    inline constexpr std::size_t kRP2350QSPIBaseAddress{0x1000'0000UZ};
 
     /**
      * @class memory

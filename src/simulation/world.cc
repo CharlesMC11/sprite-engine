@@ -124,27 +124,26 @@ namespace sc {
     void world::tick_home(const input::input_t in) noexcept
     {
         if (core::any((input::mask::up | input::mask::left) & in)) {
-            if (menu_option_ > 0) {
+            if (menu_option_ > 0U) {
                 --menu_option_;
             }
         }
         else if (core::any((input::mask::down | input::mask::right) & in)) {
-            if (menu_option_ < 2) {
+            if (menu_option_ < 2U) {
                 ++menu_option_;
-            };
+            }
         }
         else if (core::any(input::mask::interact & in)) {
             switch (menu_option_) {
-            case 0: // Continue if save file exists
+            case 0U: // Continue if save file exists
                 state_ = state::exploring;
                 break;
-            case 1: // New Simulation
+            case 1U: // New Simulation
                 state_ = state::opening;
                 break;
-            case 2: // Settings
+            case 2U: // Settings
                 // So we remember which menu we came from
-                memory_.striped_bank<1UZ>()[0UZ] =
-                        static_cast<std::byte>(0x02);
+                memory_.striped_bank<std::uint8_t, 1UZ>()[0UZ] = 0x02U;
                 state_ = state::settings;
                 break;
             default:
@@ -155,12 +154,12 @@ namespace sc {
 
     void world::tick_exploring(const input::input_t in) noexcept
     {
-        ftime_ += std::min(
-                display::kFrameTime, (1U << core::kFractionalBits) / 4U);
+        ftime_ += std::min<core::kinematics_t>(
+                display::kFrameTime, (1UL << core::kFractionalBits) / 4UL);
 
         while (ftime_ >= physics::kFixedTimestep) {
-            registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] = 0;
-            constexpr core::kinematics_t vel{200 << core::kFractionalBits};
+            registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] = 0L;
+            constexpr core::kinematics_t vel{200L << core::kFractionalBits};
             if (core::any(input::mask::up & in)) {
                 registry_.y_vel_ptr()[0UZ] -= vel;
             }

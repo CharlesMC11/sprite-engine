@@ -44,7 +44,7 @@ namespace sc::math {
             -> core::kinematics_t
     {
         return static_cast<core::kinematics_t>(
-                std::round(n * (1 << core::kFractionalBits)));
+                std::round(n * (1UL << core::kFractionalBits)));
     }
 
 #endif // __METAL_VERSION__

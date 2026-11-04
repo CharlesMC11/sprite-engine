@@ -39,8 +39,8 @@ namespace sc {
                         const core::kinematics_t y_a{y_ptr[a]};
                         const core::kinematics_t y_b{y_ptr[b]};
 
-                        return std::abs(y_a - y_b) > 0 ? y_a < y_b
-                                                       : z_ptr[a] < z_ptr[b];
+                        return std::abs(y_a - y_b) > 0L ? y_a < y_b
+                                                        : z_ptr[a] < z_ptr[b];
                     });
 
             status_ &= ~0x02UZ;
@@ -59,7 +59,8 @@ namespace sc {
         y_pos_ptr()[new_idx] = new_y_pos_ptr()[new_idx] = y;
         z_pos_ptr()[new_idx] = new_z_pos_ptr()[new_idx] = z;
 
-        x_vel_ptr()[new_idx] = y_vel_ptr()[new_idx] = z_vel_ptr()[new_idx] = 0;
+        x_vel_ptr()[new_idx] = y_vel_ptr()[new_idx] = z_vel_ptr()[new_idx] =
+                0L;
 
         sprite_index_ptr()[new_idx] = i;
         draw_order_ptr()[new_idx] = new_idx;

@@ -24,11 +24,11 @@ namespace sc::graphics {
      * Parameters of how a 2‑byte color is packed or unpacked.
      */
     struct color_encoding_params final {
-        size_t r_max{0U};
-        size_t g_max{0U};
-        size_t b_max{0U};
-        size_t r_shift{0U};
-        size_t g_shift{0U};
+        uint8_t r_max{0U};
+        uint8_t g_max{0U};
+        uint8_t b_max{0U};
+        uint8_t r_shift{0U};
+        uint8_t g_shift{0U};
 
         /**
          * Construct the parameters based on the color encoding.
