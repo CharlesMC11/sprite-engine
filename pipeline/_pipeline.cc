@@ -69,7 +69,8 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
             .def("__iter__",
-                    [](const sc::graphics::color_encoding_params& self) {
+                    [](const sc::graphics::color_encoding_params& self)
+                            -> nb::iterator {
                         return nb::iter(nb::make_tuple(self.r_max, self.g_max,
                                 self.b_max, self.r_shift, self.g_shift));
                     })
