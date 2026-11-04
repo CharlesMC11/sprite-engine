@@ -26,7 +26,6 @@ namespace sc {
 
     /**
      * @class memory
-     *
      * The RP2350’s memory layout.
      */
     class memory final {
