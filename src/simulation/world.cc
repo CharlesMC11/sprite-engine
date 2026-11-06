@@ -154,12 +154,13 @@ namespace sc {
 
     void world::tick_exploring(const input::input_t in) noexcept
     {
-        ftime_ += std::min<core::kinematics_t>(
-                display::kFrameTime, (1UL << core::kFractionalBits) / 4UL);
+        ftime_ += std::min(
+                display::kFrameTime, math::u_fixed_point_t::from_frac(1U, 4U));
 
         while (ftime_ >= physics::kFixedTimestep) {
-            registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] = 0L;
-            constexpr core::kinematics_t vel{200L << core::kFractionalBits};
+            registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] =
+                    math::kFixedZero;
+            constexpr auto vel{math::fixed_point_t::from_int(200)};
             if (core::any(input::mask::up & in)) {
                 registry_.y_vel_ptr()[0UZ] -= vel;
             }
@@ -173,7 +174,8 @@ namespace sc {
                 registry_.x_vel_ptr()[0UZ] += vel;
             }
 
-            registry_.update(physics::kFixedTimestep);
+            registry_.update(
+                    static_cast<math::fixed_point_t>(physics::kFixedTimestep));
             // grid_.update(registry_);
             // physics::resolve_entity_collisions(
             // registry_, grid_, *atlas_.data(), physics::kFixedTimestep);

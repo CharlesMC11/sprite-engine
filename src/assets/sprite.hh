@@ -3,6 +3,7 @@
 #include "core/core.hh"
 #include "graphics/graphics_types.hh"
 #include "math/bbox.hh"
+#include "math/fixed_point.hh"
 
 namespace sc::assets {
 
@@ -24,7 +25,7 @@ namespace sc::assets {
          */
         const struct alignas(core::kAlignmentNeon) metadata final {
             geometry::bbox<> bbox;
-            core::kinematics_t u_anchor{0}, v_anchor{0};
+            math::fixed_point_t u_anchor{0}, v_anchor{0};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
             graphics::color_encoding color_encoding{0U};

@@ -1,15 +1,21 @@
-#ifndef SC_SIMULATION_PHYSICS_HH
-#define SC_SIMULATION_PHYSICS_HH
+#pragma once
 
-#include "assets/atlas.hh"
-#include "registry/entity_registry.hh"
-#include "spatial_grid.hh"
+#include "math/fixed_point.hh"
 
-namespace sc::physics {
+namespace sc {
 
-    void resolve_entity_collisions(entity_registry& registry,
-            const spatial_grid& grid, const assets::atlas& atlas, float dt);
+    struct spatial_grid;
+    class entity_registry;
+    namespace assets {
+        struct atlas;
+    } // namespace assets
 
-} // namespace sc::physics
+    namespace physics {
 
-#endif // SC_SIMULATION_PHYSICS_HH
+        void resolve_entity_collisions(entity_registry& registry,
+                const spatial_grid& grid, const assets::atlas& atlas,
+                math::fixed_point_t dt);
+
+    } // namespace physics
+
+} // namespace sc

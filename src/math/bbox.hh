@@ -6,9 +6,10 @@
 
 #endif
 
-#include "math/utils.hh"
+#include "math/fixed_point.hh"
 
 namespace sc::geometry {
+
     /**
      * A bounding box.
      *
@@ -53,12 +54,12 @@ namespace sc::geometry {
 
     template<>
     template<>
-    [[nodiscard]] constexpr bbox<>::operator bbox<core::kinematics_t>() const
+    [[nodiscard]] constexpr bbox<>::operator bbox<math::fixed_point_t>() const
     {
-        return {.u_min = math::convert_to_fixed_point(u_min),
-                .u_max = math::convert_to_fixed_point(u_max),
-                .v_min = math::convert_to_fixed_point(v_min),
-                .v_max = math::convert_to_fixed_point(v_max)};
+        return {.u_min = math::fixed_point_t::from_int(u_min),
+                .u_max = math::fixed_point_t::from_int(u_max),
+                .v_min = math::fixed_point_t::from_int(v_min),
+                .v_max = math::fixed_point_t::from_int(v_max)};
     }
 
 #endif // __METAL_VERSION__

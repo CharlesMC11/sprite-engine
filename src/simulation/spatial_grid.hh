@@ -6,6 +6,7 @@
 #include <ostream>
 
 #include "graphics/display_constants.hh"
+#include "math/fixed_point.hh"
 #include "registry/entity_registry.hh"
 
 namespace sc::physics {
@@ -29,7 +30,7 @@ namespace sc::physics {
         // Private helpers
 
         [[nodiscard]] static constexpr core::index_t hash(
-                float x, float y) noexcept;
+                math::fixed_point_t x, math::fixed_point_t y) noexcept;
 
         inline void clear() noexcept;
     };
@@ -55,16 +56,18 @@ namespace sc::physics {
     // Private helpers
 
     [[nodiscard]] constexpr core::index_t spatial_grid::hash(
-            const float x, const float y) noexcept
+            const math::fixed_point_t x, const math::fixed_point_t y) noexcept
     {
-        const auto cx{static_cast<core::index_t>(std::clamp(x, 0.0f,
-                              static_cast<float>(display::kWidth) - 1.0f)) /
+        const auto cx{static_cast<int>(std::clamp(x, math::kFixedZero,
+                              math::fixed_point_t::from_int(
+                                      display::kWidth - 1UZ))) /
                 kCellSize};
-        const auto cy{static_cast<core::index_t>(std::clamp(y, 0.0f,
-                              static_cast<float>(display::kHeight) - 1.0f)) /
+        const auto cy{static_cast<int>(std::clamp(y, math::kFixedZero,
+                              math::fixed_point_t::from_int(
+                                      display::kHeight - 1UZ))) /
                 kCellSize};
 
-        return cy * static_cast<core::index_t>(kColCount) + cx;
+        return static_cast<core::index_t>(cy * kColCount + cx);
     }
 
     inline void spatial_grid::clear() noexcept

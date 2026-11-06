@@ -8,6 +8,7 @@
 #include "assets/asset_ids.hh"
 #include "core/core.hh"
 #include "core/memory.hh"
+#include "math/fixed_point.hh"
 
 /**
  * Register a channel accessor method for the registry.
@@ -35,7 +36,7 @@
     }
 
 #define SC_REGISTER_XFORM_CHANNEL_ACCESSOR(enum_val)                          \
-    SC_REGISTER_ACCESSOR(xform_channel, core::kinematics_t, enum_val)
+    SC_REGISTER_ACCESSOR(xform_channel, math::fixed_point_t, enum_val)
 
 #define SC_REGISTER_INDEX_CHANNEL_ACCESSOR(enum_val)                          \
     SC_REGISTER_ACCESSOR(index_channel, core::index_t, enum_val)
@@ -51,17 +52,17 @@
  */
 #define SC_REGISTER_SWAPPABLE_ACCESSOR(enum_val, enum_swap)                   \
     [[nodiscard]] constexpr auto enum_val##_ptr() noexcept                    \
-            -> core::kinematics_t* __restrict                                 \
+            -> math::fixed_point_t* __restrict                                \
     {                                                                         \
-        return get_ptr<xform_channel, core::kinematics_t, false>(             \
+        return get_ptr<xform_channel, math::fixed_point_t, false>(            \
                 swapped_channels() ? xform_channel::enum_swap                 \
                                    : xform_channel::enum_val);                \
     }                                                                         \
                                                                               \
     [[nodiscard]] constexpr auto enum_val##_ptr() const noexcept              \
-            -> const core::kinematics_t* __restrict                           \
+            -> const math::fixed_point_t* __restrict                          \
     {                                                                         \
-        return get_ptr<xform_channel, core::kinematics_t, true>(              \
+        return get_ptr<xform_channel, math::fixed_point_t, true>(             \
                 swapped_channels() ? xform_channel::enum_swap                 \
                                    : xform_channel::enum_val);                \
     }
@@ -115,9 +116,9 @@ namespace sc {
         ~entity_registry() = default;
 
         entity_registry(const entity_registry&) = delete;
-        entity_registry& operator=(const entity_registry&) = delete;
-
         entity_registry(entity_registry&&) = delete;
+
+        entity_registry& operator=(const entity_registry&) = delete;
         entity_registry& operator=(entity_registry&&) = delete;
 
         // Public accessors
@@ -143,6 +144,11 @@ namespace sc {
             return status_ >> 2U;
         }
 
+        [[nodiscard]] constexpr auto buffer() const noexcept -> std::byte*
+        {
+            return buffer_;
+        }
+
         // Public mutators
 
         /**
@@ -151,7 +157,7 @@ namespace sc {
          * @param dt
          * The delta time.
          */
-        void update(core::dkinematics_t dt) noexcept;
+        void update(math::fixed_point_t dt) noexcept;
 
         /**
          * Commit the changes to the registry.
@@ -159,9 +165,14 @@ namespace sc {
         void commit() noexcept { status_ ^= 0x01UZ; }
 
         /**
+         * Mark for sorting draw order.
+         */
+        void mark_for_sort() noexcept { status_ |= 0x02UZ; }
+
+        /**
          * Sort the draw order based on screen coordinates.
          */
-        void sort_draw() noexcept;
+        void sort_draw_order() noexcept;
 
         /**
          * Add a new entity to the layout.
@@ -178,10 +189,10 @@ namespace sc {
          * @param z
          * The starting aerial position.
          */
-        void spawn(core::index_t i, core::kinematics_t x, core::kinematics_t y,
-                core::kinematics_t z) noexcept;
-        void spawn(assets::sprite32_id i, core::kinematics_t x,
-                core::kinematics_t y, core::kinematics_t z) noexcept;
+        void spawn(core::index_t i, math::fixed_point_t x,
+                math::fixed_point_t y, math::fixed_point_t z) noexcept;
+        void spawn(assets::sprite32_id i, math::fixed_point_t x,
+                math::fixed_point_t y, math::fixed_point_t z) noexcept;
 
         /**
          * Reset the registry.
@@ -201,7 +212,7 @@ namespace sc {
             return (status_ & 0x01UZ) != 0UZ;
         }
 
-        [[nodiscard]] constexpr bool needs_redraw() const noexcept
+        [[nodiscard]] constexpr bool needs_sort() const noexcept
         {
             return (status_ & 0x02UZ) != 0UZ;
         }
@@ -239,7 +250,7 @@ namespace sc {
     [[nodiscard]] constexpr auto entity_registry::offset(
             xform_channel channel) noexcept -> std::size_t
     {
-        return sizeof(core::kinematics_t) * kMaxEntityCount *
+        return sizeof(math::fixed_point_t) * kMaxEntityCount *
                 static_cast<std::size_t>(channel);
     }
 
@@ -265,7 +276,7 @@ namespace sc {
 #undef SC_REGISTER_XFORM_CHANNEL_ACCESSOR
 #undef SC_REGISTER_ACCESSOR
 
-static_assert(sizeof(sc::core::kinematics_t) == sizeof(sc::core::index_t),
+static_assert(sizeof(sc::math::fixed_point_t) == sizeof(sc::core::index_t),
         "Kinematics data size must match index data size!");
 
 static_assert(sc::kMaxEntityCount % sc::core::kAlignmentCache == 0UZ,

@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "core/input.hh"
+#include "math/fixed_point.hh"
 #include "registry/entity_registry.hh"
 
 namespace sc {
@@ -45,7 +46,7 @@ namespace sc {
 
         const memory& memory_;
         entity_registry registry_;
-        core::ukinematics_t ftime_{0UL};
+        math::u_fixed_point_t ftime_{0U};
         std::uint_least8_t menu_option_{0U};
         state state_{state::home};
     };
