@@ -16,6 +16,7 @@ set(COMMON_COMPILE_OPTIONS
         -fcolor-diagnostics
         -fstrict-aliasing
         -Wall
+        -Wconversion
         -Wextra
         -Wpedantic
 )
@@ -68,6 +69,7 @@ add_library(shared INTERFACE
         src/core/core.hh
         src/graphics/graphics_types.hh
         src/math/bbox.hh
+        src/math/fixed_point.hh
         src/math/utils.hh
         src/simulation/physics_types.hh
 )
@@ -117,12 +119,12 @@ add_executable(sprite-engine
         src/core/memory.cc
         src/core/memory.hh
         src/graphics/display_constants.hh
-        src/graphics/graphics_types.cc
         src/graphics/metal_bridge.hh
         src/graphics/metal_bridge.cc
         src/graphics/render_constants.hh
         src/graphics/shader.metal
         src/math/bbox.hh
+        src/math/fixed_point.cc
         src/platform/SCAppDelegate.hh
         src/platform/SCAppDelegate.mm
         src/platform/SCStage.hh
@@ -133,9 +135,9 @@ add_executable(sprite-engine
         src/simulation/physics.hh
         src/simulation/physics.cc
         src/simulation/spatial_grid.hh
-        src/simulation/spatial_grid.cc
         src/simulation/world.hh
         src/simulation/world.cc
+        src/main.cc
 )
 
 target_include_directories(sprite-engine PUBLIC
