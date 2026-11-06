@@ -47,7 +47,7 @@ namespace sc::assets {
         auto operator=(sprite&&) -> sprite& = delete;
     };
 
-    // A 16 × 16
+    // A 16 × 16 sprite
     using sprite16 = sprite<16U>;
 
     // A 32 × 32 sprite
