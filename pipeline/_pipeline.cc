@@ -25,7 +25,7 @@ namespace sc::assets {
 
     static constexpr auto make_sprite_metadata(std::uint8_t u_min,
             std::uint8_t u_max, std::uint8_t v_min, std::uint8_t v_max,
-            core::kinematics_t u_anchor, core::kinematics_t v_anchor,
+            math::fixed_point_t u_anchor, math::fixed_point_t v_anchor,
             std::uint8_t depth, physics::type physics_type,
             graphics::color_encoding color_encoding,
             std::uint8_t palette_index) -> sprite<>::metadata;
@@ -60,7 +60,7 @@ NB_MODULE(_pipeline, m)
     m.attr("MAX_5BIT") = sc::core::kMax5Bit;
     m.attr("MAX_6BIT") = sc::core::kMax6Bit;
 
-    m.attr("FRACTIONAL_BITS") = sc::core::kFractionalBits;
+    m.attr("FRACTIONAL_BITS") = sc::math::kShiftFixedPoint;
 
     m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
     m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
@@ -80,10 +80,15 @@ NB_MODULE(_pipeline, m)
             .def_prop_ro("width", &sc::geometry::bbox<>::width)
             .def_prop_ro("height", &sc::geometry::bbox<>::height);
 
-    m.def("convert_to_fixed_point", &sc::math::convert_to_fixed_point, "n"_a,
-            "Convert the given value into a Q13.19 fixed point value.\n\n"
+    m.def(
+            "convert_to_fixed_point",
+            [](const float n) -> std::int32_t {
+                return sc::math::fixed_point_t::from_float(n).value;
+            },
+            "n"_a,
+            "Convert the given value into a Q21.10 fixed point value.\n\n"
             ":param n: The value to convert.\n\n"
-            ":return: The converted value in Q13.19 format.\n");
+            ":return: The converted value in Q21.10 format.\n");
 
     // Graphics
 
@@ -103,12 +108,13 @@ NB_MODULE(_pipeline, m)
             .def("__iter__",
                     [](const sc::graphics::color_encoding_params self)
                             -> nb::iterator {
-                        return nb::iter(nb::make_tuple(self.r_max, self.g_max,
-                                self.b_max, self.r_shift, self.g_shift));
+                        return nb::iter(nb::make_tuple(self.r_mask,
+                                self.g_mask, self.b_mask, self.r_shift,
+                                self.g_shift));
                     })
-            .def_ro("r_max", &sc::graphics::color_encoding_params::r_max)
-            .def_ro("g_max", &sc::graphics::color_encoding_params::g_max)
-            .def_ro("b_max", &sc::graphics::color_encoding_params::b_max)
+            .def_ro("r_mask", &sc::graphics::color_encoding_params::r_mask)
+            .def_ro("g_mask", &sc::graphics::color_encoding_params::g_mask)
+            .def_ro("b_mask", &sc::graphics::color_encoding_params::b_mask)
             .def_ro("r_shift", &sc::graphics::color_encoding_params::r_shift)
             .def_ro("g_shift", &sc::graphics::color_encoding_params::g_shift);
 
@@ -219,8 +225,8 @@ NB_MODULE(_pipeline, m)
 
 constexpr auto sc::assets::make_sprite_metadata(const std::uint8_t u_min,
         const std::uint8_t u_max, const std::uint8_t v_min,
-        const std::uint8_t v_max, const core::kinematics_t u_anchor,
-        const core::kinematics_t v_anchor, const std::uint8_t depth,
+        const std::uint8_t v_max, const math::fixed_point_t u_anchor,
+        const math::fixed_point_t v_anchor, const std::uint8_t depth,
         const physics::type physics_type,
         const graphics::color_encoding color_encoding,
         const std::uint8_t palette_index) -> sprite<>::metadata
