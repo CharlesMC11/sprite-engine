@@ -38,14 +38,13 @@ namespace sc::assets {
         // Delete constructors because a sprite is never constructed.
 
         sprite() = delete;
+        ~sprite() = default;
 
         sprite(const sprite&) = delete;
         sprite(sprite&&) = delete;
 
         auto operator=(const sprite&) -> sprite& = delete;
         auto operator=(sprite&&) -> sprite& = delete;
-
-        ~sprite() = default;
     };
 
     // A 16 × 16

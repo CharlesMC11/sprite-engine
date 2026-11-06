@@ -1,92 +1,111 @@
-#ifndef SC_GRAPHICS_RENDER_BRIDGE_HH
-#define SC_GRAPHICS_RENDER_BRIDGE_HH
+#pragma once
 
-#include <Metal/Metal.hpp>
+#include <Foundation/Foundation.hpp>
 
-#include "assets/atlas.hh"
-#include "core/mapped_view.hh"
-#include "registry/entity_registry.hh"
+#include <cstddef>
 
-namespace sc::render {
+namespace MTL {
+    class Buffer;
+    class CommandBuffer;
+    class CommandQueue;
+    class ComputeCommandEncoder;
+    class ComputePipelineState;
+    class Device;
+    class Drawable;
+} // namespace MTL
 
-    /**
-     * High-level interface for the Metal Compute pipeline.
-     *
-     * Orchestrates the dispatch of kernels to the GPU using
-     * `sc::assets::sprite` data as primary input.
-     */
-    class metal_bridge final {
-    public:
-        // Constructors
+namespace sc {
 
-        [[nodiscard]] explicit metal_bridge(MTL::Device* device);
+    class entity_registry;
+    namespace assets {
+        struct atlas;
+    } // namespace assets
+    namespace core {
+        class mapped_view;
+    } // namespace core
 
-        metal_bridge(const metal_bridge&) = delete;
-        metal_bridge& operator=(const metal_bridge&) = delete;
-
-        metal_bridge(metal_bridge&&) = delete;
-        metal_bridge& operator=(metal_bridge&&) = delete;
-
-        ~metal_bridge() = default;
-
-        // Public methods
+    namespace render {
 
         /**
+         * High-level interface for the Metal Compute pipeline.
          *
-         *
-         * @param buffer
-         * The destination drawable/texture.
+         * Orchestrates the dispatch of kernels to the GPU using
+         * `sc::assets::sprite` data as primary input.
          */
-        void begin_frame(const MTL::Drawable* buffer);
+        class metal_bridge final {
+        public:
+            // Constructors
 
-        /**
-         *
-         *
-         * @param buffer
-         * The destination drawable/texture.
-         */
-        void end_frame(const MTL::Drawable* buffer);
+            explicit metal_bridge(MTL::Device* device);
+            ~metal_bridge() = default;
 
-        /**
-         * Encode a command to clear the screen.
-         */
-        void clear() const;
+            metal_bridge(const metal_bridge&) = delete;
+            metal_bridge(metal_bridge&&) = delete;
 
-        /**
-         * Encode a draw command for entities on screen.
-         *
-         * @param registry
-         * The registry containing the entities to draw.
-         */
-        void draw(const entity_registry& registry) const;
+            auto operator=(const metal_bridge&) -> metal_bridge& = delete;
+            auto operator=(metal_bridge&&) -> metal_bridge& = delete;
 
-        // Mutators
+            // Public methods
 
-        /**
-         * Create a shared buffer for the atlas.
-         *
-         * @param atlas
-         * The mapped view of atlas to store in the buffer.
-         */
-        void set_atlas_buffer(const core::mapped_view<assets::atlas>& atlas);
+            /**
+             *
+             *
+             * @param buffer
+             * The destination drawable/texture.
+             */
+            void begin_frame(const MTL::Drawable* buffer);
 
-    private:
-        // Attributes
+            /**
+             *
+             *
+             * @param buffer
+             * The destination drawable/texture.
+             */
+            void end_frame(const MTL::Drawable* buffer);
 
-        NS::SharedPtr<MTL::Device> device_{nullptr};
-        NS::SharedPtr<MTL::CommandQueue> queue_{nullptr};
+            /**
+             * Encode a command to clear the screen.
+             */
+            void clear() const;
 
-        NS::SharedPtr<MTL::ComputePipelineState> clear_pso_{nullptr};
-        NS::SharedPtr<MTL::ComputePipelineState> sprite_pso_{nullptr};
+            /**
+             * Encode a draw command for entities on screen.
+             *
+             * @param registry
+             * The registry containing the entities to draw.
+             */
+            void draw(const entity_registry& registry) const;
 
-        NS::SharedPtr<MTL::Buffer> atlas_buffer_{nullptr};
-        std::size_t palette_span_offset_{0UZ};
-        std::size_t sprite32_span_offset_{0UZ};
+            // Mutators
 
-        MTL::CommandBuffer* command_buffer_{nullptr};
-        MTL::ComputeCommandEncoder* encoder_{nullptr};
-    };
+            void set_registry_buffer(const entity_registry& registry);
 
-} // namespace sc::render
+            /**
+             * Create a shared buffer for the atlas.
+             *
+             * @param atlas
+             * The mapped view of atlas to store in the buffer.
+             */
+            void set_atlas_buffer(const assets::atlas& atlas);
 
-#endif // SC_GRAPHICS_RENDER_BRIDGE_HH
+        private:
+            // Attributes
+
+            NS::SharedPtr<MTL::Device> device_{nullptr};
+            NS::SharedPtr<MTL::CommandQueue> queue_{nullptr};
+
+            NS::SharedPtr<MTL::ComputePipelineState> clear_pso_{nullptr};
+            NS::SharedPtr<MTL::ComputePipelineState> sprite_pso_{nullptr};
+
+            NS::SharedPtr<MTL::Buffer> registry_buffer_{nullptr};
+            NS::SharedPtr<MTL::Buffer> atlas_buffer_{nullptr};
+            std::size_t palette_span_offset_{0UZ};
+            std::size_t sprite32_span_offset_{0UZ};
+
+            MTL::CommandBuffer* command_buffer_{nullptr};
+            MTL::ComputeCommandEncoder* encoder_{nullptr};
+        };
+
+    } // namespace render
+
+} // namespace sc

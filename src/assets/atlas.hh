@@ -35,17 +35,31 @@ namespace sc::assets {
         [[nodiscard]] static constexpr bool validate(
                 const void* ptr, std::size_t mapped_size) noexcept;
 
+        // Attributes
+
+        /**
+         * @struct atlas::metadata
+         * An atlas’s metadata.
+         *
+         * Contains information on the number of sprites and palettes.
+         */
+        const struct alignas(core::kAlignmentNeon) metadata final {
+            const std::uint64_t magic{0ULL};
+            const std::uint32_t sprite16_count{0U};
+            const std::uint16_t sprite32_count{0U};
+            const std::uint16_t palette_count{0U};
+        } meta;
+
         // Delete constructors because the atlas is never constructed.
 
         atlas() = delete;
+        ~atlas() = default;
 
         atlas(const atlas&) = delete;
         atlas(atlas&&) = delete;
 
-        atlas& operator=(const atlas&) = delete;
-        atlas& operator=(atlas&&) = delete;
-
-        ~atlas() = default;
+        auto operator=(const atlas&) -> atlas& = delete;
+        auto operator=(atlas&&) -> atlas& = delete;
 
         // Operators
 
@@ -69,22 +83,6 @@ namespace sc::assets {
         [[nodiscard]] constexpr auto sprite32_span() const noexcept
                 -> std::span<const sprite32>;
 
-        // Attributes
-
-        /**
-         * @struct atlas::metadata
-         * An atlas’s metadata.
-         *
-         * Contains information on the number of sprites and palettes.
-         */
-        const struct alignas(core::kAlignmentNeon) metadata final {
-            const std::uint64_t magic{0ULL};
-            const std::uint32_t sprite16_count{0UL};
-            const std::uint16_t sprite32_count{0U};
-            const std::uint16_t palette_count{0U};
-        } meta;
-
-    private:
         [[nodiscard]] constexpr auto data() const noexcept
                 -> const std::byte* __restrict;
     };
@@ -154,8 +152,6 @@ namespace sc::assets {
                         sizeof(sprite16) * meta.sprite16_count),
                 meta.sprite32_count};
     }
-
-    // Private helpers
 
     [[nodiscard]] constexpr auto atlas::data() const noexcept
             -> const std::byte* __restrict

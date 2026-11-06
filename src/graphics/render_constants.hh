@@ -1,5 +1,4 @@
-#ifndef SC_GRAPHICS_RENDER_CONSTANTS_HH
-#define SC_GRAPHICS_RENDER_CONSTANTS_HH
+#pragma once
 
 #ifndef __METAL_VERSION__
 #include <cstdint>
@@ -19,5 +18,3 @@ namespace sc::render {
     };
 
 } // namespace sc::render
-
-#endif // SC_GRAPHICS_RENDER_CONSTANTS_HH

@@ -7,13 +7,13 @@
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 
-#include <stdexcept>
+#include <cassert>
 
 #include "assets/asset_constants.hh"
 #include "assets/atlas.hh"
-#include "core/mapped_view.hh"
 #include "graphics/display_constants.hh"
 #include "graphics/graphics_types.hh"
+#include "registry/entity_registry.hh"
 #include "render_constants.hh"
 
 namespace sc::render {
@@ -29,34 +29,24 @@ namespace sc::render {
         const auto* library_path{NS::String::string(
                 assets::kShaderLib, NS::UTF8StringEncoding)};
         auto* library{device->newLibrary(library_path, &error)};
-        if (!library) [[unlikely]]
-            throw std::runtime_error{
-                    error->localizedDescription()->utf8String()};
+        assert(library && error->localizedDescription()->utf8String());
 
         const auto* fn_name{
                 NS::String::string("k_clear_screen", NS::UTF8StringEncoding)};
         auto* function{library->newFunction(fn_name)};
-        if (!function) [[unlikely]]
-            throw std::runtime_error{
-                    error->localizedDescription()->utf8String()};
+        assert(function && error->localizedDescription()->utf8String());
 
         clear_pso_ = NS::TransferPtr(
                 device_->newComputePipelineState(function, &error));
-        if (!clear_pso_) [[unlikely]]
-            throw std::runtime_error{
-                    error->localizedDescription()->utf8String()};
+        assert(clear_pso_ && error->localizedDescription()->utf8String());
 
         fn_name = NS::String::string("k_draw_sprites", NS::UTF8StringEncoding);
         function = library->newFunction(fn_name);
-        if (!function) [[unlikely]]
-            throw std::runtime_error{
-                    error->localizedDescription()->utf8String()};
+        assert(function && error->localizedDescription()->utf8String());
 
         sprite_pso_ = NS::TransferPtr(
                 device_->newComputePipelineState(function, &error));
-        if (!sprite_pso_) [[unlikely]]
-            throw std::runtime_error{
-                    error->localizedDescription()->utf8String()};
+        assert(sprite_pso_ && error->localizedDescription()->utf8String());
 
         function->release();
         library->release();
@@ -104,20 +94,19 @@ namespace sc::render {
         encoder_->setBuffer(atlas_buffer_.get(), sprite32_span_offset_,
                 BUFFER_INDEX_SPRITES);
 
-        using xform = entity_registry::xform_channel;
-        encoder_->setBuffer(registry.xform_buffer(),
+        using xform = xform_channel;
+        encoder_->setBuffer(registry_buffer_.get(),
                 registry.offset(xform::x_pos), BUFFER_INDEX_X_POSITIONS);
-        encoder_->setBuffer(registry.xform_buffer(),
+        encoder_->setBuffer(registry_buffer_.get(),
                 registry.offset(xform::y_pos), BUFFER_INDEX_Y_POSITIONS);
-        encoder_->setBuffer(registry.xform_buffer(),
+        encoder_->setBuffer(registry_buffer_.get(),
                 registry.offset(xform::z_pos), BUFFER_INDEX_Z_POSITIONS);
 
-        using index = entity_registry::index_channel;
-
-        encoder_->setBuffer(registry.index_buffer(),
+        using index = index_channel;
+        encoder_->setBuffer(registry_buffer_.get(),
                 registry.offset(index::sprite_index),
                 BUFFER_INDEX_ATLAS_INDICES);
-        encoder_->setBuffer(registry.index_buffer(),
+        encoder_->setBuffer(registry_buffer_.get(),
                 registry.offset(index::draw_order), BUFFER_INDEX_DRAW_ORDER);
 
         const auto count{static_cast<std::uint32_t>(registry.count())};
@@ -131,25 +120,33 @@ namespace sc::render {
 
     // Mutators
 
-    void metal_bridge::set_atlas_buffer(
-            const core::mapped_view<assets::atlas>& atlas)
+    void metal_bridge::set_registry_buffer(const entity_registry& registry)
     {
-        const assets::atlas::metadata meta{atlas->meta};
+        constexpr auto total_size{kMaxEntityCount *
+                sizeof(math::fixed_point_t) * kTotalChannelCount};
 
-        constexpr std::size_t metadata_size{sizeof(meta)};
+        registry_buffer_ =
+                NS::TransferPtr(device_->newBuffer(registry.buffer(),
+                        total_size, MTL::ResourceStorageModeShared, nullptr));
+        assert(registry_buffer_ &&
+                "Could not allocate a MTL buffer for the registry.");
+    }
+
+    void metal_bridge::set_atlas_buffer(const assets::atlas& atlas)
+    {
+        constexpr std::size_t metadata_size{sizeof atlas.meta};
         const std::size_t palette_span_size{
-                sizeof(graphics::palette) * meta.palette_count};
+                sizeof(graphics::palette) * atlas.meta.palette_count};
         const std::size_t sprite16_span_size{
-                sizeof(assets::sprite16) * meta.sprite16_count};
+                sizeof(assets::sprite16) * atlas.meta.sprite16_count};
         const std::size_t sprite32_span_size{
-                sizeof(assets::sprite32) * meta.sprite32_count};
-        const std::size_t total_size{sizeof(atlas) + palette_span_size +
+                sizeof(assets::sprite32) * atlas.meta.sprite32_count};
+        const std::size_t total_size{sizeof atlas + palette_span_size +
                 sprite16_span_size + sprite32_span_size};
 
         atlas_buffer_ = NS::TransferPtr(device_->newBuffer(atlas.data(),
                 total_size, MTL::ResourceStorageModeShared, nullptr));
-        if (!atlas_buffer_) [[unlikely]]
-            throw std::runtime_error{"Could not allocate a Metal buffer."};
+        assert(atlas_buffer_ && "Could not allocate a Metal buffer.");
 
         palette_span_offset_ = metadata_size;
         sprite32_span_offset_ =

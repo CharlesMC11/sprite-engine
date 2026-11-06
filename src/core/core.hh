@@ -5,11 +5,11 @@
 
 #ifdef __METAL_VERSION__
 
-#define SC_CONSTEXPR constant constexpr
+#define SC_CONSTEXPR inline constant constexpr
 
 #else
 
-#define SC_CONSTEXPR constexpr
+#define SC_CONSTEXPR inline constexpr
 
 #include <bit>
 #include <cstddef>
@@ -22,22 +22,18 @@ namespace sc::core {
 
     // Constants
 
-    inline SC_CONSTEXPR size_t kMax2Bit{(1U << 2U) - 1U};
-    inline SC_CONSTEXPR size_t kMax4Bit{(1U << 4U) - 1U};
-    inline SC_CONSTEXPR size_t kMax5Bit{(1U << 5U) - 1U};
-    inline SC_CONSTEXPR size_t kMax6Bit{(1U << 6U) - 1U};
+    SC_CONSTEXPR size_t kMax2Bit{(1U << 2U) - 1U};
+    SC_CONSTEXPR size_t kMax4Bit{(1U << 4U) - 1U};
+    SC_CONSTEXPR size_t kMax5Bit{(1U << 5U) - 1U};
+    SC_CONSTEXPR size_t kMax6Bit{(1U << 6U) - 1U};
 
-    inline SC_CONSTEXPR size_t kAlignmentNeon{16U};
-    inline SC_CONSTEXPR size_t kAlignmentCache{128U};
+    SC_CONSTEXPR size_t kAlignmentNeon{16U};
+    SC_CONSTEXPR size_t kAlignmentCache{128U};
 
     using index_t = uint32_t;
-    inline SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
+    SC_CONSTEXPR auto kInvalidIndex{static_cast<index_t>(-1)};
 
     using physics_t = uint8_t;
-    using kinematics_t = int32_t;
-    using ukinematics_t = uint32_t;
-    using dkinematics_t = int64_t;
-    inline SC_CONSTEXPR size_t kFractionalBits{19U};
 
 #ifndef __METAL_VERSION__
 

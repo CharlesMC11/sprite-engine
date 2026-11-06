@@ -24,9 +24,9 @@ namespace sc::graphics {
      * Parameters of how a 2‑byte color is packed or unpacked.
      */
     struct color_encoding_params final {
-        uint8_t r_max{0U};
-        uint8_t g_max{0U};
-        uint8_t b_max{0U};
+        uint8_t r_mask{0U};
+        uint8_t g_mask{0U};
+        uint8_t b_mask{0U};
         uint8_t r_shift{0U};
         uint8_t g_shift{0U};
 
@@ -42,7 +42,7 @@ namespace sc::graphics {
         explicit constexpr color_encoding_params(color_encoding encoding);
     };
 
-    inline SC_CONSTEXPR size_t kMaxColorCount{16U};
+    SC_CONSTEXPR size_t kMaxColorCount{16U};
     using palette = packed_color_t[kMaxColorCount]; // A 16‑color palette.
 
     /**
@@ -54,16 +54,16 @@ namespace sc::graphics {
      * - [6] Emission: Boolean (0 or 1).
      * - [7] Reserved.
      */
-    using packed_pixel_t = uint8_t; // [*][E][AA][IIII]
+    using packed_pixel_t = uint8_t;
 
-    inline SC_CONSTEXPR size_t kShiftAlpha{4U};
-    inline SC_CONSTEXPR size_t kShiftEmission{6U};
+    SC_CONSTEXPR size_t kShiftAlpha{4U};
+    SC_CONSTEXPR size_t kShiftEmission{6U};
 
-    inline SC_CONSTEXPR size_t kMaskPaletteIndex{core::kMax4Bit};
-    inline SC_CONSTEXPR size_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
-    inline SC_CONSTEXPR size_t kMaskEmission{1U << kShiftEmission};
+    SC_CONSTEXPR size_t kMaskPaletteIndex{core::kMax4Bit};
+    SC_CONSTEXPR size_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
+    SC_CONSTEXPR size_t kMaskEmission{1U << kShiftEmission};
 
-    // Static methods
+    // Constructor
 
     [[nodiscard]]
     constexpr color_encoding_params::color_encoding_params(
@@ -71,23 +71,23 @@ namespace sc::graphics {
     {
         switch (encoding) {
         case color_encoding::neutral:
-            r_max = core::kMax5Bit;
-            g_max = core::kMax6Bit;
-            b_max = core::kMax5Bit;
+            r_mask = core::kMax5Bit;
+            g_mask = core::kMax6Bit;
+            b_mask = core::kMax5Bit;
             r_shift = 11U;
             g_shift = 5U;
             break;
         case color_encoding::warm:
-            r_max = core::kMax6Bit;
-            g_max = core::kMax5Bit;
-            b_max = core::kMax5Bit;
+            r_mask = core::kMax6Bit;
+            g_mask = core::kMax5Bit;
+            b_mask = core::kMax5Bit;
             r_shift = 10U;
             g_shift = 5U;
             break;
         case color_encoding::cool:
-            r_max = core::kMax5Bit;
-            g_max = core::kMax5Bit;
-            b_max = core::kMax6Bit;
+            r_mask = core::kMax5Bit;
+            g_mask = core::kMax5Bit;
+            b_mask = core::kMax6Bit;
             r_shift = 11U;
             g_shift = 6U;
             break;

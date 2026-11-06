@@ -1,5 +1,4 @@
-#ifndef SC_PHYSICS_SPATIAL_GRID_HH
-#define SC_PHYSICS_SPATIAL_GRID_HH
+#pragma once
 
 #include <algorithm>
 #include <cstddef>
@@ -17,7 +16,8 @@ namespace sc::physics {
     inline constexpr auto kTotalCells{
             static_cast<std::size_t>(kColCount) * kRowCount};
 
-    struct alignas(core::kCacheAlignment) spatial_grid final {
+    struct alignas(core::kAlignmentCache) spatial_grid final {
+
         // Public methods
 
         inline void update(entity_registry& registry) noexcept;
@@ -77,7 +77,3 @@ namespace sc::physics {
     }
 
 } // namespace sc::physics
-
-std::ostream& operator<<(std::ostream&, const sc::physics::spatial_grid&);
-
-#endif // SC_PHYSICS_SPATIAL_GRID_HH
