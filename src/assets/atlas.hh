@@ -23,7 +23,6 @@ namespace sc::assets {
 
     /**
      * @struct atlas
-     *
      * A contiguous collection of sprites.
      *
      * This class is designed to loaded by `sc::memory`.
