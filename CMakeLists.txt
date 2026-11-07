@@ -41,8 +41,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
           -fno-optimize-sibling-calls
   )
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -gdwarf-4")
-  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dysm)
-  set(GET_TASK_ALLOW true)
+  set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT dwarf-with-dsym)
 else ()
   add_compile_definitions(NDEBUG)
   list(APPEND COMMON_COMPILE_OPTIONS
@@ -58,7 +57,6 @@ else ()
       set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif ()
   endif ()
-  set(GET_TASK_ALLOW false)
 endif ()
 
 # Shared Library
