@@ -25,10 +25,8 @@ namespace sc::math {
                 int32_t numerator, int32_t denominator) -> fixed_point_t;
 
 #ifndef __METAL_VERSION__
-
         [[nodiscard]] static auto from_float(float n) -> fixed_point_t;
-
-#endif // __METAL_VERSION__
+#endif
 
         // Attribute
 
@@ -42,6 +40,7 @@ namespace sc::math {
 
         // Operators
 
+        [[nodiscard]] explicit constexpr operator float() const;
         [[nodiscard]] explicit constexpr operator int32_t() const;
 
         auto operator+=(fixed_point_t rhs) -> fixed_point_t&;
@@ -80,6 +79,7 @@ namespace sc::math {
 
         // Operators
 
+        [[nodiscard]] explicit constexpr operator float() const;
         [[nodiscard]] explicit constexpr operator uint32_t() const;
         [[nodiscard]] explicit constexpr operator fixed_point_t() const;
 
@@ -101,6 +101,11 @@ namespace sc::math {
 
     constexpr fixed_point_t::fixed_point_t(const int32_t n) : value{n} {}
 
+    [[nodiscard]] constexpr fixed_point_t::operator float() const
+    {
+        return static_cast<float>(value) / (1 << kShiftFixedPoint);
+    }
+
     [[nodiscard]] constexpr fixed_point_t::operator int32_t() const
     {
         return value / (1 << kShiftFixedPoint);
@@ -113,6 +118,11 @@ namespace sc::math {
     }
 
     constexpr u_fixed_point_t::u_fixed_point_t(const uint32_t n) : value{n} {}
+
+    [[nodiscard]] constexpr u_fixed_point_t::operator float() const
+    {
+        return static_cast<float>(value) / (1U << kShiftFixedPoint);
+    }
 
     [[nodiscard]] constexpr u_fixed_point_t::operator uint32_t() const
     {
