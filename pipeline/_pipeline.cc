@@ -62,10 +62,10 @@ NB_MODULE(_pipeline, m)
 
     m.attr("FRACTIONAL_BITS") = sc::math::kShiftFixedPoint;
 
-    m.attr("ALIGNMENT_NEON") = sc::core::kAlignmentNeon;
-    m.attr("ALIGNMENT_CACHE") = sc::core::kAlignmentCache;
+    m.attr("ALIGNMENT_NEON") = sc::memory::kAlignmentNeon;
+    m.attr("ALIGNMENT_CACHE") = sc::memory::kAlignmentCache;
 
-    m.attr("MAX_ROM_SIZE") = sc::kQSPISize;
+    m.attr("MAX_ROM_SIZE") = sc::memory::kQSPISize;
 
     // Math
 

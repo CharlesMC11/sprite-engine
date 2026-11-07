@@ -1,7 +1,9 @@
 #pragma once
 
 #include "assets/sprite.hh"
+#include "core/bitwise_enum.hh"
 #include "core/core.hh"
+#include "core/memory.hh"
 #include "math/bbox.hh"
 #include "math/fixed_point.hh"
 #include "registry/entity_registry.hh"
@@ -61,7 +63,7 @@ namespace sc::physics {
                 math::fixed_point_t y_vel, math::fixed_point_t z_vel) noexcept;
     };
 
-    struct alignas(core::kAlignmentNeon) sweep_result final {
+    struct alignas(memory::kAlignmentNeon) sweep_result final {
         math::fixed_point_t time{math::fixed_point_t::from_int(1)};
         math::fixed_point_t normal_x{0};
         math::fixed_point_t normal_y{0};

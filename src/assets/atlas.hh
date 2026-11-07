@@ -6,7 +6,7 @@
 
 #include "assets/asset_ids.hh"
 #include "assets/sprite.hh"
-#include "core/core.hh"
+#include "core/memory.hh"
 #include "graphics/graphics_types.hh"
 
 namespace sc::assets {
@@ -27,7 +27,7 @@ namespace sc::assets {
      *
      * This class is designed to loaded by `sc::memory`.
      */
-    struct alignas(core::kAlignmentNeon) atlas final {
+    struct alignas(memory::kAlignmentNeon) atlas final {
 
         // Static methods
 
@@ -42,7 +42,7 @@ namespace sc::assets {
          *
          * Contains information on the number of sprites and palettes.
          */
-        const struct alignas(core::kAlignmentNeon) metadata final {
+        const struct alignas(memory::kAlignmentNeon) metadata final {
             const std::uint64_t magic{0ULL};
             const std::uint32_t sprite16_count{0U};
             const std::uint16_t sprite32_count{0U};

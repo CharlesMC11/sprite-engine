@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <ostream>
 
+#include "core/memory.hh"
 #include "graphics/display_constants.hh"
 #include "math/fixed_point.hh"
 #include "registry/entity_registry.hh"
@@ -16,7 +17,7 @@ namespace sc::physics {
     inline constexpr auto kTotalCells{
             static_cast<std::size_t>(kColCount) * kRowCount};
 
-    struct alignas(core::kAlignmentCache) spatial_grid final {
+    struct alignas(memory::kAlignmentCache) spatial_grid final {
 
         // Public methods
 

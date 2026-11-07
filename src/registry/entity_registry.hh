@@ -279,7 +279,7 @@ namespace sc {
 static_assert(sizeof(sc::math::fixed_point_t) == sizeof(sc::core::index_t),
         "Kinematics data size must match index data size!");
 
-static_assert(sc::kMaxEntityCount % sc::core::kAlignmentCache == 0UZ,
+static_assert(sc::kMaxEntityCount % sc::memory::kAlignmentCache == 0UZ,
         "Number of entities must align with the cache!");
 
 inline constexpr auto kTotalChannelCount{
@@ -287,5 +287,5 @@ inline constexpr auto kTotalChannelCount{
         static_cast<std::size_t>(sc::index_channel::count)};
 static_assert(
         sc::kMaxEntityCount * sizeof(sc::core::index_t) * kTotalChannelCount <=
-                sc::kSRAMSize,
+                sc::memory::kSRAMSize,
         "Number of entities exceeds available SRAM size!");
