@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "core/core.hh"
+#include "core/bitwise_enum.hh"
 
 namespace sc::input {
 
