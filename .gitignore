@@ -4,9 +4,8 @@
 .vscode/
 
 # C/C++-generated files
-build-xcode/
-cmake-build-debug/
-cmake-build-release/
+build-*-debug/
+build-*-release/
 tests/test_*
 !tests/test_*.*
 *.a
