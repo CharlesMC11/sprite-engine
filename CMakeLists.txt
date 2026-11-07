@@ -63,15 +63,20 @@ endif ()
 
 # Shared Library
 
-add_library(shared INTERFACE
-        src/assets/atlas.hh
-        src/assets/sprite.hh
+add_library(shared STATIC
         src/core/core.hh
-        src/graphics/graphics_types.hh
         src/math/bbox.hh
         src/math/fixed_point.hh
+        src/math/fixed_point.cc
         src/math/utils.hh
+        src/graphics/graphics_types.hh
+        src/assets/atlas.hh
+        src/assets/sprite.hh
         src/simulation/physics_types.hh
+)
+
+target_include_directories(shared PUBLIC
+        src/
 )
 
 # Sprite Compiler / Atlas Linker
@@ -113,11 +118,13 @@ find_library(QUARTZ_LIB QuartzCore REQUIRED)
 # Executable
 
 add_executable(sprite-engine
+        src/core/bitwise_enum.hh
+        src/core/input.hh
+        src/core/memory.hh
+        src/core/memory.cc
+        src/math/bbox.hh
         src/assets/asset_constants.hh
         src/assets/asset_ids.hh
-        src/core/input.hh
-        src/core/memory.cc
-        src/core/memory.hh
         src/graphics/display_constants.hh
         src/graphics/metal_bridge.hh
         src/graphics/metal_bridge.cc
