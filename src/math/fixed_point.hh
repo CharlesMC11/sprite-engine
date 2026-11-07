@@ -47,10 +47,8 @@ namespace sc::math {
         auto operator-=(fixed_point_t rhs) -> fixed_point_t&;
 
 #ifndef __METAL_VERSION__
-
         auto operator<=>(const fixed_point_t&) const noexcept = default;
-
-#endif // __METAL_VERSION__
+#endif
     };
 
     struct u_fixed_point_t {
