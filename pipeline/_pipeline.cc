@@ -6,8 +6,9 @@
 #include "assets/atlas.hh"
 #include "assets/sprite.hh"
 #include "core/core.hh"
+#include "core/memory.hh"
 #include "graphics/graphics_types.hh"
-#include "math/utils.hh"
+#include "math/fixed_point.hh"
 #include "simulation/physics_types.hh"
 
 namespace nb = nanobind;
@@ -23,28 +24,29 @@ namespace sc::assets {
     inline constexpr std::size_t kSpriteMetadataSize{
             sizeof kSpriteMagicBytes + sizeof(sprite<>::metadata)};
 
-    static constexpr auto make_sprite_metadata(std::uint8_t u_min,
-            std::uint8_t u_max, std::uint8_t v_min, std::uint8_t v_max,
-            math::fixed_point_t u_anchor, math::fixed_point_t v_anchor,
-            std::uint8_t depth, physics::type physics_type,
+    [[nodiscard]] static constexpr auto make_sprite_metadata(
+            std::uint8_t u_min, std::uint8_t u_max, std::uint8_t v_min,
+            std::uint8_t v_max, math::fixed_point_t u_anchor,
+            math::fixed_point_t v_anchor, std::uint8_t depth,
+            physics::type physics_type,
             graphics::color_encoding color_encoding,
             std::uint8_t palette_index) -> sprite<>::metadata;
 
-    static constexpr auto serialize_sprite_metadata(
+    [[nodiscard]] static constexpr auto serialize_sprite_metadata(
             sprite<>::metadata meta) noexcept -> nb::bytes;
 
-    static constexpr auto deserialize_sprite_metadata(const nb::bytes& buffer)
-            -> sprite<>::metadata;
+    [[nodiscard]] static constexpr auto deserialize_sprite_metadata(
+            const nb::bytes& buffer) -> sprite<>::metadata;
 
     // Atlas
 
     inline constexpr std::size_t kAtlasMetadataSize{sizeof(atlas::metadata)};
 
-    static constexpr auto make_atlas_metadata(std::uint32_t sprite16_count,
-            std::uint16_t sprite32_count, std::uint16_t palette_count)
-            -> atlas::metadata;
+    [[nodiscard]] static constexpr auto make_atlas_metadata(
+            std::uint32_t sprite16_count, std::uint16_t sprite32_count,
+            std::uint16_t palette_count) -> atlas::metadata;
 
-    static constexpr auto serialize_atlas_metadata(
+    [[nodiscard]] static constexpr auto serialize_atlas_metadata(
             atlas::metadata meta) noexcept -> nb::bytes;
 
 } // namespace sc::assets
@@ -60,7 +62,7 @@ NB_MODULE(_pipeline, m)
     m.attr("MAX_5BIT") = sc::core::kMax5Bit;
     m.attr("MAX_6BIT") = sc::core::kMax6Bit;
 
-    m.attr("FRACTIONAL_BITS") = sc::math::kShiftFixedPoint;
+    m.attr("SHIFT_FIXED_POINT") = sc::math::kShiftFixedPoint;
 
     m.attr("ALIGNMENT_NEON") = sc::memory::kAlignmentNeon;
     m.attr("ALIGNMENT_CACHE") = sc::memory::kAlignmentCache;
@@ -223,11 +225,11 @@ NB_MODULE(_pipeline, m)
 
 // Sprite
 
-constexpr auto sc::assets::make_sprite_metadata(const std::uint8_t u_min,
-        const std::uint8_t u_max, const std::uint8_t v_min,
-        const std::uint8_t v_max, const math::fixed_point_t u_anchor,
-        const math::fixed_point_t v_anchor, const std::uint8_t depth,
-        const physics::type physics_type,
+[[nodiscard]] constexpr auto sc::assets::make_sprite_metadata(
+        const std::uint8_t u_min, const std::uint8_t u_max,
+        const std::uint8_t v_min, const std::uint8_t v_max,
+        const math::fixed_point_t u_anchor, const math::fixed_point_t v_anchor,
+        const std::uint8_t depth, const physics::type physics_type,
         const graphics::color_encoding color_encoding,
         const std::uint8_t palette_index) -> sprite<>::metadata
 {
@@ -243,7 +245,7 @@ constexpr auto sc::assets::make_sprite_metadata(const std::uint8_t u_min,
             .palette_index = palette_index};
 }
 
-constexpr auto sc::assets::serialize_sprite_metadata(
+[[nodiscard]] constexpr auto sc::assets::serialize_sprite_metadata(
         const sprite<>::metadata meta) noexcept -> nb::bytes
 {
     std::byte buffer[kSpriteMetadataSize];
@@ -252,8 +254,8 @@ constexpr auto sc::assets::serialize_sprite_metadata(
     return nb::bytes{buffer, kSpriteMetadataSize};
 }
 
-constexpr auto sc::assets::deserialize_sprite_metadata(const nb::bytes& buffer)
-        -> sprite<>::metadata
+[[nodiscard]] constexpr auto sc::assets::deserialize_sprite_metadata(
+        const nb::bytes& buffer) -> sprite<>::metadata
 {
     if (buffer.size() < kSpriteMetadataSize) {
         throw std::runtime_error{std::format("Buffer size too small for "
@@ -263,15 +265,15 @@ constexpr auto sc::assets::deserialize_sprite_metadata(const nb::bytes& buffer)
     }
 
     sprite<>::metadata meta;
-    std::memcpy(&meta,
-            static_cast<const char*>(buffer.data()) + sizeof kSpriteMagicBytes,
-            kSpriteMetadataSize - sizeof kSpriteMagicBytes);
+    const auto* const start{static_cast<const std::byte*>(buffer.data()) +
+            sizeof kSpriteMagicBytes};
+    std::memcpy(&meta, start, kSpriteMetadataSize - sizeof kSpriteMagicBytes);
     return meta;
 }
 
 // Atlas
 
-constexpr auto sc::assets::make_atlas_metadata(
+[[nodiscard]] constexpr auto sc::assets::make_atlas_metadata(
         const std::uint32_t sprite16_count, const std::uint16_t sprite32_count,
         const std::uint16_t palette_count) -> atlas::metadata
 {
@@ -281,7 +283,7 @@ constexpr auto sc::assets::make_atlas_metadata(
             .palette_count = palette_count};
 }
 
-constexpr auto sc::assets::serialize_atlas_metadata(
+[[nodiscard]] constexpr auto sc::assets::serialize_atlas_metadata(
         const atlas::metadata meta) noexcept -> nb::bytes
 {
     std::byte buffer[kAtlasMetadataSize];
