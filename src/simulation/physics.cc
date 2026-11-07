@@ -216,9 +216,9 @@ namespace sc::physics {
                 (hit.time - math::fixed_point_t::from_frac(1, 100)).value, 0,
                 math::kFixedOne.value)};
 
-        registry.new_x_pos_ptr()[i] = dx / padded_t + registry.x_pos_ptr()[i];
-        registry.new_y_pos_ptr()[i] = dy / padded_t + registry.y_pos_ptr()[i];
-        registry.new_z_pos_ptr()[i] = dz / padded_t + registry.z_pos_ptr()[i];
+        registry.new_x_pos_ptr()[i] = dx * padded_t + registry.x_pos_ptr()[i];
+        registry.new_y_pos_ptr()[i] = dy * padded_t + registry.y_pos_ptr()[i];
+        registry.new_z_pos_ptr()[i] = dz * padded_t + registry.z_pos_ptr()[i];
     }
 
     static void apply_slide(entity_registry& registry, const core::index_t i,
