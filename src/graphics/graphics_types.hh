@@ -42,7 +42,7 @@ namespace sc::graphics {
         explicit constexpr color_encoding_params(color_encoding encoding);
     };
 
-    SC_CONSTEXPR size_t kMaxColorCount{16U};
+    inline constexpr size_t kMaxColorCount{16U};
     using palette = packed_color_t[kMaxColorCount]; // A 16‑color palette.
 
     /**
@@ -56,16 +56,15 @@ namespace sc::graphics {
      */
     using packed_pixel_t = uint8_t;
 
-    SC_CONSTEXPR size_t kShiftAlpha{4U};
-    SC_CONSTEXPR size_t kShiftEmission{6U};
+    inline constexpr size_t kShiftAlpha{4U};
+    inline constexpr size_t kShiftEmission{6U};
 
-    SC_CONSTEXPR size_t kMaskPaletteIndex{core::kMax4Bit};
-    SC_CONSTEXPR size_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
-    SC_CONSTEXPR size_t kMaskEmission{1U << kShiftEmission};
+    inline constexpr size_t kMaskPaletteIndex{core::kMax4Bit};
+    inline constexpr size_t kMaskAlpha{core::kMax2Bit << kShiftAlpha};
+    inline constexpr size_t kMaskEmission{1U << kShiftEmission};
 
     // Constructor
 
-    [[nodiscard]]
     constexpr color_encoding_params::color_encoding_params(
             const color_encoding encoding)
     {

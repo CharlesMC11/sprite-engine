@@ -12,7 +12,7 @@
 
 namespace sc::math {
 
-    inline constexpr size_t kShiftFixedPoint{10UZ};
+    inline constexpr size_t kShiftFixedPoint{10U};
 
     struct fixed_point_t {
 
@@ -232,10 +232,10 @@ namespace sc::math {
 
     // Constants
 
-    SC_CONSTEXPR auto kFixedZero{fixed_point_t::from_int(0)};
-    SC_CONSTEXPR auto kFixedOne{fixed_point_t::from_int(1)};
+    inline constexpr auto kFixedZero{fixed_point_t::from_int(0)};
+    inline constexpr auto kFixedOne{fixed_point_t::from_int(1)};
 
-    SC_CONSTEXPR auto kUFixedZero{fixed_point_t::from_int(0U)};
-    SC_CONSTEXPR auto kUFixedOne{u_fixed_point_t::from_uint(1U)};
+    inline constexpr auto kUFixedZero{u_fixed_point_t::from_uint(0U)};
+    inline constexpr auto kUFixedOne{u_fixed_point_t::from_uint(1U)};
 
 } // namespace sc::math

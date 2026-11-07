@@ -9,15 +9,11 @@
 
 namespace sc::display {
 
-    SC_CONSTEXPR size_t kWidth{320U};
-    SC_CONSTEXPR size_t kHeight{240U};
+    inline constexpr size_t kWidth{320U};
+    inline constexpr size_t kHeight{240U};
 
-    SC_CONSTEXPR float kDefaultR{0.50f};
-    SC_CONSTEXPR float kDefaultG{0.50f};
-    SC_CONSTEXPR float kDefaultB{0.50f};
-
-    SC_CONSTEXPR size_t kTargetFPS{60U};
-    SC_CONSTEXPR auto kFrameTime{
+    inline constexpr size_t kTargetFPS{60U};
+    inline constexpr auto kFrameTime{
             math::u_fixed_point_t::from_frac(1U, kTargetFPS)};
 
 } // namespace sc::display
