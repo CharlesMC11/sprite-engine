@@ -39,7 +39,7 @@ namespace sc {
         if (buffer_) [[unlikely]] {
             ::munmap(buffer_, kRP2350TotalMemorySize);
         }
-#endif // defined(__APPLE__) || defined(__linux__)
+#endif
     }
 
 #if defined(__APPLE__) || defined(__linux__)

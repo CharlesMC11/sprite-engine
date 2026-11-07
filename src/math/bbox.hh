@@ -11,6 +11,7 @@
 namespace sc::geometry {
 
     /**
+     * @struct bbox
      * A bounding box.
      *
      * @tparam T
@@ -36,8 +37,9 @@ namespace sc::geometry {
 
         // Accessors
 
-        [[nodiscard]] constexpr T width() const;
-        [[nodiscard]] constexpr T height() const;
+        [[nodiscard]] constexpr T width() const { return u_max - u_min; }
+
+        [[nodiscard]] constexpr T height() const { return v_max - v_min; }
     };
 
     // Operators
@@ -63,19 +65,5 @@ namespace sc::geometry {
     }
 
 #endif // __METAL_VERSION__
-
-    // Accessors
-
-    template<typename T>
-    [[nodiscard]] constexpr T bbox<T>::width() const
-    {
-        return u_max - u_min;
-    }
-
-    template<typename T>
-    [[nodiscard]] constexpr T bbox<T>::height() const
-    {
-        return v_max - v_min;
-    }
 
 } // namespace sc::geometry
