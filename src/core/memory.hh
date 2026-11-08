@@ -1,7 +1,17 @@
 #pragma once
 
+#ifndef __METAL_VERSION__
+
 #include <cstddef>
 #include <span>
+
+#define SC_METAL_CONSTANT_SPACE
+
+#else
+
+#define SC_METAL_CONSTANT_SPACE constant
+
+#endif
 
 namespace sc {
 
@@ -13,25 +23,26 @@ namespace sc {
     public:
         // Static constants
 
-        static constexpr std::size_t kAlignmentNeon{16UZ};
-        static constexpr std::size_t kAlignmentCache{128UZ};
+        static constexpr size_t kAlignmentNeon{0x10U};
+        static constexpr size_t kAlignmentCache{0x80U};
 
-        static constexpr std::size_t kStripedBankSize{0x1'0000UZ};
-        static constexpr std::size_t kStripedBankCount{8UZ};
-        static constexpr std::size_t kUnstripedBankSize{0x1000UZ};
-        static constexpr std::size_t kUnstripedBankCount{2UZ};
+        static constexpr size_t kStripedBankSize{0x1'0000U};
+        static constexpr size_t kStripedBankCount{8U};
+        static constexpr size_t kUnstripedBankSize{0x1000U};
+        static constexpr size_t kUnstripedBankCount{2U};
 
-        static constexpr std::size_t kSRAMSize{
+        static constexpr size_t kSRAMSize{
                 kStripedBankSize * kStripedBankCount +
                 kUnstripedBankSize * kUnstripedBankCount};
 
-        static constexpr std::size_t kQSPISize{0x20'0000UZ};
+        static constexpr size_t kQSPISize{0x20'0000U};
 
-        static constexpr std::size_t kRP2350TotalMemorySize{
-                kSRAMSize + kQSPISize};
+        static constexpr size_t kRP2350TotalMemorySize{kSRAMSize + kQSPISize};
 
-        static constexpr std::size_t kRP2350SRAMBaseAddress{0x2000'0000UZ};
-        static constexpr std::size_t kRP2350QSPIBaseAddress{0x1000'0000UZ};
+        static constexpr size_t kRP2350SRAMBaseAddress{0x2000'0000U};
+        static constexpr size_t kRP2350QSPIBaseAddress{0x1000'0000U};
+
+#ifndef __METAL_VERSION__
 
         // Constructors
 
@@ -67,7 +78,10 @@ namespace sc {
 
     private:
         std::byte* buffer_{nullptr};
+
+#endif
     };
+#ifndef __METAL_VERSION__
 
     // Accessors
 
@@ -105,5 +119,7 @@ namespace sc {
                 kQSPISize / sizeof(T)};
 #endif
     }
+
+#endif
 
 } // namespace sc

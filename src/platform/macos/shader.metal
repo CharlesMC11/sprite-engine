@@ -5,8 +5,13 @@
 #include "graphics/display_constants.hh"
 #include "graphics/graphics_types.hh"
 #include "graphics/render_constants.hh"
+#include "math/fixed_point.hh"
 
 using namespace metal;
+
+inline constexpr float kDefaultR{0.50f};
+inline constexpr float kDefaultG{0.50f};
+inline constexpr float kDefaultB{0.50f};
 
 [[kernel]] void k_clear_screen(texture2d<float, access::read_write> out
         [[texture(0U)]],
@@ -28,29 +33,15 @@ inline float4 unpack_color(const sc::graphics::packed_color_t packed_color,
     float g{1.0f};
     float b{1.0f};
 
-    constexpr auto k5BitNorm{1.0f / static_cast<float>(k5BitMax)};
-    constexpr auto k6BitNorm{1.0f / static_cast<float>(k6BitMax)};
+    constexpr auto k5BitNorm{1.0f / static_cast<float>(sc::core::kMax5Bit)};
+    constexpr auto k6BitNorm{1.0f / static_cast<float>(sc::core::kMax6Bit)};
+    sc::graphics::color_encoding_params params{encoding};
 
-    using enum sc::graphics::color_encoding;
-    switch (encoding) {
-    case neutral:
-        r = static_cast<float>((packed_color >> 11U) & k5BitMax) * k5BitNorm;
-        g = static_cast<float>((packed_color >> 5U) & k6BitMax) * k6BitNorm;
-        b = static_cast<float>(packed_color & k5BitMax) * k5BitNorm;
-        break;
-    case warm:
-        r = static_cast<float>((packed_color >> 10U) & k6BitMax) * k6BitNorm;
-        g = static_cast<float>((packed_color >> 5U) & k5BitMax) * k5BitNorm;
-        b = static_cast<float>(packed_color & k5BitMax) * k5BitNorm;
-        break;
-    case cool:
-        r = static_cast<float>((packed_color >> 11U) & k5BitMax) * k5BitNorm;
-        g = static_cast<float>((packed_color >> 6U) & k5BitMax) * k5BitNorm;
-        b = static_cast<float>(packed_color & k6BitMax) * k6BitNorm;
-        break;
-    default:
-        break;
-    }
+    r = static_cast<float>((packed_color >> params.r_shift) & params.r_mask) *
+            k5BitNorm;
+    g = static_cast<float>((packed_color >> params.g_shift) & params.g_mask) *
+            k6BitNorm;
+    b = static_cast<float>(packed_color & params.b_mask) * k5BitNorm;
 
     return float4(r, g, b, 1.0f);
 }
@@ -59,11 +50,11 @@ inline float4 unpack_color(const sc::graphics::packed_color_t packed_color,
         [[buffer(sc::render::BUFFER_INDEX_PALETTES)]],
         constant sc::assets::sprite32* sprites
         [[buffer(sc::render::BUFFER_INDEX_SPRITES)]],
-        constant float* pos_x_ptr
+        constant sc::math::fixed_point_t* pos_x_ptr
         [[buffer(sc::render::BUFFER_INDEX_X_POSITIONS)]],
-        constant float* pos_y_ptr
+        constant sc::math::fixed_point_t* pos_y_ptr
         [[buffer(sc::render::BUFFER_INDEX_Y_POSITIONS)]],
-        constant float* pos_z_ptr
+        constant sc::math::fixed_point_t* pos_z_ptr
         [[buffer(sc::render::BUFFER_INDEX_Z_POSITIONS)]],
         constant sc::core::index_t* atlas_indices
         [[buffer(sc::render::BUFFER_INDEX_ATLAS_INDICES)]],
@@ -84,8 +75,9 @@ inline float4 unpack_color(const sc::graphics::packed_color_t packed_color,
     for (auto i{0U}; i < entity_count; ++i) {
         const sc::core::index_t draw_idx{draw_order[i]};
 
-        const auto entity_coord{float2(pos_x_ptr[draw_idx],
-                pos_y_ptr[draw_idx] - pos_z_ptr[draw_idx])};
+        const auto entity_coord{float2(static_cast<float>(pos_x_ptr[draw_idx]),
+                static_cast<float>(
+                        pos_y_ptr[draw_idx] - pos_z_ptr[draw_idx]))};
 
         const auto local_coord{int2(gid) - int2(floor(entity_coord))};
 
@@ -93,18 +85,18 @@ inline float4 unpack_color(const sc::graphics::packed_color_t packed_color,
                 local_coord.y < 0 || static_cast<uint>(local_coord.y) >= 32U)
             continue;
 
-        constant sc::assets::sprite32& sprite{sprites[atlas_indices[draw_idx]]};
-        const sc::graphics::packed_pixel_t pixel{sprite.pixels[local_coord.y *
-                        sc::assets::sprites::kDefaultSize +
-                local_coord.x]};
+        constant sc::assets::sprite32& sprite{
+                sprites[atlas_indices[draw_idx]]};
+        const sc::graphics::packed_pixel_t pixel{
+                sprite.pixels[local_coord.y * 32U + local_coord.x]};
 
-        const auto alpha_raw{(pixel >> 4U) & sc::core::k2BitMax};
+        const auto alpha_raw{(pixel >> 4U) & sc::core::kMax2Bit};
         if (alpha_raw == 0x00U)
             continue;
 
         const sc::graphics::packed_color_t packed_color{
                 palettes[sprite.meta.palette_index]
-                        .colors[pixel & sc::graphics::kMaskPaletteIndex]};
+                        [pixel & sc::graphics::kMaskPaletteIndex]};
 
         const float4 color_normalized{
                 unpack_color(packed_color, sprite.meta.color_encoding)};

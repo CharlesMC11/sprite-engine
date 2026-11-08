@@ -2,17 +2,17 @@
 #define MTL_PRIVATE_IMPLEMENTATION
 #define NS_PRIVATE_IMPLEMENTATION
 
-#include "graphics/metal_bridge.hh"
+#include "platform/macos/metal_bridge.hh"
 
 #include <Metal/Metal.hpp>
 #include <QuartzCore/QuartzCore.hpp>
 
 #include <cassert>
 
-#include "assets/asset_constants.hh"
 #include "assets/atlas.hh"
 #include "graphics/display_constants.hh"
 #include "graphics/graphics_types.hh"
+#include "platform/macos/asset_constants.hh"
 #include "registry/entity_registry.hh"
 #include "render_constants.hh"
 
@@ -29,24 +29,24 @@ namespace sc::render {
         const auto* library_path{NS::String::string(
                 assets::kShaderLib, NS::UTF8StringEncoding)};
         auto* library{device->newLibrary(library_path, &error)};
-        assert(library && error->localizedDescription()->utf8String());
+        // assert(error && library &&
+        // error->localizedDescription()->utf8String());
 
         const auto* fn_name{
                 NS::String::string("k_clear_screen", NS::UTF8StringEncoding)};
         auto* function{library->newFunction(fn_name)};
-        assert(function && error->localizedDescription()->utf8String());
-
+        // assert(function && error->localizedDescription()->utf8String());
         clear_pso_ = NS::TransferPtr(
                 device_->newComputePipelineState(function, &error));
-        assert(clear_pso_ && error->localizedDescription()->utf8String());
+        // assert(clear_pso_ && error->localizedDescription()->utf8String());
 
         fn_name = NS::String::string("k_draw_sprites", NS::UTF8StringEncoding);
         function = library->newFunction(fn_name);
-        assert(function && error->localizedDescription()->utf8String());
+        // assert(function && error->localizedDescription()->utf8String());
 
         sprite_pso_ = NS::TransferPtr(
                 device_->newComputePipelineState(function, &error));
-        assert(sprite_pso_ && error->localizedDescription()->utf8String());
+        // assert(sprite_pso_ && error->localizedDescription()->utf8String());
 
         function->release();
         library->release();

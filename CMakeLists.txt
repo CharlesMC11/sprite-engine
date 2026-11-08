@@ -63,6 +63,7 @@ endif ()
 
 add_library(shared STATIC
         src/core/core.hh
+        src/core/memory.hh
         src/math/bbox.hh
         src/math/fixed_point.hh
         src/math/fixed_point.cc
@@ -93,7 +94,6 @@ nanobind_add_module(_pipeline
 
 target_include_directories(_pipeline PRIVATE
         .venv/
-        src/
 )
 
 target_compile_options(_pipeline PRIVATE
@@ -118,23 +118,18 @@ find_library(QUARTZ_LIB QuartzCore REQUIRED)
 add_executable(sprite-engine
         src/core/bitwise_enum.hh
         src/core/input.hh
-        src/core/memory.hh
         src/core/memory.cc
-        src/math/bbox.hh
-        src/assets/asset_constants.hh
         src/assets/asset_ids.hh
         src/graphics/display_constants.hh
-        src/graphics/metal_bridge.hh
-        src/graphics/metal_bridge.cc
-        src/graphics/render_constants.hh
-        src/graphics/shader.metal
-        src/math/bbox.hh
-        src/math/fixed_point.cc
-        src/platform/SCAppDelegate.hh
-        src/platform/SCAppDelegate.mm
-        src/platform/SCStage.hh
-        src/platform/SCStage.mm
-        src/platform/main.mm
+        src/platform/macos/asset_constants.hh
+        src/platform/macos/metal_bridge.hh
+        src/platform/macos/metal_bridge.cc
+        src/platform/macos/render_constants.hh
+        src/platform/macos/SCAppDelegate.hh
+        src/platform/macos/SCAppDelegate.mm
+        src/platform/macos/SCStage.hh
+        src/platform/macos/SCStage.mm
+        src/platform/macos/main.mm
         src/registry/entity_registry.hh
         src/registry/entity_registry.cc
         src/simulation/physics.hh
@@ -142,11 +137,10 @@ add_executable(sprite-engine
         src/simulation/spatial_grid.hh
         src/simulation/world.hh
         src/simulation/world.cc
-        src/main.cc
+#        src/main.cc
 )
 
 target_include_directories(sprite-engine PUBLIC
-        src/
         vendor/metal-cpp/
 )
 
@@ -169,13 +163,13 @@ target_link_options(sprite-engine PRIVATE
 
 add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib"
         COMMAND xcrun -sdk macosx metal -c -I "${CMAKE_CURRENT_SOURCE_DIR}/src"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shader.metal" -o
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos/shader.metal" -o
         "${CMAKE_CURRENT_BINARY_DIR}/shader.air"
         COMMAND xcrun -sdk macosx metallib
         "${CMAKE_CURRENT_BINARY_DIR}/shader.air" -o
         "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib"
-        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shader.metal"
+        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/macos/shader.metal"
 )
 
 add_custom_target(shaders DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/shader.metallib")
-add_dependencies(sprite-engine shaders)
+#add_dependencies(sprite-engine shaders)

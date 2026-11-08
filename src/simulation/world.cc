@@ -57,31 +57,6 @@ namespace sc {
 
     void world::update(const input::mask input, const MTL::Drawable* drawable)
     {
-        ftime_accumulator_ += std::min(display::kFrameTime, 0.25f);
-
-        while (std::isgreaterequal(
-                ftime_accumulator_, physics::kFixedTimestep)) {
-            registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] = 0.0f;
-
-            constexpr float vel{200.0f};
-            if (core::any(input & input::mask::up))
-                registry_.y_vel_ptr()[0UZ] -= vel;
-            if (core::any(input & input::mask::down))
-                registry_.y_vel_ptr()[0UZ] += vel;
-            if (core::any(input & input::mask::left))
-                registry_.x_vel_ptr()[0UZ] -= vel;
-            if (core::any(input & input::mask::right))
-                registry_.x_vel_ptr()[0UZ] += vel;
-
-            registry_.update(physics::kFixedTimestep);
-            grid_.update(registry_);
-            physics::resolve_entity_collisions(
-                    registry_, grid_, *atlas_.data(), physics::kFixedTimestep);
-
-            registry_.commit();
-            ftime_accumulator_ -= physics::kFixedTimestep;
-        }
-
         registry_.sort_draw();
 
         bridge_.begin_frame(drawable);
