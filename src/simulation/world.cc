@@ -92,7 +92,7 @@ namespace sc {
 
     */
 
-    void world::tick(const input::input_t in) noexcept
+    void world::tick(const input::mask in) noexcept
     {
         switch (state_) {
         case state::home:
@@ -121,7 +121,7 @@ namespace sc {
         // Probably render here?
     }
 
-    void world::tick_home(const input::input_t in) noexcept
+    void world::tick_home(const input::mask in) noexcept
     {
         if (any((input::mask::up | input::mask::left) & in)) {
             if (menu_option_ > 0U) {
@@ -152,7 +152,7 @@ namespace sc {
         }
     }
 
-    void world::tick_exploring(const input::input_t in) noexcept
+    void world::tick_exploring(const input::mask in) noexcept
     {
         ftime_ += std::min(
                 display::kFrameTime, math::u_fixed_point_t::from_frac(1U, 4U));

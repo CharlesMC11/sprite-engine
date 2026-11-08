@@ -30,13 +30,13 @@ namespace sc {
 
         // Public methods
 
-        void tick(input::input_t in) noexcept;
+        void tick(input::mask in) noexcept;
 
     private:
-        void tick_home(input::input_t) noexcept;
-        void tick_exploring(input::input_t) noexcept;
-        void tick_paused(input::input_t) noexcept;
-        void tick_battle(input::input_t) noexcept;
+        void tick_home(input::mask) noexcept;
+        void tick_exploring(input::mask) noexcept;
+        void tick_paused(input::mask) noexcept;
+        void tick_battle(input::mask) noexcept;
 
         /*
         physics::spatial_grid grid_;

@@ -5,13 +5,15 @@
 #include "core/bitwise_enum.hh"
 
 namespace sc::input {
-
     // Type aliases
 
     using input_t = std::uint8_t;
 
     // Enums
 
+    /**
+     * @enum mask
+     */
     enum class mask : input_t {
         none = 0U,
         up = 1U,
@@ -23,6 +25,8 @@ namespace sc::input {
         cancel = 1U << 6U,
     };
 
+    // FIXME: This is temporary
+    [[nodiscard]] inline mask poll() noexcept { return mask::none; }
 } // namespace sc::input
 
 SC_ENABLE_ENUM_BITWISE_OPS(sc::input::mask)
