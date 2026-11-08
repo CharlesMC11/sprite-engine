@@ -2,8 +2,6 @@
 
 #include <type_traits>
 
-#include "core.hh"
-
 namespace sc {
 
     template<typename T>
@@ -17,6 +15,9 @@ namespace sc {
      */
     template<typename T>
     concept bitwise_enum = std::is_enum_v<T> && sc::enable_bitwise_ops_v<T>;
+
+    template<typename T>
+    concept bitwise_t = bitwise_enum<T> || std::is_integral_v<T>;
 
     /**
      * Check if any of an enum’s bits are on.
@@ -38,7 +39,7 @@ namespace sc {
 
 } // namespace sc
 
-template<sc::bitwise_enum LeftType, std::integral RightType = LeftType>
+template<sc::bitwise_enum LeftType, sc::bitwise_t RightType = LeftType>
 [[nodiscard]] constexpr LeftType operator|(
         const LeftType lhs, const RightType rhs) noexcept
 {
@@ -46,7 +47,7 @@ template<sc::bitwise_enum LeftType, std::integral RightType = LeftType>
     return static_cast<LeftType>(static_cast<T>(lhs) | static_cast<T>(rhs));
 }
 
-template<sc::bitwise_enum LeftType, std::integral RightType = LeftType>
+template<sc::bitwise_enum LeftType, sc::bitwise_t RightType = LeftType>
 [[nodiscard]] constexpr LeftType operator&(
         const LeftType lhs, const RightType rhs) noexcept
 {
@@ -54,7 +55,7 @@ template<sc::bitwise_enum LeftType, std::integral RightType = LeftType>
     return static_cast<LeftType>(static_cast<T>(lhs) & static_cast<T>(rhs));
 }
 
-template<sc::bitwise_enum LeftType, std::integral RightType = LeftType>
+template<sc::bitwise_enum LeftType, sc::bitwise_t RightType = LeftType>
 [[nodiscard]] constexpr LeftType operator^(
         const LeftType lhs, const RightType rhs) noexcept
 {

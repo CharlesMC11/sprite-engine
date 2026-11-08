@@ -34,7 +34,7 @@ namespace sc::physics {
                     atlas.sprite32_span()[registry.sprite_index_ptr()[a_idx]]
                             .meta};
 
-            if (!core::any(type::ACTOR & a_meta.physics_type)) {
+            if (!any(type::ACTOR & a_meta.physics_type)) {
                 continue;
             }
 
@@ -96,7 +96,7 @@ namespace sc::physics {
                                         [registry.sprite_index_ptr()[b_idx]]
                                                 .meta};
 
-                        if (core::any(type::NONE & b_meta.physics_type)) {
+                        if (any(type::NONE & b_meta.physics_type)) {
                             b_idx = registry.next_in_cell_ptr()[b_idx];
                             continue;
                         }

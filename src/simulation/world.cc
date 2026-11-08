@@ -123,17 +123,17 @@ namespace sc {
 
     void world::tick_home(const input::input_t in) noexcept
     {
-        if (core::any((input::mask::up | input::mask::left) & in)) {
+        if (any((input::mask::up | input::mask::left) & in)) {
             if (menu_option_ > 0U) {
                 --menu_option_;
             }
         }
-        else if (core::any((input::mask::down | input::mask::right) & in)) {
+        else if (any((input::mask::down | input::mask::right) & in)) {
             if (menu_option_ < 2U) {
                 ++menu_option_;
             }
         }
-        else if (core::any(input::mask::interact & in)) {
+        else if (any(input::mask::interact & in)) {
             switch (menu_option_) {
             case 0U: // Continue if save file exists
                 state_ = state::exploring;
@@ -161,16 +161,16 @@ namespace sc {
             registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] =
                     math::kFixedZero;
             constexpr auto vel{math::fixed_point_t::from_int(200)};
-            if (core::any(input::mask::up & in)) {
+            if (any(input::mask::up & in)) {
                 registry_.y_vel_ptr()[0UZ] -= vel;
             }
-            if (core::any(input::mask::down & in)) {
+            if (any(input::mask::down & in)) {
                 registry_.y_vel_ptr()[0UZ] += vel;
             }
-            if (core::any(input::mask::left & in)) {
+            if (any(input::mask::left & in)) {
                 registry_.x_vel_ptr()[0UZ] -= vel;
             }
-            if (core::any(input::mask::right & in)) {
+            if (any(input::mask::right & in)) {
                 registry_.x_vel_ptr()[0UZ] += vel;
             }
 
