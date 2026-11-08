@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <sysexits.h>
 #include <unistd.h>
+
+#include <cstdlib>
 #endif
 
 #include <cassert>
