@@ -35,12 +35,12 @@ import numpy.typing as npt
 
 from pipeline import (
     FOOTER_SIZE_BYTES,
-    FRACTIONAL_BITS,
     MASK_ALPHA,
     MASK_PALETTE_INDEX,
     MAX_2BIT,
     MAX_8BIT,
     SHIFT_ALPHA,
+    SHIFT_FIXED_POINT,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
@@ -159,8 +159,8 @@ if __name__ == "__main__":
         thickness=BBOX_THICKNESS,
     )
 
-    u_anchor = meta.u_anchor / (1 << FRACTIONAL_BITS)
-    v_anchor = meta.v_anchor / (1 << FRACTIONAL_BITS)
+    u_anchor = meta.u_anchor / (1 << SHIFT_FIXED_POINT)
+    v_anchor = meta.v_anchor / (1 << SHIFT_FIXED_POINT)
     cv2.circle(
         image_resized,
         (

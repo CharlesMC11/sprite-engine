@@ -134,7 +134,6 @@ add_executable(sprite-engine
         src/registry/entity_registry.cc
         src/simulation/physics.hh
         src/simulation/physics.cc
-        src/simulation/spatial_grid.hh
         src/simulation/world.hh
         src/simulation/world.cc
 #        src/main.cc

@@ -5,7 +5,6 @@ from pipeline._pipeline import (
     ALIGNMENT_CACHE,
     ALIGNMENT_NEON,
     ATLAS_MAGIC_BYTES,
-    FRACTIONAL_BITS,
     MASK_ALPHA,
     MASK_EMISSION,
     MASK_PALETTE_INDEX,
@@ -19,11 +18,13 @@ from pipeline._pipeline import (
     PALETTE_SIZE_BYTES,
     SHIFT_ALPHA,
     SHIFT_EMISSION,
+    SHIFT_FIXED_POINT,
     AtlasMetadata,
     BBox,
     ColorEncoding,
     ColorEncodingParams,
     PhysicsType,
+    ResourceLayoutError,
     SpriteMetadata,
     convert_to_fixed_point,
 )
@@ -48,9 +49,6 @@ SPRITE_MINIMUM_FILE_SIZE_BYTES: int = (
     SpriteMetadata.EXPECTED_SIZE_BYTES + FOOTER_SIZE_BYTES
 )
 """The minimum file size of a sprite file in bytes."""
-
-
-class ResourceLayoutError(Exception): ...
 
 
 class ResourceLayoutWarning(UserWarning): ...

@@ -206,13 +206,13 @@ class AssetLinker:
             len(self._palette_registry),
         ).to_bytes()
 
-        if (total_bytes := metadata_bytes + assets_bytes) > MAX_ROM_SIZE:
+        if len(total_bytes := metadata_bytes + assets_bytes) > MAX_ROM_SIZE:
             raise ResourceLayoutError(
                 f"Atlas size too large! Maximum is {MAX_ROM_SIZE} bytes, "
                 f"got {len(total_bytes)}."
             )
 
-        output_path.write_bytes(metadata_bytes + assets_bytes)
+        output_path.write_bytes(total_bytes)
         header_path.write_text("\n".join(header_lines))
 
     # Protected  methods

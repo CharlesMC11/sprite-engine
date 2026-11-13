@@ -16,6 +16,11 @@ using nb::literals::operator""_a;
 
 namespace sc::assets {
 
+    class resource_layout_error : public std::runtime_error {
+    public:
+        using std::runtime_error::runtime_error;
+    };
+
     // Sprite
 
     inline constexpr char kSpriteMagicBytes[]{
@@ -62,14 +67,26 @@ NB_MODULE(_pipeline, m)
     m.attr("MAX_5BIT") = sc::core::kMax5Bit;
     m.attr("MAX_6BIT") = sc::core::kMax6Bit;
 
-    m.attr("SHIFT_FIXED_POINT") = sc::math::kShiftFixedPoint;
-
     m.attr("ALIGNMENT_NEON") = sc::memory::kAlignmentNeon;
     m.attr("ALIGNMENT_CACHE") = sc::memory::kAlignmentCache;
 
     m.attr("MAX_ROM_SIZE") = sc::memory::kQSPISize;
 
+    nb::exception<sc::assets::resource_layout_error>{m, "ResourceLayoutError"};
+
     // Math
+
+    m.attr("SHIFT_FIXED_POINT") = sc::math::kShiftFixedPoint;
+
+    m.def(
+            "convert_to_fixed_point",
+            [](const float n) -> std::int32_t {
+                return sc::math::fixed_point_t::from_float(n).value;
+            },
+            "n"_a,
+            "Convert the given value into a Q21.10 fixed point value.\n\n"
+            ":param n: The value to convert.\n\n"
+            ":return: The converted value in Q21.10 format.\n");
 
     nb::class_<sc::geometry::bbox<>>{m, "BBox", "A bounding box."}
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
@@ -81,16 +98,6 @@ NB_MODULE(_pipeline, m)
             .def_ro("v_max", &sc::geometry::bbox<>::v_max)
             .def_prop_ro("width", &sc::geometry::bbox<>::width)
             .def_prop_ro("height", &sc::geometry::bbox<>::height);
-
-    m.def(
-            "convert_to_fixed_point",
-            [](const float n) -> std::int32_t {
-                return sc::math::fixed_point_t::from_float(n).value;
-            },
-            "n"_a,
-            "Convert the given value into a Q21.10 fixed point value.\n\n"
-            ":param n: The value to convert.\n\n"
-            ":return: The converted value in Q21.10 format.\n");
 
     // Graphics
 
@@ -258,9 +265,9 @@ NB_MODULE(_pipeline, m)
         const nb::bytes& buffer) -> sprite<>::metadata
 {
     if (buffer.size() < kSpriteMetadataSize) {
-        throw std::runtime_error{std::format("Buffer size too small for "
-                                             "SpriteMetadata. Expected "
-                                             "{} bytes, got {}.",
+        throw resource_layout_error{std::format("Buffer size too small for "
+                                                "SpriteMetadata. Expected "
+                                                "{} bytes, got {}.",
                 kSpriteMetadataSize, buffer.size())};
     }
 
