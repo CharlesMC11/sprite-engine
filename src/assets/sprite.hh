@@ -61,4 +61,4 @@ static_assert(
         "Sprite metadata must be 16 B.");
 static_assert(sizeof(sc::assets::sprite16) == 272U, "Sprite16 must be 272 B!");
 static_assert(
-        sizeof(sc::assets::sprite<>) == 1'040U, "Sprite32 must be 1,040 B!");
+        sizeof(sc::assets::sprite32) == 1'040U, "Sprite32 must be 1,040 B!");
