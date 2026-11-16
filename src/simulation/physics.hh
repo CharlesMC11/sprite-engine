@@ -4,7 +4,6 @@
 
 namespace sc {
 
-    struct spatial_grid;
     class entity_registry;
     namespace assets {
         struct atlas;
@@ -13,8 +12,7 @@ namespace sc {
     namespace physics {
 
         void resolve_entity_collisions(entity_registry& registry,
-                const spatial_grid& grid, const assets::atlas& atlas,
-                math::fixed_point_t dt);
+                const assets::atlas& atlas, math::fixed_point_t dt);
 
     } // namespace physics
 
