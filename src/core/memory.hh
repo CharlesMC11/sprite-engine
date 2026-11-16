@@ -129,7 +129,7 @@ namespace sc {
 
 } // namespace sc
 
-#ifndef __METAL__
+#ifndef __METAL_VERSION__
 
 static_assert(std::has_single_bit(sc::memory::ALIGNMENT_NEON),
         "ALIGNMENT_NEON is not a power of 2!");

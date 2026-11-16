@@ -22,7 +22,7 @@ namespace sc::core {
     inline constexpr size_t MAX_5BIT{(1U << 5U) - 1U};
     inline constexpr size_t MAX_6BIT{(1U << 6U) - 1U};
 
-#ifndef __METAL__
+#ifndef __METAL_VERSION__
 
     /**
      * Requirements for types to be safe to direct memory mapping.
