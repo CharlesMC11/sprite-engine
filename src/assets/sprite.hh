@@ -29,8 +29,9 @@ namespace sc::assets {
             math::fixed_point_t u_anchor{0}, v_anchor{0};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
-            graphics::color_encoding color_encoding{0U};
-            uint8_t palette_index{0U};
+            graphics::color_encoding color_encoding{
+                    graphics::color_encoding::NEUTRAL};
+            uint8_t palette_index{0x3FU};
         } meta;
 
         // Row-major pixels
