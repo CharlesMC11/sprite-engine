@@ -1,5 +1,6 @@
 #include "simulation/physics.hh"
 
+#include <algorithm>
 #include <cmath>
 
 #include "assets/atlas.hh"
@@ -8,7 +9,6 @@
 #include "math/fixed_point.hh"
 #include "registry/entity_registry.hh"
 #include "simulation/physics_types.hh"
-#include "simulation/spatial_grid.hh"
 
 namespace sc::physics {
 
@@ -25,8 +25,7 @@ namespace sc::physics {
             sweep_result hit, math::fixed_point_t dt);
 
     void resolve_entity_collisions(entity_registry& registry,
-            const spatial_grid& grid, const assets::atlas& atlas,
-            const math::fixed_point_t dt)
+            const assets::atlas& atlas, const math::fixed_point_t dt)
     {
         const auto entity_count{static_cast<core::index_t>(registry.count())};
         for (core::index_t a_idx{0U}; a_idx < entity_count; ++a_idx) {
@@ -59,59 +58,26 @@ namespace sc::physics {
 
             const auto a_aabb{aabb::from_registry(registry, a_idx, a_meta)};
 
-            const math::fixed_point_t a_sweep_west{
-                    std::min(a_aabb.west, a_aabb.west + a_dx)};
-            const math::fixed_point_t a_sweep_east{
-                    std::max(a_aabb.east, a_aabb.east + a_dx)};
-
-            const math::fixed_point_t a_sweep_north{
-                    std::min(a_aabb.north, a_aabb.north + a_dy)};
-            const math::fixed_point_t a_sweep_south{
-                    std::max(a_aabb.south, a_aabb.south + a_dy)};
-
-            const auto a_x_start{std::max(
-                    0, static_cast<int>(a_sweep_west) / (kCellSize - 1))};
-            const auto a_x_end{std::min(kColCount - 1,
-                    static_cast<int>(a_sweep_east) / (kCellSize + 1))};
-
-            const auto a_y_start{std::max(
-                    0, static_cast<int>(a_sweep_north) / (kCellSize - 1))};
-            const auto a_y_end{std::min(kRowCount - 1,
-                    static_cast<int>(a_sweep_south) / (kCellSize + 1))};
-
             sweep_result collision;
-
-            for (int cy{a_y_start}; cy <= a_y_end; ++cy) {
-                for (int cx{a_x_start}; cx <= a_x_end; ++cx) {
-                    core::index_t b_idx{grid.cell_heads[cy * kColCount + cx]};
-
-                    while (b_idx != core::kInvalidIndex) {
-                        if (a_idx == b_idx) {
-                            b_idx = registry.next_in_cell_ptr()[b_idx];
-                            continue;
-                        }
-
-                        const assets::sprite<>::metadata b_meta{
-                                atlas.sprite32_span()
-                                        [registry.sprite_index_ptr()[b_idx]]
-                                                .meta};
+            for (core::index_t b_idx{0U}; b_idx < entity_count; ++b_idx) {
+                const assets::sprite<>::metadata b_meta{atlas
+                                .sprite32_span()[registry
+                                                .sprite_index_ptr()[b_idx]]
+                                .meta};
 
                 if (any((type::UNDEFINED | type::NONE) &
                             b_meta.physics_type)) {
                     continue;
                 }
 
-                        const auto b_aabb{
-                                aabb::from_registry(registry, b_idx, b_meta)};
+                const auto b_aabb{
+                        aabb::from_registry(registry, b_idx, b_meta)};
 
-                        const sweep_result ab_collision{
-                                sweep_aabb(a_aabb, b_aabb, dt)};
+                const sweep_result ab_collision{
+                        sweep_aabb(a_aabb, b_aabb, dt)};
 
-                        if (ab_collision.time < collision.time)
-                            collision = ab_collision;
-
-                        b_idx = registry.next_in_cell_ptr()[b_idx];
-                    }
+                if (ab_collision.time < collision.time) {
+                    collision = ab_collision;
                 }
             }
 

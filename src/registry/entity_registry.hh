@@ -91,7 +91,6 @@ namespace sc {
     enum class index_channel : std::uint8_t {
         sprite_index,
         draw_order,
-        next_in_cell,
         count
     };
 
@@ -137,7 +136,6 @@ namespace sc {
 
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(sprite_index)
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(draw_order)
-        SC_REGISTER_INDEX_CHANNEL_ACCESSOR(next_in_cell)
 
         [[nodiscard]] constexpr auto count() const noexcept -> std::size_t
         {
