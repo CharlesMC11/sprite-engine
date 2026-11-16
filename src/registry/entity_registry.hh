@@ -85,13 +85,13 @@ namespace sc {
         new_x_pos,
         new_y_pos,
         new_z_pos,
-        count
+        COUNT
     };
 
     enum class index_channel : std::uint8_t {
         sprite_index,
         draw_order,
-        count
+        COUNT
     };
 
     /**
@@ -236,7 +236,7 @@ namespace sc {
 
     // Constructor
 
-    [[nodiscard]] constexpr entity_registry::entity_registry(
+    constexpr entity_registry::entity_registry(
             std::byte* const address) noexcept
         : buffer_{address}
     {
@@ -255,7 +255,7 @@ namespace sc {
     [[nodiscard]] constexpr auto entity_registry::offset(
             index_channel channel) noexcept -> std::size_t
     {
-        return offset(xform_channel::count) +
+        return offset(xform_channel::COUNT) +
                 sizeof(core::index_t) * MAX_ENTITY_COUNT *
                 static_cast<std::size_t>(channel);
     }
@@ -281,8 +281,8 @@ static_assert(sc::MAX_ENTITY_COUNT % sc::memory::ALIGNMENT_CACHE == 0UZ,
         "Number of entities must align with the cache!");
 
 inline constexpr auto TOTAL_CHANNEL_COUNT{
-        static_cast<std::size_t>(sc::xform_channel::count) +
-        static_cast<std::size_t>(sc::index_channel::count)};
+        static_cast<std::size_t>(sc::xform_channel::COUNT) +
+        static_cast<std::size_t>(sc::index_channel::COUNT)};
 static_assert(sc::MAX_ENTITY_COUNT * sizeof(sc::core::index_t) *
                         TOTAL_CHANNEL_COUNT <=
                 sc::memory::SRAM_SIZE_BYTES,
