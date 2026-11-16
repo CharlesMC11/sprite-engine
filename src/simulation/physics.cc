@@ -12,7 +12,7 @@
 
 namespace sc::physics {
 
-    constexpr math::fixed_point_t kSentinel{-1 << 30};
+    constexpr math::fixed_point_t SENTINEL{-1 << 30};
 
     [[nodiscard]] static sweep_result sweep_aabb(
             const aabb& a, const aabb& b, math::fixed_point_t dt);
@@ -130,11 +130,11 @@ namespace sc::physics {
         math::fixed_point_t entry_time, exit_time;
         if (vel == math::FIXED_POINT_ZERO) {
             if (a_max < b_min || a_min > b_max) {
-                return {kSentinel, kSentinel};
+                return {SENTINEL, SENTINEL};
             }
 
-            entry_time = kSentinel;
-            exit_time = math::fixed_point_t{-kSentinel};
+            entry_time = SENTINEL;
+            exit_time = math::fixed_point_t{-SENTINEL};
         }
         else {
             const math::fixed_point_t entry_pos{
@@ -159,21 +159,21 @@ namespace sc::physics {
         const math::fixed_point_t x_vel{(a.x_vel - b.x_vel) * dt};
         const auto [x_entry_time, x_exit_time]{calculate_entry_exit_times(
                 x_vel, a.west, a.east, b.west, b.east)};
-        if (x_entry_time == kSentinel) {
+        if (x_entry_time == SENTINEL) {
             return result;
         }
 
         const math::fixed_point_t y_vel{(a.y_vel - b.y_vel) * dt};
         const auto [y_entry_time, y_exit_time]{calculate_entry_exit_times(
                 y_vel, a.north, a.south, b.north, b.south)};
-        if (y_entry_time == kSentinel) {
+        if (y_entry_time == SENTINEL) {
             return result;
         }
 
         const math::fixed_point_t z_vel{(a.z_vel - b.z_vel) * dt};
         const auto [z_entry_time, z_exit_time]{calculate_entry_exit_times(
                 z_vel, a.nadir, a.zenith, b.nadir, b.zenith)};
-        if (z_entry_time == kSentinel) {
+        if (z_entry_time == SENTINEL) {
             return result;
         }
 

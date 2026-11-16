@@ -10,12 +10,12 @@
 
 namespace sc::physics {
 
-    inline constexpr auto kFixedTimestep{
+    inline constexpr auto FIXED_TIMESTEP{
             math::u_fixed_point_t::from_frac(1, 120)};
 
-    inline constexpr auto kGravity{
+    inline constexpr auto GRAVITY{
             math::fixed_point_t::from_frac(980'665, 100'000)};
-    inline constexpr auto kMaxVelocity{math::fixed_point_t::from_int(500)};
+    inline constexpr auto MAX_VELOCITY{math::fixed_point_t::from_int(500)};
 
     /**
      * The laws of physics an entity obeys.

@@ -13,13 +13,13 @@ namespace sc {
     class memory;
 
     enum class state : uint8_t {
-        home,
-        settings,
-        opening,
-        exploring,
-        pause,
-        battle,
-        event,
+        HOME,
+        SETTINGS,
+        OPENING,
+        EXPLORING,
+        PAUSE,
+        BATTLE,
+        EVENT,
     };
 
     class world final {
@@ -48,7 +48,7 @@ namespace sc {
         entity_registry registry_;
         math::u_fixed_point_t ftime_{0U};
         std::uint_least8_t menu_option_{0U};
-        state state_{state::home};
+        state state_{state::HOME};
     };
 
 } // namespace sc

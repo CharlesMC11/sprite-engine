@@ -70,25 +70,25 @@ namespace sc {
     void world::tick(const input::mask in) noexcept
     {
         switch (state_) {
-        case state::home:
+        case state::HOME:
             tick_home(in);
             break;
-        case state::settings:
+        case state::SETTINGS:
             // Settings menu logic
             break;
-        case state::opening:
+        case state::OPENING:
             // Opening cutscene logic
             break;
-        case state::exploring:
+        case state::EXPLORING:
             tick_exploring(in);
             break;
-        case state::pause:
+        case state::PAUSE:
             // Pause menu logic
             break;
-        case state::battle:
+        case state::BATTLE:
             // Battle logic
             break;
-        case state::event:
+        case state::EVENT:
             // Event logic
             break;
         }
@@ -111,15 +111,15 @@ namespace sc {
         else if (any(input::mask::INTERACT & in)) {
             switch (menu_option_) {
             case 0U: // Continue if save file exists
-                state_ = state::exploring;
+                state_ = state::EXPLORING;
                 break;
             case 1U: // New Simulation
-                state_ = state::opening;
+                state_ = state::OPENING;
                 break;
             case 2U: // Settings
                 // So we remember which menu we came from
                 memory_.striped_bank<std::uint8_t, 1UZ>()[0UZ] = 0x02U;
-                state_ = state::settings;
+                state_ = state::SETTINGS;
                 break;
             default:
                 break;
@@ -132,7 +132,7 @@ namespace sc {
         ftime_ += std::min(
                 display::FRAME_TIME, math::u_fixed_point_t::from_frac(1U, 4U));
 
-        while (ftime_ >= physics::kFixedTimestep) {
+        while (ftime_ >= physics::FIXED_TIMESTEP) {
             registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] =
                     math::FIXED_POINT_ZERO;
             constexpr auto vel{math::fixed_point_t::from_int(200)};
@@ -150,13 +150,13 @@ namespace sc {
             }
 
             registry_.update(
-                    static_cast<math::fixed_point_t>(physics::kFixedTimestep));
+                    static_cast<math::fixed_point_t>(physics::FIXED_TIMESTEP));
             // grid_.update(registry_);
             // physics::resolve_entity_collisions(
             // registry_, grid_, *atlas_.data(), physics::kFixedTimestep);
 
             registry_.commit();
-            ftime_ -= physics::kFixedTimestep;
+            ftime_ -= physics::FIXED_TIMESTEP;
         }
     }
 
