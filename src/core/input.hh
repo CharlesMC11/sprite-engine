@@ -5,16 +5,11 @@
 #include "core/bitwise_enum.hh"
 
 namespace sc::input {
-    // Type aliases
-
-    using input_t = std::uint8_t;
-
-    // Enums
 
     /**
      * @enum mask
      */
-    enum class mask : input_t {
+    enum class mask : std::uint8_t {
         NONE = 0U,
         UP = 1U,
         DOWN = 1U << 1U,
