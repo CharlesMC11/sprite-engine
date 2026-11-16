@@ -91,15 +91,17 @@ namespace sc::assets {
     [[nodiscard]] constexpr bool atlas::validate(
             const void* ptr, const std::size_t mapped_size) noexcept
     {
-        if (!ptr || mapped_size < sizeof(atlas)) [[unlikely]]
+        if (!ptr || mapped_size < sizeof(atlas)) [[unlikely]] {
             return false;
+        }
 
         const auto [magic, sprite16_count, sprite32_count, palette_count]{
                 static_cast<const atlas*>(ptr)->meta};
-        if (magic != ATLAS_MAGIC_BYTES.as_uint) [[unlikely]]
+        if (magic != ATLAS_MAGIC_BYTES.as_uint) [[unlikely]] {
             return false;
+        }
 
-        const std::size_t expected_size{sizeof(meta) +
+        const std::size_t expected_size{sizeof(metadata) +
                 sizeof(graphics::palette) * palette_count +
                 sizeof(sprite16) * sprite16_count +
                 sizeof(sprite32) * sprite32_count};
