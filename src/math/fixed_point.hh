@@ -12,7 +12,7 @@
 
 namespace sc::math {
 
-    inline constexpr size_t kShiftFixedPoint{10U};
+    inline constexpr size_t SHIFT_FIXED_POINT{10U};
 
     struct fixed_point_t {
 
@@ -94,37 +94,37 @@ namespace sc::math {
     [[nodiscard]] constexpr auto fixed_point_t::from_int(const int32_t n)
             -> fixed_point_t
     {
-        return fixed_point_t{n * (1 << kShiftFixedPoint)};
+        return fixed_point_t{n * (1 << SHIFT_FIXED_POINT)};
     }
 
     constexpr fixed_point_t::fixed_point_t(const int32_t n) : value{n} {}
 
     [[nodiscard]] constexpr fixed_point_t::operator float() const
     {
-        return static_cast<float>(value) / (1 << kShiftFixedPoint);
+        return static_cast<float>(value) / (1 << SHIFT_FIXED_POINT);
     }
 
     [[nodiscard]] constexpr fixed_point_t::operator int32_t() const
     {
-        return value / (1 << kShiftFixedPoint);
+        return value / (1 << SHIFT_FIXED_POINT);
     }
 
     [[nodiscard]] constexpr auto u_fixed_point_t::from_uint(const uint32_t n)
             -> u_fixed_point_t
     {
-        return u_fixed_point_t{n * (1U << kShiftFixedPoint)};
+        return u_fixed_point_t{n * (1U << SHIFT_FIXED_POINT)};
     }
 
     constexpr u_fixed_point_t::u_fixed_point_t(const uint32_t n) : value{n} {}
 
     [[nodiscard]] constexpr u_fixed_point_t::operator float() const
     {
-        return static_cast<float>(value) / (1U << kShiftFixedPoint);
+        return static_cast<float>(value) / (1U << SHIFT_FIXED_POINT);
     }
 
     [[nodiscard]] constexpr u_fixed_point_t::operator uint32_t() const
     {
-        return value / (1U << kShiftFixedPoint);
+        return value / (1U << SHIFT_FIXED_POINT);
     }
 
     [[nodiscard]] constexpr u_fixed_point_t::operator fixed_point_t() const
@@ -170,7 +170,7 @@ namespace sc::math {
             const fixed_point_t lhs, const fixed_point_t rhs) -> fixed_point_t
     {
         const auto product{static_cast<int64_t>(lhs.value) * rhs.value};
-        const auto shifted{product >> kShiftFixedPoint};
+        const auto shifted{product >> SHIFT_FIXED_POINT};
         return fixed_point_t{static_cast<int32_t>(shifted)};
     }
 
@@ -178,7 +178,7 @@ namespace sc::math {
             const fixed_point_t lhs, const fixed_point_t rhs) -> fixed_point_t
     {
         const auto expanded{static_cast<int64_t>(lhs.value)};
-        const auto shifted{expanded << kShiftFixedPoint};
+        const auto shifted{expanded << SHIFT_FIXED_POINT};
         return fixed_point_t{static_cast<int32_t>(shifted / rhs.value)};
     }
 
@@ -200,7 +200,7 @@ namespace sc::math {
             const u_fixed_point_t rhs) -> u_fixed_point_t
     {
         const auto product{static_cast<uint64_t>(lhs.value) * rhs.value};
-        const auto shifted{product >> kShiftFixedPoint};
+        const auto shifted{product >> SHIFT_FIXED_POINT};
         return u_fixed_point_t{static_cast<uint32_t>(shifted)};
     }
 
@@ -208,7 +208,7 @@ namespace sc::math {
             const u_fixed_point_t rhs) -> u_fixed_point_t
     {
         const auto expanded{static_cast<uint64_t>(lhs.value)};
-        const auto shifted{expanded << kShiftFixedPoint};
+        const auto shifted{expanded << SHIFT_FIXED_POINT};
         return u_fixed_point_t{static_cast<uint32_t>(shifted / rhs.value)};
     }
 
@@ -230,10 +230,10 @@ namespace sc::math {
 
     // Constants
 
-    inline constexpr auto kFixedZero{fixed_point_t::from_int(0)};
-    inline constexpr auto kFixedOne{fixed_point_t::from_int(1)};
+    inline constexpr auto FIXED_POINT_ZERO{fixed_point_t::from_int(0)};
+    inline constexpr auto FIXED_POINT_ONE{fixed_point_t::from_int(1)};
 
-    inline constexpr auto kUFixedZero{u_fixed_point_t::from_uint(0U)};
-    inline constexpr auto kUFixedOne{u_fixed_point_t::from_uint(1U)};
+    inline constexpr auto U_FIXED_POINT_ZERO{u_fixed_point_t::from_uint(0U)};
+    inline constexpr auto U_FIXED_POINT_ONE{u_fixed_point_t::from_uint(1U)};
 
 } // namespace sc::math

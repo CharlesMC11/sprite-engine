@@ -38,15 +38,15 @@ namespace sc::physics {
                 continue;
             }
 
-            if (registry.x_vel_ptr()[a_idx] == math::kFixedZero &&
-                    registry.y_vel_ptr()[a_idx] == math::kFixedZero) {
+            if (registry.x_vel_ptr()[a_idx] == math::FIXED_POINT_ZERO &&
+                    registry.y_vel_ptr()[a_idx] == math::FIXED_POINT_ZERO) {
                 registry.new_x_pos_ptr()[a_idx] = registry.x_pos_ptr()[a_idx];
                 registry.new_y_pos_ptr()[a_idx] = registry.y_pos_ptr()[a_idx];
                 registry.new_z_pos_ptr()[a_idx] = registry.z_pos_ptr()[a_idx];
                 continue;
             }
 
-            if (registry.y_vel_ptr()[a_idx] != math::kFixedZero) {
+            if (registry.y_vel_ptr()[a_idx] != math::FIXED_POINT_ZERO) {
                 registry.mark_for_sort();
             }
 
@@ -96,10 +96,10 @@ namespace sc::physics {
                                         [registry.sprite_index_ptr()[b_idx]]
                                                 .meta};
 
-                        if (any(type::NONE & b_meta.physics_type)) {
-                            b_idx = registry.next_in_cell_ptr()[b_idx];
-                            continue;
-                        }
+                if (any((type::UNDEFINED | type::NONE) &
+                            b_meta.physics_type)) {
+                    continue;
+                }
 
                         const auto b_aabb{
                                 aabb::from_registry(registry, b_idx, b_meta)};
@@ -115,7 +115,7 @@ namespace sc::physics {
                 }
             }
 
-            if (collision.time < math::fixed_point_t::from_int(1)) {
+            if (collision.time < math::FIXED_POINT_ZERO) {
                 apply_collision(registry, a_idx, collision, a_dx, a_dy, a_dz);
                 apply_slide(registry, a_idx, collision, dt);
             }
@@ -128,9 +128,10 @@ namespace sc::physics {
             const math::fixed_point_t b_min, const math::fixed_point_t b_max)
     {
         math::fixed_point_t entry_time, exit_time;
-        if (vel == math::kFixedZero) {
-            if (a_max < b_min || a_min > b_max)
+        if (vel == math::FIXED_POINT_ZERO) {
+            if (a_max < b_min || a_min > b_max) {
                 return {kSentinel, kSentinel};
+            }
 
             entry_time = kSentinel;
             exit_time = math::fixed_point_t{-kSentinel};
@@ -181,7 +182,7 @@ namespace sc::physics {
         const math::fixed_point_t exit_time{
                 std::min({x_exit_time, y_exit_time, z_exit_time})};
         if (std::signbit(exit_time.value) || entry_time > exit_time ||
-                entry_time > math::kFixedOne) {
+                entry_time > math::FIXED_POINT_ONE) {
             return result;
         }
 
@@ -192,17 +193,17 @@ namespace sc::physics {
         const bool y_is_max{!x_is_max && y_entry_time >= z_entry_time};
 
         result.normal_x = x_is_max
-                ? (x_vel < math::kFixedZero ? -math::kFixedOne
-                                            : math::kFixedOne)
-                : math::kFixedZero;
+                ? (std::signbit(x_vel.value) ? -math::FIXED_POINT_ONE
+                                             : math::FIXED_POINT_ONE)
+                : math::FIXED_POINT_ZERO;
         result.normal_y = y_is_max
-                ? (y_vel < math::kFixedZero ? -math::kFixedOne
-                                            : math::kFixedOne)
-                : math::kFixedZero;
+                ? (std::signbit(y_vel.value) ? -math::FIXED_POINT_ONE
+                                             : math::FIXED_POINT_ONE)
+                : math::FIXED_POINT_ZERO;
         result.normal_z = !x_is_max && !y_is_max
-                ? (z_vel < math::kFixedZero ? -math::kFixedOne
-                                            : math::kFixedOne)
-                : math::kFixedZero;
+                ? (std::signbit(z_vel.value) ? -math::FIXED_POINT_ONE
+                                             : math::FIXED_POINT_ONE)
+                : math::FIXED_POINT_ZERO;
 
         return result;
     }
@@ -212,9 +213,9 @@ namespace sc::physics {
             const math::fixed_point_t dx, const math::fixed_point_t dy,
             const math::fixed_point_t dz)
     {
-        const math::fixed_point_t padded_t{std::clamp(
-                (hit.time - math::fixed_point_t::from_frac(1, 100)).value, 0,
-                math::kFixedOne.value)};
+        const math::fixed_point_t padded_t{
+                std::clamp(hit.time - math::fixed_point_t::from_frac(1, 100),
+                        math::FIXED_POINT_ZERO, math::FIXED_POINT_ONE)};
 
         registry.new_x_pos_ptr()[i] = dx * padded_t + registry.x_pos_ptr()[i];
         registry.new_y_pos_ptr()[i] = dy * padded_t + registry.y_pos_ptr()[i];
@@ -224,7 +225,7 @@ namespace sc::physics {
     static void apply_slide(entity_registry& registry, const core::index_t i,
             const sweep_result hit, const math::fixed_point_t dt)
     {
-        const math::fixed_point_t remain_t{math::kFixedOne - hit.time};
+        const math::fixed_point_t remain_t{math::FIXED_POINT_ONE - hit.time};
 
         const math::fixed_point_t dot_neg{
                 -(registry.x_vel_ptr()[i] * hit.normal_x +

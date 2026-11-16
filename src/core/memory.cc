@@ -20,7 +20,7 @@ namespace sc {
     {
 #if defined(__APPLE__) || defined(__linux__)
 
-        void* const addr{::mmap(nullptr, kRP2350TotalMemorySize,
+        void* const addr{::mmap(nullptr, RP2350_MEMORY_SIZE_BYTES,
                 PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0)};
         if (addr == MAP_FAILED) [[unlikely]] {
             std::exit(EX_OSERR);
@@ -29,7 +29,7 @@ namespace sc {
         buffer_ = static_cast<std::byte* const>(addr);
 
 #else
-        buffer_ = reinterpret_cast<std::byte* const>(kRP2350SRAMBaseAddress);
+        buffer_ = reinterpret_cast<std::byte* const>(SRAM_BASE_ADDRESS);
 #endif
     }
 
@@ -39,7 +39,7 @@ namespace sc {
     {
 #if defined(__APPLE__) || defined(__linux__)
         if (buffer_) [[unlikely]] {
-            ::munmap(buffer_, kRP2350TotalMemorySize);
+            ::munmap(buffer_, RP2350_MEMORY_SIZE_BYTES);
         }
 #endif
     }
@@ -58,7 +58,7 @@ namespace sc {
         }
 
         const auto file_size{static_cast<std::size_t>(st.st_size)};
-        assert(file_size <= kQSPISize && "File exceeds QSPI size!");
+        assert(file_size <= ROM_SIZE_BYTES && "File exceeds QSPI size!");
 
         const std::ptrdiff_t bytes_read{
                 ::read(fd, rom<std::byte>().data(), file_size)};

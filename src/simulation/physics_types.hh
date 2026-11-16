@@ -63,11 +63,11 @@ namespace sc::physics {
                 math::fixed_point_t y_vel, math::fixed_point_t z_vel) noexcept;
     };
 
-    struct alignas(memory::kAlignmentNeon) sweep_result final {
-        math::fixed_point_t time{math::fixed_point_t::from_int(1)};
-        math::fixed_point_t normal_x{0};
-        math::fixed_point_t normal_y{0};
-        math::fixed_point_t normal_z{0};
+    struct alignas(memory::ALIGNMENT_NEON) sweep_result final {
+        math::fixed_point_t time{math::FIXED_POINT_ONE};
+        math::fixed_point_t normal_x{math::FIXED_POINT_ZERO};
+        math::fixed_point_t normal_y{math::FIXED_POINT_ZERO};
+        math::fixed_point_t normal_z{math::FIXED_POINT_ZERO};
     };
 
     // Constructors

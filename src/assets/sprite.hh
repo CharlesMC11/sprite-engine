@@ -13,7 +13,7 @@ namespace sc::assets {
      * A hardware-aware sprite definition.
      */
     template<size_t Width = 32U, size_t Height = Width>
-    struct alignas(memory::kAlignmentNeon) sprite final {
+    struct alignas(memory::ALIGNMENT_NEON) sprite final {
 
         // Attributes
 
@@ -24,7 +24,7 @@ namespace sc::assets {
          * Contains information regarding a sprite’s bounding box, anchor
          * point, depth, physics type, color encoding, and palette index.
          */
-        const struct alignas(memory::kAlignmentNeon) metadata final {
+        const struct alignas(memory::ALIGNMENT_NEON) metadata final {
             geometry::bbox<> bbox;
             math::fixed_point_t u_anchor{0}, v_anchor{0};
             uint8_t depth{0U};
@@ -57,7 +57,7 @@ namespace sc::assets {
 } // namespace sc::assets
 
 static_assert(
-        sizeof(sc::assets::sprite<>::metadata) == sc::memory::kAlignmentNeon,
+        sizeof(sc::assets::sprite<>::metadata) == sc::memory::ALIGNMENT_NEON,
         "Sprite metadata must be 16 B.");
 static_assert(sizeof(sc::assets::sprite16) == 272U, "Sprite16 must be 272 B!");
 static_assert(

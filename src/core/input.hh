@@ -15,18 +15,19 @@ namespace sc::input {
      * @enum mask
      */
     enum class mask : input_t {
-        none = 0U,
-        up = 1U,
-        down = 1U << 1U,
-        left = 1U << 2U,
-        right = 1U << 3U,
-        jump = 1U << 4U,
-        interact = 1U << 5U,
-        cancel = 1U << 6U,
+        NONE = 0U,
+        UP = 1U,
+        DOWN = 1U << 1U,
+        LEFT = 1U << 2U,
+        RIGHT = 1U << 3U,
+        JUMP = 1U << 4U,
+        INTERACT = 1U << 5U,
+        CANCEL = 1U << 6U,
     };
 
     // FIXME: This is temporary
-    [[nodiscard]] inline mask poll() noexcept { return mask::none; }
+    [[nodiscard]] inline mask poll() noexcept { return mask::NONE; }
+
 } // namespace sc::input
 
 SC_ENABLE_ENUM_BITWISE_OPS(sc::input::mask)

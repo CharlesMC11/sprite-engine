@@ -2,7 +2,6 @@
 
 #ifndef __METAL_VERSION__
 
-#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
@@ -13,19 +12,17 @@
 
 namespace sc::core {
 
-    // Constants
-
-    inline constexpr size_t kMax2Bit{(1U << 2U) - 1U};
-    inline constexpr size_t kMax4Bit{(1U << 4U) - 1U};
-    inline constexpr size_t kMax5Bit{(1U << 5U) - 1U};
-    inline constexpr size_t kMax6Bit{(1U << 6U) - 1U};
-
     using index_t = uint32_t;
-    inline constexpr auto kInvalidIndex{static_cast<index_t>(-1)};
-
     using physics_t = uint8_t;
 
-#ifndef __METAL_VERSION__
+    // Constants
+
+    inline constexpr size_t MAX_2BIT{(1U << 2U) - 1U};
+    inline constexpr size_t MAX_4BIT{(1U << 4U) - 1U};
+    inline constexpr size_t MAX_5BIT{(1U << 5U) - 1U};
+    inline constexpr size_t MAX_6BIT{(1U << 6U) - 1U};
+
+#ifndef __METAL__
 
     /**
      * Requirements for types to be safe to direct memory mapping.
@@ -34,7 +31,7 @@ namespace sc::core {
      * CPU and GPU interpret the raw bytes identically.
      */
     template<typename T>
-    concept mappable = alignof(T) % memory::kAlignmentNeon == 0UZ &&
+    concept mappable = alignof(T) % memory::ALIGNMENT_NEON == 0UZ &&
             std::is_standard_layout_v<T> && !std::is_polymorphic_v<T>;
 
 #endif

@@ -98,17 +98,17 @@ namespace sc {
 
     void world::tick_home(const input::mask in) noexcept
     {
-        if (any((input::mask::up | input::mask::left) & in)) {
+        if (any((input::mask::UP | input::mask::LEFT) & in)) {
             if (menu_option_ > 0U) {
                 --menu_option_;
             }
         }
-        else if (any((input::mask::down | input::mask::right) & in)) {
+        else if (any((input::mask::DOWN | input::mask::RIGHT) & in)) {
             if (menu_option_ < 2U) {
                 ++menu_option_;
             }
         }
-        else if (any(input::mask::interact & in)) {
+        else if (any(input::mask::INTERACT & in)) {
             switch (menu_option_) {
             case 0U: // Continue if save file exists
                 state_ = state::exploring;
@@ -130,22 +130,22 @@ namespace sc {
     void world::tick_exploring(const input::mask in) noexcept
     {
         ftime_ += std::min(
-                display::kFrameTime, math::u_fixed_point_t::from_frac(1U, 4U));
+                display::FRAME_TIME, math::u_fixed_point_t::from_frac(1U, 4U));
 
         while (ftime_ >= physics::kFixedTimestep) {
             registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] =
-                    math::kFixedZero;
+                    math::FIXED_POINT_ZERO;
             constexpr auto vel{math::fixed_point_t::from_int(200)};
-            if (any(input::mask::up & in)) {
+            if (any(input::mask::UP & in)) {
                 registry_.y_vel_ptr()[0UZ] -= vel;
             }
-            if (any(input::mask::down & in)) {
+            if (any(input::mask::DOWN & in)) {
                 registry_.y_vel_ptr()[0UZ] += vel;
             }
-            if (any(input::mask::left & in)) {
+            if (any(input::mask::LEFT & in)) {
                 registry_.x_vel_ptr()[0UZ] -= vel;
             }
-            if (any(input::mask::right & in)) {
+            if (any(input::mask::RIGHT & in)) {
                 registry_.x_vel_ptr()[0UZ] += vel;
             }
 

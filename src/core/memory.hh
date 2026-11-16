@@ -24,24 +24,25 @@ namespace sc {
     public:
         // Static constants
 
-        static constexpr size_t kAlignmentNeon{0x10U};
-        static constexpr size_t kAlignmentCache{0x80U};
+        static constexpr size_t ALIGNMENT_NEON{0x10U};
+        static constexpr size_t ALIGNMENT_CACHE{0x80U};
 
-        static constexpr size_t kStripedBankSize{0x1'0000U};
-        static constexpr size_t kStripedBankCount{8U};
-        static constexpr size_t kUnstripedBankSize{0x1000U};
-        static constexpr size_t kUnstripedBankCount{2U};
+        static constexpr size_t STRIPED_BANK_SIZE_BYTES{0x1'0000U};
+        static constexpr size_t STRIPED_BANK_COUNT{8U};
 
-        static constexpr size_t kSRAMSize{
-                kStripedBankSize * kStripedBankCount +
-                kUnstripedBankSize * kUnstripedBankCount};
+        static constexpr size_t UNSTRIPED_BANK_SIZE_BYTES{0x1000U};
+        static constexpr size_t UNSTRIPED_BANK_COUNT{2U};
 
-        static constexpr size_t kQSPISize{0x20'0000U};
+        static constexpr size_t SRAM_SIZE_BYTES{
+                STRIPED_BANK_SIZE_BYTES * STRIPED_BANK_COUNT +
+                UNSTRIPED_BANK_SIZE_BYTES * UNSTRIPED_BANK_COUNT};
+        static constexpr size_t SRAM_BASE_ADDRESS{0x2000'0000U};
 
-        static constexpr size_t kRP2350TotalMemorySize{kSRAMSize + kQSPISize};
+        static constexpr size_t ROM_SIZE_BYTES{0x20'0000U};
+        static constexpr size_t ROM_BASE_ADDRESS{0x1000'0000U};
 
-        static constexpr size_t kRP2350SRAMBaseAddress{0x2000'0000U};
-        static constexpr size_t kRP2350QSPIBaseAddress{0x1000'0000U};
+        static constexpr size_t RP2350_MEMORY_SIZE_BYTES{
+                SRAM_SIZE_BYTES + ROM_SIZE_BYTES};
 
 #ifndef __METAL_VERSION__
 
@@ -91,33 +92,36 @@ namespace sc {
             -> std::span<T>
     {
         static_assert(
-                Index < kStripedBankCount, "Memory bank index out of range!");
+                Index < STRIPED_BANK_COUNT, "Memory bank index out of range!");
 
-        return {reinterpret_cast<T*>(buffer_ + kStripedBankSize * Index),
-                kStripedBankSize / sizeof(T)};
+        return {reinterpret_cast<T*>(
+                        buffer_ + STRIPED_BANK_SIZE_BYTES * Index),
+                STRIPED_BANK_SIZE_BYTES / sizeof(T)};
     }
 
     template<typename T, std::size_t Index>
     [[nodiscard]] constexpr auto memory::unstriped_bank() const noexcept
             -> std::span<T>
     {
-        static_assert(Index < kUnstripedBankCount,
+        static_assert(Index < UNSTRIPED_BANK_COUNT,
                 "Memory bank index out of range!");
 
-        constexpr std::size_t offset{kStripedBankSize * kStripedBankCount +
-                kUnstripedBankSize * Index};
+        constexpr std::size_t offset{
+                STRIPED_BANK_SIZE_BYTES * STRIPED_BANK_COUNT +
+                UNSTRIPED_BANK_SIZE_BYTES * Index};
         return {reinterpret_cast<T*>(buffer_ + offset),
-                kUnstripedBankSize / sizeof(T)};
+                UNSTRIPED_BANK_SIZE_BYTES / sizeof(T)};
     }
 
     template<typename T>
     [[nodiscard]] constexpr auto memory::rom() const noexcept -> std::span<T>
     {
 #if defined(__APPLE__) || defined(__linux__)
-        return {buffer_ + kSRAMSize, kQSPISize / sizeof(T)};
+        return {reinterpret_cast<T*>(buffer_ + SRAM_SIZE_BYTES),
+                ROM_SIZE_BYTES / sizeof(T)};
 #else
-        return {reinterpret_cast<T*>(kRP2350QSPIBaseAddress),
-                kQSPISize / sizeof(T)};
+        return {reinterpret_cast<T*>(ROM_BASE_ADDRESS),
+                ROM_SIZE_BYTES / sizeof(T)};
 #endif
     }
 

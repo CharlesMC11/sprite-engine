@@ -45,7 +45,7 @@ namespace sc {
             const math::fixed_point_t x, const math::fixed_point_t y,
             const math::fixed_point_t z) noexcept
     {
-        assert(count() < kMaxEntityCount && "Cannot spawn more entities!");
+        assert(count() < MAX_ENTITY_COUNT && "Cannot spawn more entities!");
 
         const std::size_t new_idx{count()};
 
@@ -54,7 +54,7 @@ namespace sc {
         z_pos_ptr()[new_idx] = new_z_pos_ptr()[new_idx] = z;
 
         x_vel_ptr()[new_idx] = y_vel_ptr()[new_idx] = z_vel_ptr()[new_idx] =
-                math::kFixedZero;
+                math::FIXED_POINT_ZERO;
 
         sprite_index_ptr()[new_idx] = i;
         draw_order_ptr()[new_idx] = static_cast<core::index_t>(new_idx);

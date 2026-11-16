@@ -23,11 +23,11 @@ namespace sc::assets {
 
     // Sprite
 
-    inline constexpr char kSpriteMagicBytes[]{
-            'S', 'C', ' ', 'S', 'P', ' ', 'v', kAssetStandard};
+    inline constexpr char SPRITE_MAGIC_BYTES[]{
+            'S', 'C', ' ', 'S', 'P', ' ', 'v', ASSET_STANDARD_VER};
 
-    inline constexpr std::size_t kSpriteMetadataSize{
-            sizeof kSpriteMagicBytes + sizeof(sprite<>::metadata)};
+    inline constexpr std::size_t SPRITE_METADATA_SIZE_BYTES{
+            sizeof SPRITE_MAGIC_BYTES + sizeof(sprite<>::metadata)};
 
     [[nodiscard]] static constexpr auto make_sprite_metadata(
             std::uint8_t u_min, std::uint8_t u_max, std::uint8_t v_min,
@@ -45,7 +45,7 @@ namespace sc::assets {
 
     // Atlas
 
-    inline constexpr std::size_t kAtlasMetadataSize{sizeof(atlas::metadata)};
+    inline constexpr std::size_t ATLAS_METADATA_SIZE{sizeof(atlas::metadata)};
 
     [[nodiscard]] static constexpr auto make_atlas_metadata(
             std::uint32_t sprite16_count, std::uint16_t sprite32_count,
@@ -62,21 +62,21 @@ NB_MODULE(_pipeline, m)
 
     // Core
 
-    m.attr("MAX_2BIT") = sc::core::kMax2Bit;
-    m.attr("MAX_4BIT") = sc::core::kMax4Bit;
-    m.attr("MAX_5BIT") = sc::core::kMax5Bit;
-    m.attr("MAX_6BIT") = sc::core::kMax6Bit;
+    m.attr("MAX_2BIT") = sc::core::MAX_2BIT;
+    m.attr("MAX_4BIT") = sc::core::MAX_4BIT;
+    m.attr("MAX_5BIT") = sc::core::MAX_5BIT;
+    m.attr("MAX_6BIT") = sc::core::MAX_6BIT;
 
-    m.attr("ALIGNMENT_NEON") = sc::memory::kAlignmentNeon;
-    m.attr("ALIGNMENT_CACHE") = sc::memory::kAlignmentCache;
+    m.attr("ALIGNMENT_NEON") = sc::memory::ALIGNMENT_NEON;
+    m.attr("ALIGNMENT_CACHE") = sc::memory::ALIGNMENT_CACHE;
 
-    m.attr("MAX_ROM_SIZE") = sc::memory::kQSPISize;
+    m.attr("MAX_ROM_SIZE") = sc::memory::ROM_SIZE_BYTES;
 
     nb::exception<sc::assets::resource_layout_error>{m, "ResourceLayoutError"};
 
     // Math
 
-    m.attr("SHIFT_FIXED_POINT") = sc::math::kShiftFixedPoint;
+    m.attr("SHIFT_FIXED_POINT") = sc::math::SHIFT_FIXED_POINT;
 
     m.def(
             "convert_to_fixed_point",
@@ -101,14 +101,14 @@ NB_MODULE(_pipeline, m)
 
     // Graphics
 
-    m.attr("MAX_COLOR_COUNT") = sc::graphics::kMaxColorCount;
+    m.attr("MAX_COLOR_COUNT") = sc::graphics::MAX_COLOR_COUNT;
 
     nb::enum_<sc::graphics::color_encoding>{m, "ColorEncoding",
             "Distribution of color bits across a 2‑byte packed integer.",
             nb::is_arithmetic{}}
-            .value("NEUTRAL", sc::graphics::color_encoding::neutral, "R5G6B5")
-            .value("WARM", sc::graphics::color_encoding::warm, "R6G5B5")
-            .value("COOL", sc::graphics::color_encoding::cool, "R5G5B6");
+            .value("NEUTRAL", sc::graphics::color_encoding::NEUTRAL, "R5G6B5")
+            .value("WARM", sc::graphics::color_encoding::WARM, "R6G5B5")
+            .value("COOL", sc::graphics::color_encoding::COOL, "R5G5B6");
 
     nb::class_<sc::graphics::color_encoding_params>{m, "ColorEncodingParams",
             "Parameters of how a 2‑byte color is packed or unpacked.\n",
@@ -127,15 +127,15 @@ NB_MODULE(_pipeline, m)
             .def_ro("r_shift", &sc::graphics::color_encoding_params::r_shift)
             .def_ro("g_shift", &sc::graphics::color_encoding_params::g_shift);
 
-    m.attr("SHIFT_ALPHA") = sc::graphics::kShiftAlpha;
-    m.attr("SHIFT_EMISSION") = sc::graphics::kShiftEmission;
+    m.attr("SHIFT_ALPHA") = sc::graphics::SHIFT_ALPHA;
+    m.attr("SHIFT_EMISSION") = sc::graphics::SHIFT_EMISSION;
 
-    m.attr("MASK_PALETTE_INDEX") = sc::graphics::kMaskPaletteIndex;
-    m.attr("MASK_ALPHA") = sc::graphics::kMaskAlpha;
-    m.attr("MASK_EMISSION") = sc::graphics::kMaskEmission;
+    m.attr("MASK_PALETTE_INDEX") = sc::graphics::MASK_PALETTE_INDEX;
+    m.attr("MASK_ALPHA") = sc::graphics::MASK_ALPHA;
+    m.attr("MASK_EMISSION") = sc::graphics::MASK_EMISSION;
 
     m.attr("PACKED_COLOR_SIZE_BYTES") = sizeof(sc::graphics::packed_color_t);
-    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::kMaxColorCount *
+    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::MAX_COLOR_COUNT *
             sizeof(sc::graphics::packed_color_t);
 
     // Physics
@@ -168,14 +168,14 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def_prop_ro_static("MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
-                        return nb::bytes{&sc::assets::kSpriteMagicBytes,
-                                sizeof sc::assets::kSpriteMagicBytes};
+                        return nb::bytes{&sc::assets::SPRITE_MAGIC_BYTES,
+                                sizeof sc::assets::SPRITE_MAGIC_BYTES};
                     })
-            .def_ro_static(
-                    "EXPECTED_SIZE_BYTES", &sc::assets::kSpriteMetadataSize)
+            .def_ro_static("EXPECTED_SIZE_BYTES",
+                    &sc::assets::SPRITE_METADATA_SIZE_BYTES)
             .def_prop_ro_static("PALETTE_INDEX",
                     []([[maybe_unused]] nb::handle) -> std::size_t {
-                        return sc::assets::kSpriteMetadataSize - 1UZ;
+                        return sc::assets::SPRITE_METADATA_SIZE_BYTES - 1UZ;
                     })
             .def_static("from_bytes", sc::assets::deserialize_sprite_metadata,
                     "buffer"_a)
@@ -202,7 +202,7 @@ NB_MODULE(_pipeline, m)
     // Atlas
 
     m.attr("ATLAS_MAGIC_BYTES") =
-            nb::bytes{&sc::assets::kAtlasMagicBytes, 8UZ};
+            nb::bytes{&sc::assets::ATLAS_MAGIC_BYTES, 8UZ};
 
     nb::class_<sc::assets::atlas::metadata>{m, "AtlasMetadata",
             "An atlas’s metadata.\n\n"
@@ -214,11 +214,11 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def_prop_ro_static("MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
-                        return nb::bytes{&sc::assets::kAtlasMagicBytes,
-                                sizeof sc::assets::kAtlasMagicBytes};
+                        return nb::bytes{&sc::assets::ATLAS_MAGIC_BYTES,
+                                sizeof sc::assets::ATLAS_MAGIC_BYTES};
                     })
             .def_ro_static(
-                    "EXPECTED_SIZE_BYTES", &sc::assets::kAtlasMetadataSize)
+                    "EXPECTED_SIZE_BYTES", &sc::assets::ATLAS_METADATA_SIZE)
             .def(nb::new_{&sc::assets::make_atlas_metadata},
                     "sprite16_count"_a, "sprite32_count"_a, "palette_count"_a)
             .def_ro("sprite16_count",
@@ -255,26 +255,27 @@ NB_MODULE(_pipeline, m)
 [[nodiscard]] constexpr auto sc::assets::serialize_sprite_metadata(
         const sprite<>::metadata meta) noexcept -> nb::bytes
 {
-    std::byte buffer[kSpriteMetadataSize];
-    std::memcpy(buffer, kSpriteMagicBytes, sizeof kSpriteMagicBytes);
-    std::memcpy(buffer + sizeof kSpriteMagicBytes, &meta, sizeof meta);
-    return nb::bytes{buffer, kSpriteMetadataSize};
+    std::byte buffer[SPRITE_METADATA_SIZE_BYTES];
+    std::memcpy(buffer, SPRITE_MAGIC_BYTES, sizeof SPRITE_MAGIC_BYTES);
+    std::memcpy(buffer + sizeof SPRITE_MAGIC_BYTES, &meta, sizeof meta);
+    return nb::bytes{buffer, SPRITE_METADATA_SIZE_BYTES};
 }
 
 [[nodiscard]] constexpr auto sc::assets::deserialize_sprite_metadata(
         const nb::bytes& buffer) -> sprite<>::metadata
 {
-    if (buffer.size() < kSpriteMetadataSize) {
-        throw resource_layout_error{std::format("Buffer size too small for "
-                                                "SpriteMetadata. Expected "
-                                                "{} bytes, got {}.",
-                kSpriteMetadataSize, buffer.size())};
+    if (buffer.size() < SPRITE_METADATA_SIZE_BYTES) {
+        throw resource_layout_error{
+                std::format("Buffer size too small for SpriteMetadata. "
+                            "Expected {} bytes, got {}.",
+                        SPRITE_METADATA_SIZE_BYTES, buffer.size())};
     }
 
     sprite<>::metadata meta;
     const auto* const start{static_cast<const std::byte*>(buffer.data()) +
-            sizeof kSpriteMagicBytes};
-    std::memcpy(&meta, start, kSpriteMetadataSize - sizeof kSpriteMagicBytes);
+            sizeof SPRITE_MAGIC_BYTES};
+    std::memcpy(&meta, start,
+            SPRITE_METADATA_SIZE_BYTES - sizeof SPRITE_MAGIC_BYTES);
     return meta;
 }
 
@@ -284,7 +285,7 @@ NB_MODULE(_pipeline, m)
         const std::uint32_t sprite16_count, const std::uint16_t sprite32_count,
         const std::uint16_t palette_count) -> atlas::metadata
 {
-    return {.magic = kAtlasMagicBytes.as_uint,
+    return {.magic = ATLAS_MAGIC_BYTES.as_uint,
             .sprite16_count = sprite16_count,
             .sprite32_count = sprite32_count,
             .palette_count = palette_count};
@@ -293,7 +294,7 @@ NB_MODULE(_pipeline, m)
 [[nodiscard]] constexpr auto sc::assets::serialize_atlas_metadata(
         const atlas::metadata meta) noexcept -> nb::bytes
 {
-    std::byte buffer[kAtlasMetadataSize];
-    std::memcpy(buffer, &meta, kAtlasMetadataSize);
-    return nb::bytes{buffer, kAtlasMetadataSize};
+    std::byte buffer[ATLAS_METADATA_SIZE];
+    std::memcpy(buffer, &meta, ATLAS_METADATA_SIZE);
+    return nb::bytes{buffer, ATLAS_METADATA_SIZE};
 }

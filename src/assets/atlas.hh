@@ -11,15 +11,15 @@
 
 namespace sc::assets {
 
-    inline constexpr char kAssetStandard{'7'};
+    inline constexpr char ASSET_STANDARD_VER{'7'};
 
     union atlas_magic_bytes {
         const char as_array[8UZ];
         const std::uint64_t as_uint;
     };
 
-    constexpr atlas_magic_bytes kAtlasMagicBytes{
-            {'S', 'C', ' ', 'A', 'T', ' ', 'v', kAssetStandard}};
+    constexpr atlas_magic_bytes ATLAS_MAGIC_BYTES{
+            {'S', 'C', ' ', 'A', 'T', ' ', 'v', ASSET_STANDARD_VER}};
 
     /**
      * @struct atlas
@@ -27,7 +27,7 @@ namespace sc::assets {
      *
      * This class is designed to loaded by `sc::memory`.
      */
-    struct alignas(memory::kAlignmentNeon) atlas final {
+    struct alignas(memory::ALIGNMENT_NEON) atlas final {
 
         // Static methods
 
@@ -42,7 +42,7 @@ namespace sc::assets {
          *
          * Contains information on the number of sprites and palettes.
          */
-        const struct alignas(memory::kAlignmentNeon) metadata final {
+        const struct alignas(memory::ALIGNMENT_NEON) metadata final {
             const std::uint64_t magic{0ULL};
             const std::uint32_t sprite16_count{0U};
             const std::uint16_t sprite32_count{0U};
@@ -96,7 +96,7 @@ namespace sc::assets {
 
         const auto [magic, sprite16_count, sprite32_count, palette_count]{
                 static_cast<const atlas*>(ptr)->meta};
-        if (magic != kAtlasMagicBytes.as_uint) [[unlikely]]
+        if (magic != ATLAS_MAGIC_BYTES.as_uint) [[unlikely]]
             return false;
 
         const std::size_t expected_size{sizeof(meta) +

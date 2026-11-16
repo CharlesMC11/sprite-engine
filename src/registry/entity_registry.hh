@@ -71,7 +71,7 @@ namespace sc {
 
     // Constants
 
-    inline constexpr std::size_t kMaxEntityCount{0x100UZ};
+    inline constexpr std::size_t MAX_ENTITY_COUNT{0x100UZ};
 
     // Enums
 
@@ -250,7 +250,7 @@ namespace sc {
     [[nodiscard]] constexpr auto entity_registry::offset(
             xform_channel channel) noexcept -> std::size_t
     {
-        return sizeof(math::fixed_point_t) * kMaxEntityCount *
+        return sizeof(math::fixed_point_t) * MAX_ENTITY_COUNT *
                 static_cast<std::size_t>(channel);
     }
 
@@ -258,7 +258,7 @@ namespace sc {
             index_channel channel) noexcept -> std::size_t
     {
         return offset(xform_channel::count) +
-                sizeof(core::index_t) * kMaxEntityCount *
+                sizeof(core::index_t) * MAX_ENTITY_COUNT *
                 static_cast<std::size_t>(channel);
     }
 
@@ -279,13 +279,13 @@ namespace sc {
 static_assert(sizeof(sc::math::fixed_point_t) == sizeof(sc::core::index_t),
         "Kinematics data size must match index data size!");
 
-static_assert(sc::kMaxEntityCount % sc::memory::kAlignmentCache == 0UZ,
+static_assert(sc::MAX_ENTITY_COUNT % sc::memory::ALIGNMENT_CACHE == 0UZ,
         "Number of entities must align with the cache!");
 
-inline constexpr auto kTotalChannelCount{
+inline constexpr auto TOTAL_CHANNEL_COUNT{
         static_cast<std::size_t>(sc::xform_channel::count) +
         static_cast<std::size_t>(sc::index_channel::count)};
-static_assert(
-        sc::kMaxEntityCount * sizeof(sc::core::index_t) * kTotalChannelCount <=
-                sc::memory::kSRAMSize,
+static_assert(sc::MAX_ENTITY_COUNT * sizeof(sc::core::index_t) *
+                        TOTAL_CHANNEL_COUNT <=
+                sc::memory::SRAM_SIZE_BYTES,
         "Number of entities exceeds available SRAM size!");
