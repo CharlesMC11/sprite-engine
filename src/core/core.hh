@@ -40,12 +40,3 @@ namespace sc::core {
 #endif
 
 } // namespace sc::core
-
-#ifndef __METAL_VERSION__
-
-static_assert(std::has_single_bit(sc::memory::kAlignmentNeon),
-        "kAlignmentNeon is not a power of 2!");
-static_assert(std::has_single_bit(sc::memory::kAlignmentCache),
-        "kAlignmentCache is not a power of 2!");
-
-#endif

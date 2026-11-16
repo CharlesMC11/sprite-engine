@@ -2,6 +2,7 @@
 
 #ifndef __METAL_VERSION__
 
+#include <bit>
 #include <cstddef>
 #include <span>
 
@@ -123,3 +124,12 @@ namespace sc {
 #endif
 
 } // namespace sc
+
+#ifndef __METAL__
+
+static_assert(std::has_single_bit(sc::memory::ALIGNMENT_NEON),
+        "ALIGNMENT_NEON is not a power of 2!");
+static_assert(std::has_single_bit(sc::memory::ALIGNMENT_CACHE),
+        "ALIGNMENT_CACHE is not a power of 2!");
+
+#endif
