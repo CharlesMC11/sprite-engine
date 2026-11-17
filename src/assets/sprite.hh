@@ -26,7 +26,8 @@ namespace sc::assets {
          */
         const struct alignas(memory::ALIGNMENT_NEON) metadata final {
             geometry::bbox<> bbox;
-            math::fixed_point_t u_anchor{0}, v_anchor{0};
+            math::fixed_point_t u_anchor{math::FIXED_POINT_ZERO},
+                    v_anchor{math::FIXED_POINT_ZERO};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
             graphics::color_encoding color_encoding{
