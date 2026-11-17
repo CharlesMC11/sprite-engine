@@ -54,9 +54,9 @@ namespace sc::physics {
         math::fixed_point_t y_vel{0};
         math::fixed_point_t z_vel{0};
 
-        // Constructors
+        // Constructor
 
-        [[nodiscard]] explicit constexpr aabb(math::fixed_point_t x_pos,
+        explicit constexpr aabb(math::fixed_point_t x_pos,
                 math::fixed_point_t y_pos, math::fixed_point_t z_pos,
                 geometry::bbox<math::fixed_point_t> bbox,
                 math::fixed_point_t depth, math::fixed_point_t x_vel,
@@ -84,7 +84,7 @@ namespace sc::physics {
                 registry.z_vel_ptr()[i]};
     }
 
-    [[nodiscard]] constexpr aabb::aabb(const math::fixed_point_t x_pos,
+    constexpr aabb::aabb(const math::fixed_point_t x_pos,
             const math::fixed_point_t y_pos, const math::fixed_point_t z_pos,
             const geometry::bbox<math::fixed_point_t> bbox,
             const math::fixed_point_t depth, const math::fixed_point_t x_vel,
