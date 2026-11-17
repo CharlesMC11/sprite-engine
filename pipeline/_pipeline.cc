@@ -202,20 +202,20 @@ NB_MODULE(_pipeline, m)
     // Atlas
 
     m.attr("ATLAS_MAGIC_BYTES") =
-            nb::bytes{&sc::assets::ATLAS_MAGIC_BYTES, 8UZ};
+            nb::bytes{&sc::assets::atlas::MAGIC_BYTES, 8UZ};
 
     nb::class_<sc::assets::atlas::metadata>{m, "AtlasMetadata",
             "An atlas’s metadata.\n\n"
             "Contains information on the number of sprites and palettes.\n\n"
             "- magic (8 bytes)\n"
-            "- 16 × 16 sprite count (4 bytes)"
-            "- 32 × 32 sprite count (2 bytes)"
-            "- Palette count (2 bytes)",
+            "- 16 × 16 sprite count (4 bytes)\n"
+            "- 32 × 32 sprite count (2 bytes)\n"
+            "- Palette count (2 bytes)\n",
             nb::is_final{}}
             .def_prop_ro_static("MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
-                        return nb::bytes{&sc::assets::ATLAS_MAGIC_BYTES,
-                                sizeof sc::assets::ATLAS_MAGIC_BYTES};
+                        return nb::bytes{&sc::assets::atlas::MAGIC_BYTES,
+                                sizeof sc::assets::atlas::MAGIC_BYTES};
                     })
             .def_ro_static(
                     "EXPECTED_SIZE_BYTES", &sc::assets::ATLAS_METADATA_SIZE)
@@ -285,7 +285,7 @@ NB_MODULE(_pipeline, m)
         const std::uint32_t sprite16_count, const std::uint16_t sprite32_count,
         const std::uint16_t palette_count) -> atlas::metadata
 {
-    return {.magic = ATLAS_MAGIC_BYTES.as_uint,
+    return {.magic = atlas::MAGIC_BYTES.as_uint,
             .sprite16_count = sprite16_count,
             .sprite32_count = sprite32_count,
             .palette_count = palette_count};

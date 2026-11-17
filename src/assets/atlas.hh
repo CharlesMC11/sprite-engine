@@ -13,14 +13,6 @@ namespace sc::assets {
 
     inline constexpr char ASSET_STANDARD_VER{'7'};
 
-    union atlas_magic_bytes {
-        const char as_array[8UZ];
-        const std::uint64_t as_uint;
-    };
-
-    constexpr atlas_magic_bytes ATLAS_MAGIC_BYTES{
-            {'S', 'C', ' ', 'A', 'T', ' ', 'v', ASSET_STANDARD_VER}};
-
     /**
      * @struct atlas
      * A contiguous collection of sprites.
@@ -28,6 +20,13 @@ namespace sc::assets {
      * This class is designed to loaded by `sc::memory`.
      */
     struct alignas(memory::ALIGNMENT_NEON) atlas final {
+
+        // Static constants
+
+        static constexpr union magic_bytes {
+            const char as_array[8UZ];
+            const std::uint64_t as_uint;
+        } MAGIC_BYTES{{'S', 'C', ' ', 'A', 'T', ' ', 'v', ASSET_STANDARD_VER}};
 
         // Static methods
 
@@ -97,7 +96,7 @@ namespace sc::assets {
 
         const auto [magic, sprite16_count, sprite32_count, palette_count]{
                 static_cast<const atlas*>(ptr)->meta};
-        if (magic != ATLAS_MAGIC_BYTES.as_uint) [[unlikely]] {
+        if (magic != MAGIC_BYTES.as_uint) [[unlikely]] {
             return false;
         }
 
