@@ -49,13 +49,13 @@ from pipeline import (
     BGRImage,
     ColorEncoding,
     ColorEncodingParams,
+    FixedPoint,
     Palette,
     PhysicsType,
     ResourceLayoutError,
     ResourceLayoutWarning,
     SpriteMetadata,
     calculate_padding_needed,
-    convert_to_fixed_point,
     is_power_of_2,
     remap_from_8bit,
 )
@@ -85,7 +85,7 @@ class SpriteComponents:
 def ingest_asset(
     bgra_image_path: Path,
     color_encoding: ColorEncoding,
-    anchor: Sequence[float],
+    anchor: tuple[float, float],
     depth: int,
     physics_type: PhysicsType,
     emission_mask_path: Path | None,
@@ -146,24 +146,24 @@ def ingest_asset(
     u_anchor, v_anchor = anchor
 
     if math.isnan(u_anchor):
-        u_anchor = convert_to_fixed_point(width / 2.0)
+        u_anchor = FixedPoint.from_float(width / 2.0)
     elif u_anchor < u_min or u_anchor > u_max:
         raise ValueError(
             "U anchor point out of range! "
             f"Expected to be in [0, {width}), got {u_anchor}."
         )
     else:
-        u_anchor = convert_to_fixed_point(u_anchor)
+        u_anchor = FixedPoint.from_float(u_anchor)
 
     if math.isnan(v_anchor):
-        v_anchor = convert_to_fixed_point(height / 2.0)
+        v_anchor = FixedPoint.from_float(height / 2.0)
     elif v_anchor < v_min or v_anchor > v_max:
         raise ValueError(
             "V anchor point out of range! "
             f"Expected to be in [0, {height}), got {v_anchor}."
         )
     else:
-        v_anchor = convert_to_fixed_point(v_anchor)
+        v_anchor = FixedPoint.from_float(v_anchor)
 
     # Validate depth
 

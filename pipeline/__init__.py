@@ -18,15 +18,14 @@ from pipeline._pipeline import (
     PALETTE_SIZE_BYTES,
     SHIFT_ALPHA,
     SHIFT_EMISSION,
-    SHIFT_FIXED_POINT,
     AtlasMetadata,
     BBox,
     ColorEncoding,
     ColorEncodingParams,
+    FixedPoint,
     PhysicsType,
     ResourceLayoutError,
     SpriteMetadata,
-    convert_to_fixed_point,
 )
 
 # Core

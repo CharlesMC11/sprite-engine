@@ -76,17 +76,13 @@ NB_MODULE(_pipeline, m)
 
     // Math
 
-    m.attr("SHIFT_FIXED_POINT") = sc::math::SHIFT_FIXED_POINT;
-
-    m.def(
-            "convert_to_fixed_point",
-            [](const float n) -> std::int32_t {
-                return sc::math::fixed_point_t::from_float(n).value;
-            },
-            "n"_a,
-            "Convert the given value into a Q21.10 fixed point value.\n\n"
-            ":param n: The value to convert.\n\n"
-            ":return: The converted value in Q21.10 format.\n");
+    nb::class_<sc::math::fixed_point_t>{
+            m, "FixedPoint", "A signed Q21.10 fixed point value.\n"}
+            .def_static(
+                    "from_float", &sc::math::fixed_point_t::from_float, "n"_a)
+            .def(nb::init{})
+            .def("to_int", &sc::math::fixed_point_t::operator std::int32_t)
+            .def_ro("value", &sc::math::fixed_point_t::value);
 
     nb::class_<sc::geometry::bbox<>>{m, "BBox", "A bounding box."}
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,

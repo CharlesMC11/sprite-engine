@@ -159,13 +159,13 @@ if __name__ == "__main__":
         thickness=BBOX_THICKNESS,
     )
 
-    u_anchor = meta.u_anchor / (1 << SHIFT_FIXED_POINT)
-    v_anchor = meta.v_anchor / (1 << SHIFT_FIXED_POINT)
+    u_anchor = meta.u_anchor.to_int()
+    v_anchor = meta.v_anchor.to_int()
     cv2.circle(
         image_resized,
         (
-            math.floor(u_anchor * scale_factor),
-            math.floor(v_anchor * scale_factor),
+            u_anchor * scale_factor,
+            v_anchor * scale_factor,
         ),
         radius=0,
         color=(0x00, MAX_8BIT, 0x00),
