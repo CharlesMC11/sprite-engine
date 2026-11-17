@@ -1,16 +1,16 @@
-#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
 #import "SCAppDelegate.hh"
 
-int main(const int argc, const char* argv[])
+int main()
 {
     @autoreleasepool {
-        auto* app{[NSApplication sharedApplication]};
+        const auto* app{[NSApplication sharedApplication]};
         [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-        auto* delegate{[[SCAppDelegate alloc] init]};
+        const auto* delegate{[[SCAppDelegate alloc] init]};
         app.delegate = delegate;
 
-        return NSApplicationMain(argc, argv);
+        [app run];
     }
 }
