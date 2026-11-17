@@ -139,7 +139,7 @@ namespace sc {
 
         [[nodiscard]] constexpr auto count() const noexcept -> std::size_t
         {
-            return status_ >> 2U;
+            return state_bits_ >> SHIFT_COUNT;
         }
 
         [[nodiscard]] constexpr auto buffer() const noexcept -> std::byte*
@@ -160,12 +160,12 @@ namespace sc {
         /**
          * Commit the changes to the registry.
          */
-        void commit() noexcept { status_ ^= 0x01UZ; }
+        void commit() noexcept { state_bits_ ^= SWAP_BIT; }
 
         /**
          * Mark for sorting draw order.
          */
-        void mark_for_sort() noexcept { status_ |= 0x02UZ; }
+        void mark_for_sort() noexcept { state_bits_ |= SORT_BIT; }
 
         /**
          * Sort the draw order based on screen coordinates.
@@ -195,7 +195,7 @@ namespace sc {
         /**
          * Reset the registry.
          */
-        void reset() noexcept { status_ = 0UZ; }
+        void reset() noexcept { state_bits_ = 0UZ; }
 
     private:
         // Type aliases
@@ -203,16 +203,22 @@ namespace sc {
         template<typename T, bool IsConst>
         using ptr_t = std::conditional_t<IsConst, const T*, T*>;
 
+        // Static constants
+
+        static constexpr std::size_t SWAP_BIT{0x01UZ};
+        static constexpr std::size_t SORT_BIT{0x02UZ};
+        static constexpr std::size_t SHIFT_COUNT{2UZ};
+
         // Private accessors
 
         [[nodiscard]] constexpr bool swapped_channels() const noexcept
         {
-            return (status_ & 0x01UZ) != 0UZ;
+            return (state_bits_ & SWAP_BIT) != 0UZ;
         }
 
         [[nodiscard]] constexpr bool needs_sort() const noexcept
         {
-            return (status_ & 0x02UZ) != 0UZ;
+            return (state_bits_ & SORT_BIT) != 0UZ;
         }
 
         template<typename EnumType, typename T, bool IsConst>
@@ -231,7 +237,7 @@ namespace sc {
          * - [1] Needs to be sorted (0 or 1).
          * - [2–31] Entity count.
          */
-        std::size_t status_{0UZ};
+        std::size_t state_bits_{0UZ};
     };
 
     // Constructor

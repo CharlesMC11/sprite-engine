@@ -37,7 +37,7 @@ namespace sc {
                         return y_a == y_b ? y_a < y_b : z_ptr[a] < z_ptr[b];
                     });
 
-            status_ &= ~0x02UZ;
+            state_bits_ &= ~SORT_BIT;
         }
     }
 
@@ -59,10 +59,9 @@ namespace sc {
         sprite_index_ptr()[new_idx] = i;
         draw_order_ptr()[new_idx] = static_cast<core::index_t>(new_idx);
 
-        const std::size_t is_swapped{swapped_channels() & 0x01UZ};
-        constexpr std::size_t needs_redraw{0x02UZ};
-        const std::size_t new_count{(count() + 1UZ) << 2U};
-        status_ = new_count | needs_redraw | is_swapped;
+        const std::size_t is_swapped{swapped_channels() & SWAP_BIT};
+        const std::size_t new_count{(count() + 1UZ) << SHIFT_COUNT};
+        state_bits_ = new_count | SORT_BIT | is_swapped;
     }
 
     void entity_registry::spawn(const assets::sprite32_id i,
