@@ -12,18 +12,20 @@ namespace sc {
 
     class memory;
 
-    enum class state : uint8_t {
-        HOME,
-        SETTINGS,
-        OPENING,
-        EXPLORING,
-        PAUSE,
-        BATTLE,
-        EVENT,
-    };
-
     class world final {
     public:
+        // Enums
+
+        enum class state : uint8_t {
+            HOME,
+            SETTINGS,
+            OPENING,
+            EXPLORING,
+            PAUSE,
+            BATTLE,
+            EVENT,
+        };
+
         // Constructors
 
         explicit world(const memory& memory) noexcept;
