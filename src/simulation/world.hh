@@ -48,7 +48,7 @@ namespace sc {
 
         const memory& memory_;
         entity_registry registry_;
-        math::u_fixed_point_t ftime_{0U};
+        math::u_fixed_point_t accumulator_{0U};
         std::uint_least8_t menu_option_{0U};
         state state_{state::HOME};
     };

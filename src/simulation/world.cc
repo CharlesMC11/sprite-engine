@@ -1,4 +1,4 @@
-#include "world.hh"
+#include "simulation/world.hh"
 
 /*
 
@@ -129,10 +129,10 @@ namespace sc {
 
     void world::tick_exploring(const input::mask in) noexcept
     {
-        ftime_ += std::min(
+        accumulator_ += std::min(
                 display::FRAME_TIME, math::u_fixed_point_t::from_frac(1U, 4U));
 
-        while (ftime_ >= physics::FIXED_TIMESTEP) {
+        while (accumulator_ >= physics::FIXED_TIMESTEP) {
             registry_.x_vel_ptr()[0UZ] = registry_.y_vel_ptr()[0UZ] =
                     math::FIXED_POINT_ZERO;
             constexpr auto vel{math::fixed_point_t::from_int(200)};
@@ -156,7 +156,7 @@ namespace sc {
             // registry_, grid_, *atlas_.data(), physics::kFixedTimestep);
 
             registry_.commit();
-            ftime_ -= physics::FIXED_TIMESTEP;
+            accumulator_ -= physics::FIXED_TIMESTEP;
         }
     }
 
