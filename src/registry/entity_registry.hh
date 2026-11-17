@@ -69,11 +69,14 @@
 
 namespace sc {
 
-    // Constants
-
-    inline constexpr std::size_t MAX_ENTITY_COUNT{0x100UZ};
-
-    // Enums
+    /**
+     * @class entity_registry
+     *
+     * Arena-like registry for holding kinematic transforms and IDs.
+     */
+    class entity_registry final {
+    public:
+        // Enums
 
     enum class xform_channel : std::uint8_t {
         x_pos,
@@ -94,13 +97,14 @@ namespace sc {
         COUNT
     };
 
-    /**
-     * @class entity_registry
-     *
-     * Arena-like registry for holding kinematic transforms and IDs.
-     */
-    class entity_registry final {
-    public:
+        // Static constants
+
+        static constexpr std::size_t TOTAL_CHANNEL_COUNT{
+                static_cast<std::size_t>(xform_channel::COUNT) +
+                static_cast<std::size_t>(index_channel::COUNT)};
+
+        static constexpr std::size_t MAX_ENTITY_COUNT{0x100UZ};
+
         // Static accessors
 
         [[nodiscard]] static constexpr auto offset(xform_channel) noexcept
@@ -283,13 +287,13 @@ namespace sc {
 static_assert(sizeof(sc::math::fixed_point_t) == sizeof(sc::core::index_t),
         "Kinematics data size must match index data size!");
 
-static_assert(sc::MAX_ENTITY_COUNT % sc::memory::ALIGNMENT_CACHE == 0UZ,
+static_assert(
+        sc::entity_registry::MAX_ENTITY_COUNT % sc::memory::ALIGNMENT_CACHE ==
+                0UZ,
         "Number of entities must align with the cache!");
 
-inline constexpr auto TOTAL_CHANNEL_COUNT{
-        static_cast<std::size_t>(sc::xform_channel::COUNT) +
-        static_cast<std::size_t>(sc::index_channel::COUNT)};
-static_assert(sc::MAX_ENTITY_COUNT * sizeof(sc::core::index_t) *
-                        TOTAL_CHANNEL_COUNT <=
+static_assert(sizeof(sc::math::fixed_point_t) *
+                        sc::entity_registry::MAX_ENTITY_COUNT *
+                        sc::entity_registry::TOTAL_CHANNEL_COUNT <=
                 sc::memory::SRAM_SIZE_BYTES,
         "Number of entities exceeds available SRAM size!");
