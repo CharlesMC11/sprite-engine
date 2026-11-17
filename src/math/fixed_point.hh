@@ -36,7 +36,7 @@ namespace sc::math {
 
         constexpr fixed_point_t() = default;
 
-        explicit constexpr fixed_point_t(int32_t n);
+        explicit constexpr fixed_point_t(int32_t raw);
 
         // Operators
 
@@ -73,7 +73,7 @@ namespace sc::math {
 
         constexpr u_fixed_point_t() = default;
 
-        explicit constexpr u_fixed_point_t(uint32_t n);
+        explicit constexpr u_fixed_point_t(uint32_t raw);
 
         // Operators
 
@@ -97,7 +97,7 @@ namespace sc::math {
         return fixed_point_t{n * (1 << SHIFT_FIXED_POINT)};
     }
 
-    constexpr fixed_point_t::fixed_point_t(const int32_t n) : value{n} {}
+    constexpr fixed_point_t::fixed_point_t(const int32_t raw) : value{raw} {}
 
     [[nodiscard]] constexpr fixed_point_t::operator float() const
     {
@@ -115,7 +115,9 @@ namespace sc::math {
         return u_fixed_point_t{n * (1U << SHIFT_FIXED_POINT)};
     }
 
-    constexpr u_fixed_point_t::u_fixed_point_t(const uint32_t n) : value{n} {}
+    constexpr u_fixed_point_t::u_fixed_point_t(const uint32_t raw) : value{raw}
+    {
+    }
 
     [[nodiscard]] constexpr u_fixed_point_t::operator float() const
     {
