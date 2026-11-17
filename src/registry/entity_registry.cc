@@ -34,7 +34,7 @@ namespace sc {
                         const math::fixed_point_t y_a{y_ptr[a]};
                         const math::fixed_point_t y_b{y_ptr[b]};
 
-                        return y_a == y_b ? y_a < y_b : z_ptr[a] < z_ptr[b];
+                        return y_a == y_b ? z_ptr[a] < z_ptr[b] : y_a < y_b;
                     });
 
             state_bits_ &= ~SORT_BIT;
