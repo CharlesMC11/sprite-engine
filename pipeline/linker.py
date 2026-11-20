@@ -79,7 +79,7 @@ class AssetLinker:
         }
 
     def __len__(self) -> int:
-        return sum(len(b) for b in self._asset_registry.values())
+        return sum(len(b[1]) for b in self._asset_registry.values())
 
     # Public methods
 
