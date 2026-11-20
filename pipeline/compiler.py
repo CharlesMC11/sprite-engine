@@ -28,7 +28,6 @@ The binary layout contains:
 import math
 import struct
 from argparse import ArgumentParser
-from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from warnings import warn
