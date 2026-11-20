@@ -1,6 +1,10 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 
+#include <bit>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <format>
 #include <stdexcept>
 #include <string>
@@ -11,6 +15,7 @@
 #include "core/core.hh"
 #include "core/memory.hh"
 #include "graphics/graphics_types.hh"
+#include "math/bbox.hh"
 #include "math/fixed_point.hh"
 #include "simulation/physics_types.hh"
 
@@ -26,11 +31,11 @@ namespace sc::assets {
 
     // Sprite
 
-    inline constexpr char SPRITE_MAGIC_BYTES[]{
+    inline constexpr char SPRITE_MAGIC[]{
             'S', 'C', ' ', 'S', 'P', ' ', 'v', ASSET_STANDARD_VER};
 
-    inline constexpr std::size_t SPRITE_METADATA_SIZE_BYTES{
-            sizeof SPRITE_MAGIC_BYTES + sizeof(sprite<>::metadata)};
+    inline constexpr std::size_t SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES{
+            sizeof SPRITE_MAGIC + sizeof(sprite<>::metadata)};
 
     [[nodiscard]] static constexpr auto make_sprite_metadata(
             std::uint8_t u_min, std::uint8_t u_max, std::uint8_t v_min,
@@ -154,7 +159,6 @@ NB_MODULE(_pipeline, m)
     m.attr("MASK_ALPHA") = sc::graphics::MASK_ALPHA;
     m.attr("MASK_EMISSION") = sc::graphics::MASK_EMISSION;
 
-    m.attr("PACKED_COLOR_SIZE_BYTES") = sizeof(sc::graphics::packed_color_t);
     m.attr("PALETTE_SIZE_BYTES") = sc::graphics::MAX_COLOR_COUNT *
             sizeof(sc::graphics::packed_color_t);
 
@@ -188,15 +192,11 @@ NB_MODULE(_pipeline, m)
             nb::is_final{}}
             .def_prop_ro_static("MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
-                        return nb::bytes{&sc::assets::SPRITE_MAGIC_BYTES,
-                                sizeof sc::assets::SPRITE_MAGIC_BYTES};
+                        return nb::bytes{&sc::assets::SPRITE_MAGIC,
+                                sizeof sc::assets::SPRITE_MAGIC};
                     })
             .def_ro_static("EXPECTED_SIZE_BYTES",
-                    &sc::assets::SPRITE_METADATA_SIZE_BYTES)
-            .def_prop_ro_static("PALETTE_INDEX",
-                    []([[maybe_unused]] nb::handle) -> std::size_t {
-                        return sc::assets::SPRITE_METADATA_SIZE_BYTES - 1UZ;
-                    })
+                    &sc::assets::SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES)
             .def_static("from_bytes", sc::assets::deserialize_sprite_metadata,
                     "buffer"_a)
             .def(nb::new_{&sc::assets::make_sprite_metadata}, "u_min"_a,
@@ -238,9 +238,6 @@ NB_MODULE(_pipeline, m)
 
     // Atlas
 
-    m.attr("ATLAS_MAGIC_BYTES") =
-            nb::bytes{&sc::assets::atlas::MAGIC_BYTES, 8UZ};
-
     nb::class_<sc::assets::atlas::metadata>{m, "AtlasMetadata",
             "An atlas’s metadata.\n\n"
             "Contains information on the number of sprites and palettes.\n\n"
@@ -256,6 +253,15 @@ NB_MODULE(_pipeline, m)
                     })
             .def_ro_static(
                     "EXPECTED_SIZE_BYTES", &sc::assets::ATLAS_METADATA_SIZE)
+            .def_static(
+                    "validate_atlas",
+                    [](const nb::bytes& buffer) -> bool {
+                        return sc::assets::atlas::validate(
+                                buffer.data(), buffer.size());
+                    },
+                    "buffer"_a)
+            .def_static("from_bytes", &sc::assets::deserialize_atlas_metadata,
+                    "buffer"_a)
             .def(nb::new_{&sc::assets::make_atlas_metadata},
                     "sprite16_count"_a, "sprite32_count"_a, "palette_count"_a)
             .def("__repr__",
@@ -300,28 +306,34 @@ NB_MODULE(_pipeline, m)
 [[nodiscard]] auto sc::assets::serialize_sprite_metadata(
         const sprite<>::metadata meta) noexcept -> nb::bytes
 {
-    std::byte buffer[SPRITE_METADATA_SIZE_BYTES];
-    std::memcpy(buffer, SPRITE_MAGIC_BYTES, sizeof SPRITE_MAGIC_BYTES);
-    std::memcpy(buffer + sizeof SPRITE_MAGIC_BYTES, &meta, sizeof meta);
-    return nb::bytes{buffer, SPRITE_METADATA_SIZE_BYTES};
+    std::byte buffer[SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES];
+    std::memcpy(buffer, SPRITE_MAGIC, sizeof SPRITE_MAGIC);
+    std::memcpy(buffer + sizeof SPRITE_MAGIC, &meta, sizeof meta);
+    return nb::bytes{buffer, sizeof buffer};
 }
 
 [[nodiscard]] auto sc::assets::deserialize_sprite_metadata(
         const nb::bytes& buffer) -> sprite<>::metadata
 {
-    if (buffer.size() < SPRITE_METADATA_SIZE_BYTES) {
+    if (buffer.size() < SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES) {
         throw resource_layout_error{
                 std::format("Buffer size too small for SpriteMetadata. "
                             "Expected {} bytes, got {}.",
-                        SPRITE_METADATA_SIZE_BYTES, buffer.size())};
+                        SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES, buffer.size())};
+    }
+    if (std::memcmp(buffer.data(), SPRITE_MAGIC, sizeof SPRITE_MAGIC) != 0) {
+        throw resource_layout_error{std::format(
+                "Invalid sprite magic bytes. Expected '{}', got '{}'.",
+                std::string_view{SPRITE_MAGIC, sizeof SPRITE_MAGIC},
+                std::string_view{static_cast<const char*>(buffer.data()),
+                        sizeof SPRITE_MAGIC})};
     }
 
-    sprite<>::metadata meta;
+    std::byte meta[sizeof(sprite<>::metadata)];
     const auto* const start{static_cast<const std::byte*>(buffer.data()) +
-            sizeof SPRITE_MAGIC_BYTES};
-    std::memcpy(&meta, start,
-            SPRITE_METADATA_SIZE_BYTES - sizeof SPRITE_MAGIC_BYTES);
-    return meta;
+            sizeof SPRITE_MAGIC};
+    std::memcpy(&meta, start, sizeof meta);
+    return std::bit_cast<sprite<>::metadata>(meta);
 }
 
 // Atlas
@@ -339,7 +351,31 @@ NB_MODULE(_pipeline, m)
 [[nodiscard]] auto sc::assets::serialize_atlas_metadata(
         const atlas::metadata meta) noexcept -> nb::bytes
 {
-    std::byte buffer[ATLAS_METADATA_SIZE];
-    std::memcpy(buffer, &meta, ATLAS_METADATA_SIZE);
-    return nb::bytes{buffer, ATLAS_METADATA_SIZE};
+    std::byte buffer[sizeof meta];
+    std::memcpy(buffer, &meta, sizeof buffer);
+    return nb::bytes{buffer, sizeof buffer};
+}
+
+[[nodiscard]] auto sc::assets::deserialize_atlas_metadata(
+        const nb::bytes& buffer) -> atlas::metadata
+{
+    if (buffer.size() < ATLAS_METADATA_SIZE) {
+        throw resource_layout_error{
+                std::format("Buffer size too small for AtlasMetadata. "
+                            "Expected {} bytes, got {}.",
+                        ATLAS_METADATA_SIZE, buffer.size())};
+    }
+    if (std::memcmp(buffer.data(), atlas::MAGIC_BYTES.as_array,
+                sizeof atlas::MAGIC_BYTES) != 0) {
+        throw resource_layout_error{std::format(
+                "Invalid atlas magic bytes. Expected '{}', got '{}'.",
+                std::string_view{atlas::MAGIC_BYTES.as_array,
+                        sizeof atlas::MAGIC_BYTES},
+                std::string_view{static_cast<const char*>(buffer.data()),
+                        sizeof atlas::MAGIC_BYTES})};
+    }
+
+    std::byte meta[ATLAS_METADATA_SIZE];
+    std::memcpy(&meta, buffer.data(), sizeof meta);
+    return std::bit_cast<atlas::metadata>(meta);
 }
