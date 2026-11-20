@@ -65,18 +65,8 @@ class AssetLinker:
 
     # Type annotations
 
-    _metadata: AtlasMetadata
-
     _palette_registry: dict[ComponentBlob, int]
     _asset_registry: dict[tuple[int, int], tuple[str, list[AssetBlob]]]
-
-    _blobs: list[AssetBlob]
-
-    _current_offset: int
-    _sprite8_offset: int
-    _sprite16_offset: int
-    _sprite32_offset: int
-    _sprite64_offset: int
 
     # Magic methods
 
@@ -87,11 +77,6 @@ class AssetLinker:
             (16, 16): ("sprite16", []),
             (32, 32): ("sprite32", []),
         }
-
-        self._sprite8_offset = 0
-        self._sprite16_offset = 0
-        self._sprite32_offset = 0
-        self._sprite64_offset = 0
 
     def __len__(self) -> int:
         return sum(len(b) for b in self._asset_registry.values())
