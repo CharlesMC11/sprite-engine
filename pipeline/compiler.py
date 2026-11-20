@@ -149,7 +149,7 @@ def ingest_asset(
 
     if math.isnan(u_anchor):
         u_anchor = FixedPoint.from_float(width / 2.0)
-    elif u_anchor < u_min or u_anchor > u_max:
+    elif u_anchor < 0 or u_anchor > width:
         raise ValueError(
             "U anchor point out of range! "
             f"Expected to be in [0, {width}), got {u_anchor}."
@@ -159,7 +159,7 @@ def ingest_asset(
 
     if math.isnan(v_anchor):
         v_anchor = FixedPoint.from_float(height / 2.0)
-    elif v_anchor < v_min or v_anchor > v_max:
+    elif v_anchor < 0 or v_anchor > height:
         raise ValueError(
             "V anchor point out of range! "
             f"Expected to be in [0, {height}), got {v_anchor}."
