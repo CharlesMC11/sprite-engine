@@ -107,13 +107,13 @@ def print_8bit(color: Color) -> None:
     :param color: The original color value
     """
 
-    max3 = MAX_2BIT << 1
+    max_3bit = MAX_4BIT >> 1
 
     q4 = _quantize(color, MAX_4BIT)
     e4 = _dequantize(q4, MAX_4BIT)
 
-    q3 = _quantize(color, max3)
-    e3 = _dequantize(q3, max3)
+    q3 = _quantize(color, max_3bit)
+    e3 = _dequantize(q3, max_3bit)
 
     q2 = _quantize(color, MAX_2BIT)
     e2 = _dequantize(q2, MAX_2BIT)
