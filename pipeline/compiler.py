@@ -55,7 +55,6 @@ from pipeline import (
     ResourceLayoutError,
     ResourceLayoutWarning,
     SpriteMetadata,
-    calculate_padding_needed,
     is_power_of_2,
     remap_from_8bit,
 )
@@ -224,8 +223,6 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
     pixels, palette = _bake_pixels(components, output_path.name)
     pixel_bytes = pixels.tobytes(order="C")
-    padding_needed = calculate_padding_needed(len(pixel_bytes), ALIGNMENT_NEON)
-    pixel_bytes += b"\x00" * padding_needed
 
     palette_bytes = bytearray()
     palette_size = len(palette)
