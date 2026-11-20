@@ -222,7 +222,7 @@ class AssetLinker:
             lines.append(
                 f"{INDENT * 2}{_clean_identifier(asset.name)} = {i}U,"
             )
-        lines.extend((f"{INDENT * 2}count", f"{INDENT}}};\n"))
+        lines.extend((f"{INDENT * 2}COUNT", f"{INDENT}}};\n"))
 
         return blobs, lines
 
