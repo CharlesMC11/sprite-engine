@@ -40,7 +40,6 @@ from pipeline import (
     MAX_2BIT,
     MAX_8BIT,
     SHIFT_ALPHA,
-    SHIFT_FIXED_POINT,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
     ColorEncoding,
@@ -159,13 +158,13 @@ if __name__ == "__main__":
         thickness=BBOX_THICKNESS,
     )
 
-    u_anchor = meta.u_anchor.to_int()
-    v_anchor = meta.v_anchor.to_int()
+    u_anchor = meta.u_anchor.to_float()
+    v_anchor = meta.v_anchor.to_float()
     cv2.circle(
         image_resized,
         (
-            u_anchor * scale_factor,
-            v_anchor * scale_factor,
+            round(u_anchor * scale_factor),
+            round(v_anchor * scale_factor),
         ),
         radius=0,
         color=(0x00, MAX_8BIT, 0x00),
