@@ -116,6 +116,9 @@ def ingest_asset(
     if (image := cv2.imread(bgra_image_path, cv2.IMREAD_UNCHANGED)) is None:
         raise RuntimeError("Could not read source image.")
 
+    if image.ndim < 3:
+        raise ResourceLayoutError("Source image is not a BGR/BGRA image.")
+
     height, width = image.shape[:2]
     if not (is_power_of_2(height) and is_power_of_2(width)):
         raise ResourceLayoutError(
