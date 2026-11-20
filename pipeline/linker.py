@@ -35,7 +35,7 @@ from pipeline import (
 GENERATED_HEADER_FILENAME = "asset_ids.hh"
 
 INDENT = " " * 4
-INVALID_IDENTIFIER_SYMBOLS_RE = re.compile(r"\s")
+INVALID_IDENTIFIER_SYMBOLS_RE = re.compile(r"\W")
 
 
 @dataclass(frozen=True, slots=True)
