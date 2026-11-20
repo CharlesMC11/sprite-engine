@@ -4,7 +4,6 @@ import numpy.typing as npt
 from pipeline._pipeline import (
     ALIGNMENT_CACHE,
     ALIGNMENT_NEON,
-    ATLAS_MAGIC_BYTES,
     MASK_ALPHA,
     MASK_EMISSION,
     MASK_PALETTE_INDEX,
@@ -65,22 +64,6 @@ def is_power_of_2(n: int) -> bool:
     """
 
     return n > 0 and n.bit_count() == 1
-
-
-def calculate_padding_needed(n: int, alignment: int) -> int:
-    """
-    Calculate the needed padding in terms of bytes.
-
-    :param n: The number to be padded.
-    :param alignment: The value to be padded up to.
-
-    :return: The number of bytes needed.
-    """
-
-    if not is_power_of_2(alignment):
-        raise ValueError(f"Alignment must be a power of 2, got {alignment}.")
-
-    return (alignment - n % alignment) % alignment
 
 
 def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
