@@ -37,10 +37,10 @@ namespace sc::assets {
             graphics::color_encoding color_encoding,
             std::uint8_t palette_index) -> sprite<>::metadata;
 
-    [[nodiscard]] static constexpr auto serialize_sprite_metadata(
+    [[nodiscard]] static auto serialize_sprite_metadata(
             sprite<>::metadata meta) noexcept -> nb::bytes;
 
-    [[nodiscard]] static constexpr auto deserialize_sprite_metadata(
+    [[nodiscard]] static auto deserialize_sprite_metadata(
             const nb::bytes& buffer) -> sprite<>::metadata;
 
     // Atlas
@@ -51,8 +51,11 @@ namespace sc::assets {
             std::uint32_t sprite16_count, std::uint16_t sprite32_count,
             std::uint16_t palette_count) -> atlas::metadata;
 
-    [[nodiscard]] static constexpr auto serialize_atlas_metadata(
+    [[nodiscard]] static auto serialize_atlas_metadata(
             atlas::metadata meta) noexcept -> nb::bytes;
+
+    [[nodiscard]] static auto deserialize_atlas_metadata(
+            const nb::bytes& buffer) -> atlas::metadata;
 
 } // namespace sc::assets
 
@@ -248,7 +251,7 @@ NB_MODULE(_pipeline, m)
             .palette_index = palette_index};
 }
 
-[[nodiscard]] constexpr auto sc::assets::serialize_sprite_metadata(
+[[nodiscard]] auto sc::assets::serialize_sprite_metadata(
         const sprite<>::metadata meta) noexcept -> nb::bytes
 {
     std::byte buffer[SPRITE_METADATA_SIZE_BYTES];
@@ -257,7 +260,7 @@ NB_MODULE(_pipeline, m)
     return nb::bytes{buffer, SPRITE_METADATA_SIZE_BYTES};
 }
 
-[[nodiscard]] constexpr auto sc::assets::deserialize_sprite_metadata(
+[[nodiscard]] auto sc::assets::deserialize_sprite_metadata(
         const nb::bytes& buffer) -> sprite<>::metadata
 {
     if (buffer.size() < SPRITE_METADATA_SIZE_BYTES) {
@@ -287,7 +290,7 @@ NB_MODULE(_pipeline, m)
             .palette_count = palette_count};
 }
 
-[[nodiscard]] constexpr auto sc::assets::serialize_atlas_metadata(
+[[nodiscard]] auto sc::assets::serialize_atlas_metadata(
         const atlas::metadata meta) noexcept -> nb::bytes
 {
     std::byte buffer[ATLAS_METADATA_SIZE];
