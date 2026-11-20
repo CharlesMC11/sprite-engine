@@ -160,10 +160,8 @@ class AssetLinker:
         """
 
         header_path = output_path.with_name(GENERATED_HEADER_FILENAME)
-        include_guard = f"SC_ASSETS_{header_path.stem.upper()}_HH"
         header_lines = [
-            f"#ifndef {include_guard}",
-            f"#define {include_guard}\n",
+            f"#pragma once\n\n",
             '#include "core/core.hh"\n',
             "namespace sc::assets {\n",
         ]
@@ -181,9 +179,7 @@ class AssetLinker:
             assets_bytes.extend(blobs)
             header_lines.extend(lines)
 
-        header_lines.extend(
-            ("} // namespace sc::assets\n", f"#endif // {include_guard}")
-        )
+        header_lines.append("} // namespace sc::assets\n")
 
         metadata_bytes = AtlasMetadata(
             len(self._asset_registry[16, 16][1]),
