@@ -1,7 +1,10 @@
 #include <nanobind/nanobind.h>
+#include <nanobind/stl/string.h>
 
 #include <format>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 #include "assets/atlas.hh"
 #include "assets/sprite.hh"
@@ -83,14 +86,23 @@ NB_MODULE(_pipeline, m)
             m, "FixedPoint", "A signed Q21.10 fixed point value.\n"}
             .def_static(
                     "from_float", &sc::math::fixed_point_t::from_float, "n"_a)
-            .def(nb::init{})
-            .def("to_int", &sc::math::fixed_point_t::operator std::int32_t)
+            .def("__repr__",
+                    [](const sc::math::fixed_point_t f) -> std::string {
+                        return std::format("FixedPoint(raw={})", f.value);
+                    })
+            .def("to_float", &sc::math::fixed_point_t::operator float)
             .def_ro("value", &sc::math::fixed_point_t::value);
 
     nb::class_<sc::geometry::bbox<>>{m, "BBox", "A bounding box."}
             .def(nb::init<std::uint8_t, std::uint8_t, std::uint8_t,
                          std::uint8_t>{},
                     "u_min"_a, "u_max"_a, "v_min"_a, "v_max"_a)
+            .def("__repr__",
+                    [](const sc::geometry::bbox<> b) -> std::string {
+                        return std::format(
+                                "BBox(u_min={}, u_max={}, v_min={}, v_max={})",
+                                b.u_min, b.u_max, b.v_min, b.v_max);
+                    })
             .def_ro("u_min", &sc::geometry::bbox<>::u_min)
             .def_ro("u_max", &sc::geometry::bbox<>::u_max)
             .def_ro("v_min", &sc::geometry::bbox<>::v_min)
@@ -113,6 +125,15 @@ NB_MODULE(_pipeline, m)
             "Parameters of how a 2‑byte color is packed or unpacked.\n",
             nb::is_final{}}
             .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
+            .def("__repr__",
+                    [](const sc::graphics::color_encoding_params p)
+                            -> std::string {
+                        return std::format(
+                                "ColorEncodingParams(r_mask={}, g_mask={}, "
+                                "b_mask={}, r_shift={}, g_shift={})",
+                                p.r_mask, p.g_mask, p.b_mask, p.r_shift,
+                                p.g_shift);
+                    })
             .def("__iter__",
                     [](const sc::graphics::color_encoding_params self)
                             -> nb::iterator {
@@ -182,6 +203,23 @@ NB_MODULE(_pipeline, m)
                     "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
                     "color_encoding"_a, "palette_index"_a = 0x3F)
+            .def("__repr__",
+                    [](const sc::assets::sprite<>::metadata self)
+                            -> std::string {
+                        return std::format("SpriteMetadata(bbox=BBox(u_min={},"
+                                           " u_max={}, v_min={}, v_max={}), "
+                                           "u_anchor=FixedPoint(raw={}), "
+                                           "v_anchor=FixedPoint(raw={}), "
+                                           "depth={}, physics_type={}, "
+                                           "color_encoding=ColorEncoding({}), "
+                                           "palette_index={})",
+                                self.bbox.u_min, self.bbox.u_max,
+                                self.bbox.v_min, self.bbox.v_max,
+                                self.u_anchor.value, self.v_anchor.value,
+                                self.depth, self.physics_type,
+                                static_cast<int>(self.color_encoding),
+                                self.palette_index);
+                    })
             .def_ro("bbox", &sc::assets::sprite<>::metadata::bbox)
             .def_ro("u_anchor", &sc::assets::sprite<>::metadata::u_anchor)
             .def_ro("v_anchor", &sc::assets::sprite<>::metadata::v_anchor)
@@ -220,6 +258,14 @@ NB_MODULE(_pipeline, m)
                     "EXPECTED_SIZE_BYTES", &sc::assets::ATLAS_METADATA_SIZE)
             .def(nb::new_{&sc::assets::make_atlas_metadata},
                     "sprite16_count"_a, "sprite32_count"_a, "palette_count"_a)
+            .def("__repr__",
+                    [](const sc::assets::atlas::metadata self) -> std::string {
+                        return std::format(
+                                "AtlasMetadata(sprite16_count={}, "
+                                "sprite32_count={}, palette_count={})",
+                                self.sprite16_count, self.sprite32_count,
+                                self.palette_count);
+                    })
             .def_ro("sprite16_count",
                     &sc::assets::atlas::metadata::sprite16_count)
             .def_ro("sprite32_count",
