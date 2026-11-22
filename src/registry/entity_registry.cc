@@ -14,9 +14,9 @@ namespace sc {
     void entity_registry::update(const math::fixed_point_t dt) noexcept
     {
         for (std::size_t i{0UZ}; i < count(); ++i) {
-            new_x_pos_ptr()[i] = x_vel_ptr()[i] * dt + x_pos_ptr()[i];
-            new_y_pos_ptr()[i] = y_vel_ptr()[i] * dt + y_pos_ptr()[i];
-            new_z_pos_ptr()[i] = z_vel_ptr()[i] * dt + z_pos_ptr()[i];
+            next_x_pos_ptr()[i] = x_vel_ptr()[i] * dt + x_pos_ptr()[i];
+            next_y_pos_ptr()[i] = y_vel_ptr()[i] * dt + y_pos_ptr()[i];
+            next_z_pos_ptr()[i] = z_vel_ptr()[i] * dt + z_pos_ptr()[i];
         }
     }
 
@@ -49,9 +49,9 @@ namespace sc {
 
         const std::size_t new_idx{count()};
 
-        x_pos_ptr()[new_idx] = new_x_pos_ptr()[new_idx] = x;
-        y_pos_ptr()[new_idx] = new_y_pos_ptr()[new_idx] = y;
-        z_pos_ptr()[new_idx] = new_z_pos_ptr()[new_idx] = z;
+        x_pos_ptr()[new_idx] = next_x_pos_ptr()[new_idx] = x;
+        y_pos_ptr()[new_idx] = next_y_pos_ptr()[new_idx] = y;
+        z_pos_ptr()[new_idx] = next_z_pos_ptr()[new_idx] = z;
 
         x_vel_ptr()[new_idx] = y_vel_ptr()[new_idx] = z_vel_ptr()[new_idx] =
                 math::FIXED_POINT_ZERO;

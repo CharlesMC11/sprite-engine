@@ -78,24 +78,24 @@ namespace sc {
     public:
         // Enums
 
-    enum class xform_channel : std::uint8_t {
-        x_pos,
-        y_pos,
-        z_pos,
-        x_vel,
-        y_vel,
-        z_vel,
-        new_x_pos,
-        new_y_pos,
-        new_z_pos,
-        COUNT
-    };
+        enum class xform_channel : std::uint8_t {
+            x_pos,
+            y_pos,
+            z_pos,
+            next_x_pos,
+            next_y_pos,
+            next_z_pos,
+            x_vel,
+            y_vel,
+            z_vel,
+            COUNT
+        };
 
-    enum class index_channel : std::uint8_t {
-        sprite_index,
-        draw_order,
-        COUNT
-    };
+        enum class index_channel : std::uint8_t {
+            sprite_index,
+            draw_order,
+            COUNT
+        };
 
         // Static constants
 
@@ -126,17 +126,19 @@ namespace sc {
 
         // Public accessors
 
-        SC_REGISTER_SWAPPABLE_ACCESSOR(x_pos, new_x_pos)
-        SC_REGISTER_SWAPPABLE_ACCESSOR(y_pos, new_y_pos)
-        SC_REGISTER_SWAPPABLE_ACCESSOR(z_pos, new_z_pos)
+        // FIXME: Use template accessors??
+
+        SC_REGISTER_SWAPPABLE_ACCESSOR(x_pos, next_x_pos)
+        SC_REGISTER_SWAPPABLE_ACCESSOR(y_pos, next_y_pos)
+        SC_REGISTER_SWAPPABLE_ACCESSOR(z_pos, next_z_pos)
 
         SC_REGISTER_XFORM_CHANNEL_ACCESSOR(x_vel)
         SC_REGISTER_XFORM_CHANNEL_ACCESSOR(y_vel)
         SC_REGISTER_XFORM_CHANNEL_ACCESSOR(z_vel)
 
-        SC_REGISTER_SWAPPABLE_ACCESSOR(new_x_pos, x_pos)
-        SC_REGISTER_SWAPPABLE_ACCESSOR(new_y_pos, y_pos)
-        SC_REGISTER_SWAPPABLE_ACCESSOR(new_z_pos, z_pos)
+        SC_REGISTER_SWAPPABLE_ACCESSOR(next_x_pos, x_pos)
+        SC_REGISTER_SWAPPABLE_ACCESSOR(next_y_pos, y_pos)
+        SC_REGISTER_SWAPPABLE_ACCESSOR(next_z_pos, z_pos)
 
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(sprite_index)
         SC_REGISTER_INDEX_CHANNEL_ACCESSOR(draw_order)
