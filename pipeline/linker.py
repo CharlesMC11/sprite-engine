@@ -4,12 +4,22 @@ Asset Linker.
 Assembles multiple asset files into a single memory-mappable atlas binary.
 
 The binary layout contains:
-- Header (16 bytes): atlas metadata
+- Header (128 bytes): atlas metadata
     - Magic (8 bytes)
-    - Palette count (4 bytes)
-    - 16 × 16 sprite count (4 bytes)
-    - 32 × 32 sprite count (4 bytes)
-    - Padding (108 bytes)
+    - Item counts
+        - Palette count (4 bytes)
+        - 16 × 16 sprite count (4 bytes)
+        - 32 × 32 sprite count (4 bytes)
+    - Block sizes
+        - Palette block size (4 bytes)
+        - 16 × 16 sprite block size (4 bytes)
+        - 32 × 32 sprite block size (4 bytes)
+        - Total atlas size (4 bytes)
+    - Block offsets
+        - Palette block offset (4 bytes)
+        - 16 × 16 sprite block offset (4 bytes)
+        - 32 × 32 sprite block offset (4 bytes)
+    - Padding (80 bytes)
 - Data (n bytes): contiguous arrays of palette and sprite structures
     - Color palettes (32 × palette count bytes)
     - 16 × 16 sprites (272 × 16 × 16 sprite count bytes)
@@ -156,8 +166,8 @@ class AssetLinker:
         """
         Collapse the internal blobs into a single atlas binary.
 
-        The header is 16‑byte aligned to ensure the first sprite starts on a
-        clean 16‑byte boundary.
+        The header is 128‑byte aligned to ensure the first sprite starts on a
+        clean 128‑byte boundary.
 
         :param output_path: The path to save the atlas to.
         """

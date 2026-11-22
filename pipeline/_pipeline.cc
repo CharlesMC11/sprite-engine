@@ -275,11 +275,21 @@ NB_MODULE(_pipeline, m)
     nb::class_<sc::assets::atlas::metadata>{m, "AtlasMetadata",
             "An atlas’s metadata.\n\n"
             "Contains information on the number of sprites and palettes.\n\n"
-            "- magic (8 bytes)\n"
-            "- Palette count (4 bytes)\n"
-            "- 16 × 16 sprite count (4 bytes)\n"
-            "- 32 × 32 sprite count (4 bytes)\n"
-            "- Padding",
+            "- Magic (8 bytes)\n"
+            "- Item counts:\n"
+            "    - Palette count (4 bytes)\n"
+            "    - 16 × 16 sprite count (4 bytes)\n"
+            "    - 32 × 32 sprite count (4 bytes)\n"
+            "- Block sizes:\n"
+            "    - Palette block size (4 bytes)\n"
+            "    - 16 × 16 sprite block size (4 bytes)\n"
+            "    - 32 × 32 sprite block size (4 bytes)\n"
+            "    - Total atlas size (4 bytes)\n"
+            "- Offsets:\n"
+            "    - Palette block offset (4 bytes)\n"
+            "    - 16 × 16 sprite block offset (4 bytes)\n"
+            "    - 32 × 32 sprite block offset (4 bytes)\n"
+            "- Padding (80 bytes)",
             nb::is_final{}}
             .def_prop_ro_static(
                     "MAGIC",
@@ -317,12 +327,26 @@ NB_MODULE(_pipeline, m)
                                 self.sprite16_count, self.sprite32_count,
                                 self.palette_count);
                     })
+            .def_ro("palette_count",
+                    &sc::assets::atlas::metadata::palette_count)
             .def_ro("sprite16_count",
                     &sc::assets::atlas::metadata::sprite16_count)
             .def_ro("sprite32_count",
                     &sc::assets::atlas::metadata::sprite32_count)
-            .def_ro("palette_count",
-                    &sc::assets::atlas::metadata::palette_count)
+            .def_ro("palette_block_size_bytes",
+                    &sc::assets::atlas::metadata::palette_block_size)
+            .def_ro("sprite16_block_size_bytes",
+                    &sc::assets::atlas::metadata::sprite16_block_size)
+            .def_ro("sprite32_block_size_bytes",
+                    &sc::assets::atlas::metadata::sprite32_block_size)
+            .def_ro("total_size_bytes",
+                    &sc::assets::atlas::metadata::total_size)
+            .def_ro("palette_block_offset",
+                    &sc::assets::atlas::metadata::palette_block_offset)
+            .def_ro("sprite16_block_offset",
+                    &sc::assets::atlas::metadata::sprite16_block_offset)
+            .def_ro("sprite32_block_offset",
+                    &sc::assets::atlas::metadata::sprite32_block_offset)
             .def("to_bytes", &sc::assets::serialize_atlas_metadata,
                     "Serialize the :class:`AtlasMetadata` instance into "
                     "bytes.");
@@ -389,10 +413,27 @@ NB_MODULE(_pipeline, m)
         const std::uint32_t palette_count, const std::uint32_t sprite16_count,
         const std::uint32_t sprite32_count) -> atlas::metadata
 {
-    return {.magic = atlas::MAGIC_BYTES.as_uint,
+    const std::uint32_t palette_block_size{
+            atlas::calculate_block_size<graphics::palette>(palette_count)};
+    const std::uint32_t sprite16_block_size{
+            atlas::calculate_block_size<sprite16>(sprite16_count)};
+    const std::uint32_t sprite32_block_size{
+            atlas::calculate_block_size<sprite32>(sprite32_count)};
+    return {
+            .magic = atlas::MAGIC_BYTES.as_uint,
             .palette_count = palette_count,
             .sprite16_count = sprite16_count,
-            .sprite32_count = sprite32_count};
+            .sprite32_count = sprite32_count,
+            .palette_block_size = palette_block_size,
+            .sprite16_block_size = sprite16_block_size,
+            .sprite32_block_size = sprite32_block_size,
+            .total_size = static_cast<std::uint32_t>(sizeof(atlas::metadata)) +
+                    palette_block_size + sprite16_block_size +
+                    sprite32_block_size,
+            .palette_block_offset = 0,
+            .sprite16_block_offset = palette_block_size,
+            .sprite32_block_offset = palette_block_size + sprite16_block_size,
+    };
 }
 
 [[nodiscard]] auto sc::assets::serialize_atlas_metadata(

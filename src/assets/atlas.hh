@@ -34,19 +34,42 @@ namespace sc::assets {
         [[nodiscard]] static constexpr bool validate(
                 const void* ptr, std::size_t mapped_size) noexcept;
 
+        /**
+         * Calculate the size of a block in an atlas.
+         *
+         * @tparam T
+         * The type of object contained in the block.
+         *
+         * @param count
+         * The number of items in the block.
+         *
+         * @return
+         * The size of the block in bytes.
+         */
+        template<core::mappable T>
+        [[nodiscard]] static constexpr auto calculate_block_size(
+                std::size_t count) noexcept -> std::uint32_t;
+
         // Attributes
 
         /**
          * @struct atlas::metadata
          * An atlas’s metadata.
          *
-         * Contains information on the number of sprites and palettes.
+         * Contains information on the number of palettes and sprites.
          */
         const struct alignas(memory::ALIGNMENT_CACHE) metadata final {
             const std::uint64_t magic{0ULL};
             const std::uint32_t palette_count{0U};
             const std::uint32_t sprite16_count{0U};
             const std::uint32_t sprite32_count{0U};
+            const std::uint32_t palette_block_size{0U};
+            const std::uint32_t sprite16_block_size{0U};
+            const std::uint32_t sprite32_block_size{0U};
+            const std::uint32_t total_size{0U};
+            const std::uint32_t palette_block_offset{0U};
+            const std::uint32_t sprite16_block_offset{0U};
+            const std::uint32_t sprite32_block_offset{0U};
         } meta;
 
         // Delete constructors because the atlas is never constructed.
@@ -84,23 +107,6 @@ namespace sc::assets {
 
         [[nodiscard]] constexpr auto data() const noexcept
                 -> const std::byte* __restrict;
-
-    private:
-        /**
-         * Calculate the size of a block in at atlas.
-         *
-         * @tparam T
-         * The type of object contained in the block.
-         *
-         * @param count
-         * The number of items in the block.
-         *
-         * @return
-         * The size of the block in bytes.
-         */
-        template<core::mappable T>
-        [[nodiscard]] static constexpr auto calculate_block_size(
-                std::size_t count) noexcept -> std::size_t;
     };
 
     // Static methods
@@ -112,26 +118,53 @@ namespace sc::assets {
             return false;
         }
 
-        const auto [magic, palette_count, sprite16_count, sprite32_count]{
-                static_cast<const atlas*>(ptr)->meta};
-        if (magic != MAGIC_BYTES.as_uint) [[unlikely]] {
-            return false;
-        }
+        const metadata& meta{static_cast<const atlas*>(ptr)->meta};
 
-        const std::size_t expected_size{sizeof(metadata) +
-                calculate_block_size<graphics::palette>(palette_count) +
-                calculate_block_size<sprite16>(sprite16_count) +
-                calculate_block_size<sprite32>(sprite32_count)};
-        return mapped_size >= expected_size;
+        const std::uint32_t expected_palette_block_size{
+                calculate_block_size<graphics::palette>(meta.palette_count)};
+        const std::uint32_t expected_sprite16_block_size{
+                calculate_block_size<sprite16>(meta.sprite16_count)};
+        const std::uint32_t expected_sprite32_block_size{
+                calculate_block_size<sprite32>(meta.sprite32_count)};
+        const std::uint32_t expected_total_size{
+                static_cast<std::uint32_t>(sizeof meta) +
+                expected_palette_block_size + expected_sprite16_block_size +
+                expected_sprite32_block_size};
+
+        const bool has_expected_palette_block_size{
+                meta.palette_block_size == expected_palette_block_size};
+        const bool has_expected_sprite16_block_size{
+                meta.sprite16_block_size == expected_sprite16_block_size};
+        const bool has_expected_sprite32_block_size{
+                meta.sprite32_block_size == expected_sprite32_block_size};
+        const bool has_expected_total_size{
+                meta.total_size == expected_total_size};
+
+        const bool has_expected_palette_block_offset{
+                meta.palette_block_offset == 0};
+        const bool has_expected_sprite16_block_offset{
+                meta.sprite16_block_offset == expected_palette_block_size};
+        const bool has_expected_sprite32_block_offset{
+                meta.sprite32_block_offset ==
+                expected_palette_block_size + expected_sprite16_block_size};
+
+        return meta.magic == MAGIC_BYTES.as_uint &&
+                has_expected_palette_block_size &&
+                has_expected_sprite16_block_size &&
+                has_expected_sprite32_block_size && has_expected_total_size &&
+                mapped_size == expected_total_size &&
+                has_expected_palette_block_offset &&
+                has_expected_sprite16_block_offset &&
+                has_expected_sprite32_block_offset;
     }
 
     template<core::mappable T>
     [[nodiscard]] constexpr auto atlas::calculate_block_size(
-            const std::size_t count) noexcept -> std::size_t
+            const std::size_t count) noexcept -> std::uint32_t
     {
         const std::size_t existing_size{sizeof(T) * count};
-        return existing_size +
-                static_cast<std::size_t>(math::calculate_padding_needed(
+        return static_cast<std::uint32_t>(existing_size) +
+                static_cast<std::uint32_t>(math::calculate_padding_needed(
                         existing_size, memory::ALIGNMENT_CACHE));
     }
 
@@ -160,26 +193,24 @@ namespace sc::assets {
     [[nodiscard]] constexpr auto atlas::palette_span() const noexcept
             -> std::span<const graphics::palette>
     {
-        return {reinterpret_cast<const graphics::palette*>(data()),
+        return {reinterpret_cast<const graphics::palette*>(
+                        data() + meta.palette_block_offset),
                 meta.palette_count};
     }
 
     [[nodiscard]] constexpr auto atlas::sprite16_span() const noexcept
             -> std::span<const sprite16>
     {
-        return {reinterpret_cast<const sprite16*>(data() +
-                        calculate_block_size<graphics::palette>(
-                                meta.palette_count)),
+        return {reinterpret_cast<const sprite16*>(
+                        data() + meta.sprite16_block_offset),
                 meta.sprite16_count};
     }
 
     [[nodiscard]] constexpr auto atlas::sprite32_span() const noexcept
             -> std::span<const sprite32>
     {
-        return {reinterpret_cast<const sprite32*>(data() +
-                        calculate_block_size<graphics::palette>(
-                                meta.palette_count) +
-                        calculate_block_size<sprite16>(meta.sprite16_count)),
+        return {reinterpret_cast<const sprite32*>(
+                        data() + meta.sprite32_block_offset),
                 meta.sprite32_count};
     }
 
