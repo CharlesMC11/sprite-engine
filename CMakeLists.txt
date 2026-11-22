@@ -122,8 +122,8 @@ add_executable(sprite-engine
         src/assets/asset_ids.hh
         src/graphics/display_constants.hh
         src/platform/macos/asset_constants.hh
-        src/platform/macos/metal_bridge.hh
-        src/platform/macos/metal_bridge.cc
+        src/platform/macos/Renderer.hh
+        src/platform/macos/Renderer.cc
         src/platform/macos/render_constants.hh
         src/platform/macos/SCAppDelegate.hh
         src/platform/macos/SCAppDelegate.mm

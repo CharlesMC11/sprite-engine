@@ -10,20 +10,20 @@
 #include "assets/atlas.hh"
 #include "core/memory.hh"
 #include "graphics/display_constants.hh"
+#include "platform/macos/Renderer.hh"
 #include "platform/macos/asset_constants.hh"
-#include "platform/macos/metal_bridge.hh"
 #include "simulation/world.hh"
 
 @implementation SCAppDelegate {
     std::unique_ptr<sc::world> _world;
-    std::unique_ptr<sc::render::metal_bridge> _bridge;
+    std::unique_ptr<sc::Renderer> _bridge;
 }
 
 - (void)applicationDidFinishLaunching:(nonnull NSNotification*)notification
 {
     constexpr double scale{4.0};
-    const auto frame{::NSMakeRect(0.0, 0.0, sc::display::kWidth * scale,
-            sc::display::kHeight * scale)};
+    const auto frame{::NSMakeRect(0.0, 0.0, sc::display::WIDTH * scale,
+            sc::display::HEIGHT * scale)};
     self.window = [[NSWindow alloc]
             initWithContentRect:frame
                       styleMask:(::NSWindowStyleMaskTitled |
@@ -33,15 +33,13 @@
                           defer:NO
 
     ];
-    [self.window setTitle:@"Test Sprite Engine"];
+    [self.window setTitle:@"Sprite Engine"];
     [self.window center];
 
-    id<MTLDevice> device{MTLCreateSystemDefaultDevice()};
+    _world = std::make_unique<sc::world>(sc::memory{});
 
-    const sc::memory memory;
-    _world = std::make_unique<sc::world>(memory);
-    _bridge = std::make_unique<sc::render::metal_bridge>(
-            (__bridge MTL::Device*) device);
+    id<MTLDevice> device{MTLCreateSystemDefaultDevice()};
+    _bridge = std::make_unique<sc::Renderer>((__bridge MTL::Device*) device);
 
     self.view = [[SCStage alloc] initWithFrame:frame
                                         device:device
