@@ -6,9 +6,10 @@ Assembles multiple asset files into a single memory-mappable atlas binary.
 The binary layout contains:
 - Header (16 bytes): atlas metadata
     - Magic (8 bytes)
+    - Palette count (4 bytes)
     - 16 × 16 sprite count (4 bytes)
-    - 32 × 32 sprite count (2 bytes)
-    - Palette count (2 bytes)
+    - 32 × 32 sprite count (4 bytes)
+    - Padding (108 bytes)
 - Data (n bytes): contiguous arrays of palette and sprite structures
     - Color palettes (32 × palette count bytes)
     - 16 × 16 sprites (272 × 16 × 16 sprite count bytes)
@@ -23,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from pipeline import (
+    ALIGNMENT_CACHE,
     FOOTER_SIZE_BYTES,
     MAX_ROM_SIZE,
     SPRITE_DIMENSIONS_SIZE_BYTES,
@@ -162,7 +164,7 @@ class AssetLinker:
 
         header_path = output_path.with_name(GENERATED_HEADER_FILENAME)
         header_lines = [
-            f"#pragma once\n\n",
+            f"#pragma once\n",
             '#include "core/core.hh"\n',
             "namespace sc::assets {\n",
         ]
@@ -193,12 +195,17 @@ class AssetLinker:
         header_lines.append("} // namespace sc::assets\n")
 
         metadata_bytes = AtlasMetadata(
+            len(self._palette_registry),
             len(self._asset_registry[16, 16][1]),
             len(self._asset_registry[32, 32][1]),
-            len(self._palette_registry),
         ).to_bytes()
 
-        if len(total_bytes := metadata_bytes + assets_bytes) > MAX_ROM_SIZE:
+        if not AtlasMetadata.validate_atlas(
+            total_bytes := metadata_bytes + assets_bytes
+        ):
+            raise ResourceLayoutError("Atlas layout is invalid!")
+
+        if len(total_bytes) > MAX_ROM_SIZE:
             raise ResourceLayoutError(
                 f"Atlas size too large! Maximum is {MAX_ROM_SIZE} bytes, "
                 f"got {len(total_bytes)}."
