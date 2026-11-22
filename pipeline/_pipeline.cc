@@ -17,6 +17,7 @@
 #include "graphics/graphics_types.hh"
 #include "math/bbox.hh"
 #include "math/fixed_point.hh"
+#include "math/utils.hh"
 #include "simulation/physics_types.hh"
 
 namespace nb = nanobind;
@@ -86,6 +87,26 @@ NB_MODULE(_pipeline, m)
     nb::exception<sc::assets::resource_layout_error>{m, "ResourceLayoutError"};
 
     // Math
+
+    m.def(
+            "calculate_padding_needed",
+            [](const std::size_t n,
+                    const std::size_t alignment) -> std::ptrdiff_t {
+                if (const std::ptrdiff_t result{
+                            sc::math::calculate_padding_needed(n, alignment)};
+                        result >= 0Z) {
+                    return result;
+                }
+                throw nb::value_error(std::format(
+                        "Alignment must be a power of 2, got {}.", alignment)
+                                .c_str());
+            },
+            "n"_a, "alignment"_a,
+            "Calculate the padding needed in bytes.\n\n"
+            ":param n: The number to be padded.\n"
+            ":param alignment: The value to be padded up to.\n\n"
+            ":raises ValueError: If `alignment` is not a power of `2`.\n\n"
+            ":return: The number of bytes needed.");
 
     nb::class_<sc::math::fixed_point_t>{
             m, "FixedPoint", "A signed Q21.10 fixed point value.\n"}

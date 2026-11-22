@@ -3,7 +3,6 @@ import numpy.typing as npt
 
 from pipeline._pipeline import (
     ALIGNMENT_CACHE,
-    ALIGNMENT_NEON,
     MASK_ALPHA,
     MASK_EMISSION,
     MASK_PALETTE_INDEX,
@@ -13,7 +12,6 @@ from pipeline._pipeline import (
     MAX_6BIT,
     MAX_COLOR_COUNT,
     MAX_ROM_SIZE,
-    PACKED_COLOR_SIZE_BYTES,
     PALETTE_SIZE_BYTES,
     SHIFT_ALPHA,
     SHIFT_EMISSION,
@@ -25,6 +23,7 @@ from pipeline._pipeline import (
     PhysicsType,
     ResourceLayoutError,
     SpriteMetadata,
+    calculate_padding_needed,
 )
 
 # Core
@@ -41,7 +40,7 @@ SPRITE_DIMENSIONS_SIZE_BYTES: int = 2
 """The total size of the sprite dimensions in bytes."""
 
 FOOTER_SIZE_BYTES: int = PALETTE_SIZE_BYTES + SPRITE_DIMENSIONS_SIZE_BYTES
-""" The total size of the sprite footer in bytes."""
+"""The total size of the sprite footer in bytes."""
 
 SPRITE_MINIMUM_FILE_SIZE_BYTES: int = (
     SpriteMetadata.EXPECTED_SIZE_BYTES + FOOTER_SIZE_BYTES
@@ -60,26 +59,11 @@ def is_power_of_2(n: int) -> bool:
     Check if a number is a power of 2.
 
     :param n: The number to check.
+
     :return: `True` if it is; `False` otherwise.
     """
 
     return n > 0 and n.bit_count() == 1
-
-
-def calculate_padding_needed(n: int, alignment: int) -> int:
-    """
-    Calculate the needed padding in terms of bytes.
-
-    :param n: The number to be padded.
-    :param alignment: The value to be padded up to.
-
-    :return: The number of bytes needed.
-    """
-
-    if not is_power_of_2(alignment):
-        raise ValueError(f"Alignment must be a power of 2, got {alignment}.")
-
-    return (alignment - n % alignment) % alignment
 
 
 def remap[T: (int, npt.NDArray)](value: T, /, src_max: int, dst_max: int) -> T:
