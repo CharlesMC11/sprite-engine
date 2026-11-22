@@ -39,20 +39,20 @@ namespace sc::physics {
 
         // Attributes
 
-        geometry::bbox<math::fixed_point_t> bbox;
+        const geometry::bbox<math::fixed_point_t> bbox;
 
-        math::fixed_point_t west{0};
-        math::fixed_point_t east{0};
+        const math::fixed_point_t west;
+        const math::fixed_point_t east;
 
-        math::fixed_point_t north{0};
-        math::fixed_point_t south{0};
+        const math::fixed_point_t north;
+        const math::fixed_point_t south;
 
-        math::fixed_point_t nadir{0};
-        math::fixed_point_t zenith{0};
+        const math::fixed_point_t nadir;
+        const math::fixed_point_t zenith;
 
-        math::fixed_point_t x_vel{0};
-        math::fixed_point_t y_vel{0};
-        math::fixed_point_t z_vel{0};
+        const math::fixed_point_t x_vel;
+        const math::fixed_point_t y_vel;
+        const math::fixed_point_t z_vel;
 
         // Constructor
 
