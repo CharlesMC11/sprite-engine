@@ -61,8 +61,8 @@ namespace sc::graphics {
         palette(const palette&) = delete;
         palette(palette&&) = delete;
 
-        palette& operator=(const palette&) = delete;
-        palette& operator=(palette&&) = delete;
+        auto operator=(const palette&) -> palette& = delete;
+        auto operator=(palette&&) -> palette& = delete;
 
         // Operator
 
