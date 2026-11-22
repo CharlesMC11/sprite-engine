@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/core.hh"
+#include "core/memory.hh"
 
 namespace sc::graphics {
 
@@ -42,8 +43,32 @@ namespace sc::graphics {
         explicit constexpr color_encoding_params(color_encoding encoding);
     };
 
-    inline constexpr size_t MAX_COLOR_COUNT{16U};
-    using palette = packed_color_t[MAX_COLOR_COUNT]; // A 16‑color palette.
+    struct alignas(memory::ALIGNMENT_NEON) palette final {
+
+        // Static attributes
+
+        static constexpr size_t MAX_COLOR_COUNT{16U};
+
+        // Attributes
+
+        const packed_color_t colors[MAX_COLOR_COUNT]{};
+
+        // Delete constructors because a palette is never constructed.
+
+        palette() = delete;
+        ~palette() = default;
+
+        palette(const palette&) = delete;
+        palette(palette&&) = delete;
+
+        palette& operator=(const palette&) = delete;
+        palette& operator=(palette&&) = delete;
+
+        // Operator
+
+        [[nodiscard]] constexpr auto operator[](
+                std::size_t index) const noexcept -> packed_color_t;
+    };
 
     /**
      * A 1‑byte packed pixel.
@@ -93,4 +118,15 @@ namespace sc::graphics {
         }
     }
 
+    // Operators
+
+    [[nodiscard]] constexpr auto palette::operator[](
+            const std::size_t index) const noexcept -> packed_color_t
+    {
+        return colors[index];
+    }
+
 } // namespace sc::graphics
+
+static_assert(alignof(sc::graphics::palette) == sc::memory::ALIGNMENT_NEON,
+        "Palette must be NEON-aligned.");
