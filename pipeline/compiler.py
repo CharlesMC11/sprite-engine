@@ -121,7 +121,7 @@ def ingest_asset(
     if not (is_power_of_2(height) and is_power_of_2(width)):
         raise ResourceLayoutError(
             f"Source image '{bgra_image_path.name}' dimensions must be a "
-            f"power of 2 (8, 16, 32, etc...)! Got {width}×{height}."
+            f"power of 2 (8, 16, 32, etc...)! Got {width} × {height}."
         )
 
     # Extract alpha mask
@@ -301,7 +301,7 @@ def _ingest_grayscale_mask(
     if width != source_image_width or height != source_image_height:
         raise ResourceLayoutError(
             f"Mask '{mask_path.name}' dimensions do not match source image! "
-            f"Expected {source_image_width}×{source_image_height}, got {width}×{height}."
+            f"Expected {source_image_width} × {source_image_height}, got {width} × {height}."
         )
 
     return mask

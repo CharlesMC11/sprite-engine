@@ -128,7 +128,7 @@ class AssetLinker:
 
             if not (is_power_of_2(width) and is_power_of_2(height)):
                 raise ResourceLayoutError(
-                    f"'{path.name}' has invalid dimensions: {width}×{height}!"
+                    f"'{path.name}' has invalid dimensions: {width} × {height}!"
                 )
 
             name = _clean_identifier(path.stem)
@@ -146,7 +146,7 @@ class AssetLinker:
                 self._asset_registry[width, height][1].append(asset)
             else:
                 raise ResourceLayoutError(
-                    f"Unsupported asset dimensions: {width}×{height}."
+                    f"Unsupported asset dimensions: {width} × {height}."
                 )
 
     def link(self, output_path: Path) -> None:
