@@ -136,7 +136,6 @@ add_executable(sprite-engine
         src/simulation/physics.cc
         src/simulation/world.hh
         src/simulation/world.cc
-#        src/main.cc
 )
 
 target_include_directories(sprite-engine PUBLIC
