@@ -8,6 +8,7 @@
 #include "assets/sprite.hh"
 #include "core/memory.hh"
 #include "graphics/graphics_types.hh"
+#include "math/utils.hh"
 
 namespace sc::assets {
 
@@ -19,7 +20,7 @@ namespace sc::assets {
      *
      * This class is designed to loaded by `sc::memory`.
      */
-    struct alignas(memory::ALIGNMENT_NEON) atlas final {
+    struct alignas(memory::ALIGNMENT_CACHE) atlas final {
 
         // Static constants
 
@@ -41,11 +42,11 @@ namespace sc::assets {
          *
          * Contains information on the number of sprites and palettes.
          */
-        const struct alignas(memory::ALIGNMENT_NEON) metadata final {
+        const struct alignas(memory::ALIGNMENT_CACHE) metadata final {
             const std::uint64_t magic{0ULL};
+            const std::uint32_t palette_count{0U};
             const std::uint32_t sprite16_count{0U};
-            const std::uint16_t sprite32_count{0U};
-            const std::uint16_t palette_count{0U};
+            const std::uint32_t sprite32_count{0U};
         } meta;
 
         // Delete constructors because the atlas is never constructed.
@@ -83,6 +84,23 @@ namespace sc::assets {
 
         [[nodiscard]] constexpr auto data() const noexcept
                 -> const std::byte* __restrict;
+
+    private:
+        /**
+         * Calculate the size of a block in at atlas.
+         *
+         * @tparam T
+         * The type of object contained in the block.
+         *
+         * @param count
+         * The number of items in the block.
+         *
+         * @return
+         * The size of the block in bytes.
+         */
+        template<core::mappable T>
+        [[nodiscard]] static constexpr auto calculate_block_size(
+                std::size_t count) noexcept -> std::size_t;
     };
 
     // Static methods
@@ -94,17 +112,27 @@ namespace sc::assets {
             return false;
         }
 
-        const auto [magic, sprite16_count, sprite32_count, palette_count]{
+        const auto [magic, palette_count, sprite16_count, sprite32_count]{
                 static_cast<const atlas*>(ptr)->meta};
         if (magic != MAGIC_BYTES.as_uint) [[unlikely]] {
             return false;
         }
 
         const std::size_t expected_size{sizeof(metadata) +
-                sizeof(graphics::palette) * palette_count +
-                sizeof(sprite16) * sprite16_count +
-                sizeof(sprite32) * sprite32_count};
+                calculate_block_size<graphics::palette>(palette_count) +
+                calculate_block_size<sprite16>(sprite16_count) +
+                calculate_block_size<sprite32>(sprite32_count)};
         return mapped_size >= expected_size;
+    }
+
+    template<core::mappable T>
+    [[nodiscard]] constexpr auto atlas::calculate_block_size(
+            const std::size_t count) noexcept -> std::size_t
+    {
+        const std::size_t existing_size{sizeof(T) * count};
+        return existing_size +
+                static_cast<std::size_t>(math::calculate_padding_needed(
+                        existing_size, memory::ALIGNMENT_CACHE));
     }
 
     // Operators
@@ -140,7 +168,8 @@ namespace sc::assets {
             -> std::span<const sprite16>
     {
         return {reinterpret_cast<const sprite16*>(data() +
-                        sizeof(graphics::palette) * meta.palette_count),
+                        calculate_block_size<graphics::palette>(
+                                meta.palette_count)),
                 meta.sprite16_count};
     }
 
@@ -148,8 +177,9 @@ namespace sc::assets {
             -> std::span<const sprite32>
     {
         return {reinterpret_cast<const sprite32*>(data() +
-                        sizeof(graphics::palette) * meta.palette_count +
-                        sizeof(sprite16) * meta.sprite16_count),
+                        calculate_block_size<graphics::palette>(
+                                meta.palette_count) +
+                        calculate_block_size<sprite16>(meta.sprite16_count)),
                 meta.sprite32_count};
     }
 
@@ -160,3 +190,7 @@ namespace sc::assets {
     }
 
 } // namespace sc::assets
+
+static_assert(
+        sizeof(sc::assets::atlas::metadata) == sc::memory::ALIGNMENT_CACHE,
+        "Atlas metadata must be 128 B.");

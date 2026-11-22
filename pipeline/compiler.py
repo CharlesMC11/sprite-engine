@@ -37,7 +37,6 @@ import numpy as np
 import numpy.typing as npt
 
 from pipeline import (
-    ALIGNMENT_NEON,
     MASK_PALETTE_INDEX,
     MAX_2BIT,
     MAX_8BIT,
@@ -148,7 +147,7 @@ def ingest_asset(
 
     if math.isnan(u_anchor):
         u_anchor = FixedPoint.from_float(width / 2.0)
-    elif u_anchor < 0 or u_anchor > width:
+    elif u_anchor < 0 or u_anchor >= width:
         raise ValueError(
             "U anchor point out of range! "
             f"Expected to be in [0, {width}), got {u_anchor}."
@@ -158,7 +157,7 @@ def ingest_asset(
 
     if math.isnan(v_anchor):
         v_anchor = FixedPoint.from_float(height / 2.0)
-    elif v_anchor < 0 or v_anchor > height:
+    elif v_anchor < 0 or v_anchor >= height:
         raise ValueError(
             "V anchor point out of range! "
             f"Expected to be in [0, {height}), got {v_anchor}."
@@ -237,9 +236,7 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
     combined_buffer = header_bytes + pixel_bytes + palette_bytes + footer_bytes
     sprite_size_bytes = (
-        SPRITE_MINIMUM_FILE_SIZE_BYTES
-        + components.height * components.width
-        + padding_needed
+        SPRITE_MINIMUM_FILE_SIZE_BYTES + components.height * components.width
     )
     if len(combined_buffer) != sprite_size_bytes:
         raise ResourceLayoutError(

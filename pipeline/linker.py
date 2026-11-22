@@ -29,6 +29,7 @@ from pipeline import (
     AtlasMetadata,
     ResourceLayoutError,
     SpriteMetadata,
+    calculate_padding_needed,
     is_power_of_2,
 )
 
@@ -174,10 +175,20 @@ class AssetLinker:
         assets_bytes.extend(blobs)
         header_lines.extend(lines)
 
+        if padding_needed := calculate_padding_needed(
+            len(blobs), ALIGNMENT_CACHE
+        ):
+            assets_bytes.extend(b"\x00" * padding_needed)
+
         for name, buffer in self._asset_registry.values():
             blobs, lines = self._generate_enum_contents(name, buffer)
             assets_bytes.extend(blobs)
             header_lines.extend(lines)
+
+            if padding_needed := calculate_padding_needed(
+                len(blobs), ALIGNMENT_CACHE
+            ):
+                assets_bytes.extend(b"\x00" * padding_needed)
 
         header_lines.append("} // namespace sc::assets\n")
 

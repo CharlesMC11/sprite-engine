@@ -57,11 +57,11 @@ namespace sc::assets {
     inline constexpr std::size_t ATLAS_METADATA_SIZE{sizeof(atlas::metadata)};
 
     [[nodiscard]] static constexpr auto make_atlas_metadata(
-            std::uint32_t sprite16_count, std::uint16_t sprite32_count,
-            std::uint16_t palette_count) -> atlas::metadata;
+            std::uint32_t palette_count, std::uint32_t sprite16_count,
+            std::uint32_t sprite32_count) -> atlas::metadata;
 
     [[nodiscard]] static auto serialize_atlas_metadata(
-            atlas::metadata meta) noexcept -> nb::bytes;
+            const atlas::metadata& meta) noexcept -> nb::bytes;
 
     [[nodiscard]] static auto deserialize_atlas_metadata(
             const nb::bytes& buffer) -> atlas::metadata;
@@ -110,13 +110,17 @@ NB_MODULE(_pipeline, m)
 
     nb::class_<sc::math::fixed_point_t>{
             m, "FixedPoint", "A signed Q21.10 fixed point value.\n"}
-            .def_static(
-                    "from_float", &sc::math::fixed_point_t::from_float, "n"_a)
+            .def_static("from_float", &sc::math::fixed_point_t::from_float,
+                    "n"_a,
+                    "Convert a float to a Q21.10 :class:`FixedPoint` "
+                    "value.\n\n"
+                    ":param n: The value to convert.")
             .def("__repr__",
                     [](const sc::math::fixed_point_t f) -> std::string {
                         return std::format("FixedPoint(raw={})", f.value);
                     })
-            .def("to_float", &sc::math::fixed_point_t::operator float)
+            .def("to_float", &sc::math::fixed_point_t::operator float,
+                    "Convert the Q21.10 value to a float.")
             .def_ro("value", &sc::math::fixed_point_t::value);
 
     nb::class_<sc::geometry::bbox<>>{m, "BBox", "A bounding box."}
@@ -138,7 +142,7 @@ NB_MODULE(_pipeline, m)
 
     // Graphics
 
-    m.attr("MAX_COLOR_COUNT") = sc::graphics::MAX_COLOR_COUNT;
+    m.attr("MAX_COLOR_COUNT") = sc::graphics::palette::MAX_COLOR_COUNT;
 
     nb::enum_<sc::graphics::color_encoding>{m, "ColorEncoding",
             "Distribution of color bits across a 2‑byte packed integer.",
@@ -148,7 +152,7 @@ NB_MODULE(_pipeline, m)
             .value("COOL", sc::graphics::color_encoding::COOL, "R5G5B6");
 
     nb::class_<sc::graphics::color_encoding_params>{m, "ColorEncodingParams",
-            "Parameters of how a 2‑byte color is packed or unpacked.\n",
+            "Parameters of how a 2‑byte color is packed or unpacked.",
             nb::is_final{}}
             .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
             .def("__repr__",
@@ -180,8 +184,7 @@ NB_MODULE(_pipeline, m)
     m.attr("MASK_ALPHA") = sc::graphics::MASK_ALPHA;
     m.attr("MASK_EMISSION") = sc::graphics::MASK_EMISSION;
 
-    m.attr("PALETTE_SIZE_BYTES") = sc::graphics::MAX_COLOR_COUNT *
-            sizeof(sc::graphics::packed_color_t);
+    m.attr("PALETTE_SIZE_BYTES") = sizeof(sc::graphics::palette);
 
     // Physics
 
@@ -209,17 +212,24 @@ NB_MODULE(_pipeline, m)
             "- depth (uint8)\n"
             "- physics_type (uint8)\n"
             "- color_encoding (uint8)\n"
-            "- palette_index (uint8)\n",
+            "- palette_index (uint8)",
             nb::is_final{}}
-            .def_prop_ro_static("MAGIC",
+            .def_prop_ro_static(
+                    "MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
                         return nb::bytes{&sc::assets::SPRITE_MAGIC,
                                 sizeof sc::assets::SPRITE_MAGIC};
-                    })
+                    },
+                    "The magic bytes in an unlinked sprite’s header.")
             .def_ro_static("EXPECTED_SIZE_BYTES",
-                    &sc::assets::SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES)
+                    &sc::assets::SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES,
+                    "The expected size of a sprite’s header metadata "
+                    "(including the magic bytes) in bytes.\n")
             .def_static("from_bytes", sc::assets::deserialize_sprite_metadata,
-                    "buffer"_a)
+                    "buffer"_a,
+                    "Construct a :class:`SpriteMetadata` object from a bytes "
+                    "buffer.\n\n"
+                    ":param buffer:")
             .def(nb::new_{&sc::assets::make_sprite_metadata}, "u_min"_a,
                     "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
@@ -254,8 +264,11 @@ NB_MODULE(_pipeline, m)
             .def_ro("color_encoding",
                     &sc::assets::sprite<>::metadata::color_encoding)
             .def_rw("palette_index",
-                    &sc::assets::sprite<>::metadata::palette_index, "index"_a)
-            .def("to_bytes", &sc::assets::serialize_sprite_metadata);
+                    &sc::assets::sprite<>::metadata::palette_index, "index"_a,
+                    ":type index: int")
+            .def("to_bytes", &sc::assets::serialize_sprite_metadata,
+                    "Serialize the :class:`SpriteMetadata` instance into "
+                    "bytes");
 
     // Atlas
 
@@ -263,30 +276,41 @@ NB_MODULE(_pipeline, m)
             "An atlas’s metadata.\n\n"
             "Contains information on the number of sprites and palettes.\n\n"
             "- magic (8 bytes)\n"
+            "- Palette count (4 bytes)\n"
             "- 16 × 16 sprite count (4 bytes)\n"
-            "- 32 × 32 sprite count (2 bytes)\n"
-            "- Palette count (2 bytes)\n",
+            "- 32 × 32 sprite count (4 bytes)\n"
+            "- Padding",
             nb::is_final{}}
-            .def_prop_ro_static("MAGIC",
+            .def_prop_ro_static(
+                    "MAGIC",
                     []([[maybe_unused]] nb::handle) -> nb::bytes {
                         return nb::bytes{&sc::assets::atlas::MAGIC_BYTES,
                                 sizeof sc::assets::atlas::MAGIC_BYTES};
-                    })
-            .def_ro_static(
-                    "EXPECTED_SIZE_BYTES", &sc::assets::ATLAS_METADATA_SIZE)
+                    },
+                    "The magic bytes in an atlas’ header.")
+            .def_ro_static("EXPECTED_SIZE_BYTES",
+                    &sc::assets::ATLAS_METADATA_SIZE,
+                    "The expected size of an atlas’ header metadata in bytes.")
             .def_static(
                     "validate_atlas",
                     [](const nb::bytes& buffer) -> bool {
                         return sc::assets::atlas::validate(
                                 buffer.data(), buffer.size());
                     },
-                    "buffer"_a)
+                    "buffer"_a,
+                    "Validate an atlas.\n\n"
+                    ":param buffer:\n\n"
+                    ":return: `True` if it is a valid atlas; `False` "
+                    "otherwise.")
             .def_static("from_bytes", &sc::assets::deserialize_atlas_metadata,
-                    "buffer"_a)
-            .def(nb::new_{&sc::assets::make_atlas_metadata},
-                    "sprite16_count"_a, "sprite32_count"_a, "palette_count"_a)
+                    "buffer"_a,
+                    "Construct an :class:`AtlasMetadata` object from a bytes "
+                    "buffer.")
+            .def(nb::new_{&sc::assets::make_atlas_metadata}, "palette_count"_a,
+                    "sprite16_count"_a, "sprite32_count"_a)
             .def("__repr__",
-                    [](const sc::assets::atlas::metadata self) -> std::string {
+                    [](const sc::assets::atlas::metadata& self)
+                            -> std::string {
                         return std::format(
                                 "AtlasMetadata(sprite16_count={}, "
                                 "sprite32_count={}, palette_count={})",
@@ -299,7 +323,9 @@ NB_MODULE(_pipeline, m)
                     &sc::assets::atlas::metadata::sprite32_count)
             .def_ro("palette_count",
                     &sc::assets::atlas::metadata::palette_count)
-            .def("to_bytes", &sc::assets::serialize_atlas_metadata);
+            .def("to_bytes", &sc::assets::serialize_atlas_metadata,
+                    "Serialize the :class:`AtlasMetadata` instance into "
+                    "bytes.");
 }
 
 // Sprite
@@ -360,19 +386,19 @@ NB_MODULE(_pipeline, m)
 // Atlas
 
 [[nodiscard]] constexpr auto sc::assets::make_atlas_metadata(
-        const std::uint32_t sprite16_count, const std::uint16_t sprite32_count,
-        const std::uint16_t palette_count) -> atlas::metadata
+        const std::uint32_t palette_count, const std::uint32_t sprite16_count,
+        const std::uint32_t sprite32_count) -> atlas::metadata
 {
     return {.magic = atlas::MAGIC_BYTES.as_uint,
+            .palette_count = palette_count,
             .sprite16_count = sprite16_count,
-            .sprite32_count = sprite32_count,
-            .palette_count = palette_count};
+            .sprite32_count = sprite32_count};
 }
 
 [[nodiscard]] auto sc::assets::serialize_atlas_metadata(
-        const atlas::metadata meta) noexcept -> nb::bytes
+        const atlas::metadata& meta) noexcept -> nb::bytes
 {
-    std::byte buffer[sizeof meta];
+    std::byte buffer[sizeof meta]{};
     std::memcpy(buffer, &meta, sizeof buffer);
     return nb::bytes{buffer, sizeof buffer};
 }
@@ -396,7 +422,7 @@ NB_MODULE(_pipeline, m)
                         sizeof atlas::MAGIC_BYTES})};
     }
 
-    std::byte meta[ATLAS_METADATA_SIZE];
+    std::byte meta[ATLAS_METADATA_SIZE]{};
     std::memcpy(&meta, buffer.data(), sizeof meta);
     return std::bit_cast<atlas::metadata>(meta);
 }
