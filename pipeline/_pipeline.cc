@@ -42,9 +42,8 @@ namespace sc::assets {
             std::uint8_t u_min, std::uint8_t u_max, std::uint8_t v_min,
             std::uint8_t v_max, math::fixed_point_t u_anchor,
             math::fixed_point_t v_anchor, std::uint8_t depth,
-            physics::type physics_type,
-            graphics::color_encoding color_encoding,
-            std::uint8_t palette_index) -> sprite<>::metadata;
+            physics::type physics_type, std::uint8_t palette_index)
+            -> sprite<>::metadata;
 
     [[nodiscard]] static auto serialize_sprite_metadata(
             sprite<>::metadata meta) noexcept -> nb::bytes;
@@ -144,38 +143,12 @@ NB_MODULE(_pipeline, m)
 
     m.attr("MAX_COLOR_COUNT") = sc::graphics::palette::MAX_COLOR_COUNT;
 
-    nb::enum_<sc::graphics::color_encoding>{m, "ColorEncoding",
-            "Distribution of color bits across a 2‑byte packed integer.",
-            nb::is_arithmetic{}}
-            .value("NEUTRAL", sc::graphics::color_encoding::NEUTRAL, "R5G6B5")
-            .value("WARM", sc::graphics::color_encoding::WARM, "R6G5B5")
-            .value("COOL", sc::graphics::color_encoding::COOL, "R5G5B6");
+    m.attr("SHIFT_RED") = sc::graphics::SHIFT_RED;
+    m.attr("SHIFT_GREEN") = sc::graphics::SHIFT_GREEN;
 
-    nb::class_<sc::graphics::color_encoding_params>{m, "ColorEncodingParams",
-            "Parameters of how a 2‑byte color is packed or unpacked.",
-            nb::is_final{}}
-            .def(nb::init<sc::graphics::color_encoding>(), "encoding"_a)
-            .def("__repr__",
-                    [](const sc::graphics::color_encoding_params p)
-                            -> std::string {
-                        return std::format(
-                                "ColorEncodingParams(r_mask={}, g_mask={}, "
-                                "b_mask={}, r_shift={}, g_shift={})",
-                                p.r_mask, p.g_mask, p.b_mask, p.r_shift,
-                                p.g_shift);
-                    })
-            .def("__iter__",
-                    [](const sc::graphics::color_encoding_params self)
-                            -> nb::iterator {
-                        return nb::iter(nb::make_tuple(self.r_mask,
-                                self.g_mask, self.b_mask, self.r_shift,
-                                self.g_shift));
-                    })
-            .def_ro("r_mask", &sc::graphics::color_encoding_params::r_mask)
-            .def_ro("g_mask", &sc::graphics::color_encoding_params::g_mask)
-            .def_ro("b_mask", &sc::graphics::color_encoding_params::b_mask)
-            .def_ro("r_shift", &sc::graphics::color_encoding_params::r_shift)
-            .def_ro("g_shift", &sc::graphics::color_encoding_params::g_shift);
+    m.attr("MASK_RED") = sc::graphics::MASK_RED;
+    m.attr("MASK_GREEN") = sc::graphics::MASK_GREEN;
+    m.attr("MASK_BLUE") = sc::graphics::MASK_BLUE;
 
     m.attr("SHIFT_ALPHA") = sc::graphics::SHIFT_ALPHA;
     m.attr("SHIFT_EMISSION") = sc::graphics::SHIFT_EMISSION;
@@ -203,7 +176,7 @@ NB_MODULE(_pipeline, m)
     nb::class_<sc::assets::sprite<>::metadata>{m, "SpriteMetadata",
             "A sprite’s metadata.\n\n"
             "Contains information regarding a sprite’s bounding box, anchor "
-            "point,\ndepth, color encoding, and physics type.\n\n"
+            "point,\ndepth, and physics type.\n\n"
             "- bbox\n"
             "    - u_min (uint8), u_max (uint8)\n"
             "    - v_min (uint8), v_max (uint8)\n"
@@ -211,8 +184,8 @@ NB_MODULE(_pipeline, m)
             "    - u_anchor (int32), v_anchor (int32)\n"
             "- depth (uint8)\n"
             "- physics_type (uint8)\n"
-            "- color_encoding (uint8)\n"
-            "- palette_index (uint8)",
+            "- palette_index (uint8)\n"
+            "- reserved (uint8)",
             nb::is_final{}}
             .def_prop_ro_static(
                     "MAGIC",
@@ -233,7 +206,7 @@ NB_MODULE(_pipeline, m)
             .def(nb::new_{&sc::assets::make_sprite_metadata}, "u_min"_a,
                     "u_max"_a, "v_min"_a, "v_max"_a, "u_anchor"_a,
                     "v_anchor"_a, "depth"_a, "physics_type"_a,
-                    "color_encoding"_a, "palette_index"_a = 0x3F)
+                    "palette_index"_a = 0x3F)
             .def("__repr__",
                     [](const sc::assets::sprite<>::metadata self)
                             -> std::string {
@@ -242,13 +215,11 @@ NB_MODULE(_pipeline, m)
                                            "u_anchor=FixedPoint(raw={}), "
                                            "v_anchor=FixedPoint(raw={}), "
                                            "depth={}, physics_type={}, "
-                                           "color_encoding=ColorEncoding({}), "
                                            "palette_index={})",
                                 self.bbox.u_min, self.bbox.u_max,
                                 self.bbox.v_min, self.bbox.v_max,
                                 self.u_anchor.value, self.v_anchor.value,
                                 self.depth, self.physics_type,
-                                static_cast<int>(self.color_encoding),
                                 self.palette_index);
                     })
             .def_ro("bbox", &sc::assets::sprite<>::metadata::bbox)
@@ -261,8 +232,6 @@ NB_MODULE(_pipeline, m)
                         return static_cast<sc::physics::type>(
                                 self.physics_type);
                     })
-            .def_ro("color_encoding",
-                    &sc::assets::sprite<>::metadata::color_encoding)
             .def_rw("palette_index",
                     &sc::assets::sprite<>::metadata::palette_index, "index"_a,
                     ":type index: int")
@@ -359,7 +328,6 @@ NB_MODULE(_pipeline, m)
         const std::uint8_t v_min, const std::uint8_t v_max,
         const math::fixed_point_t u_anchor, const math::fixed_point_t v_anchor,
         const std::uint8_t depth, const physics::type physics_type,
-        const graphics::color_encoding color_encoding,
         const std::uint8_t palette_index) -> sprite<>::metadata
 {
     return {.bbox = {.u_min = u_min,
@@ -370,16 +338,15 @@ NB_MODULE(_pipeline, m)
             .v_anchor = v_anchor,
             .depth = depth,
             .physics_type = static_cast<core::physics_t>(physics_type),
-            .color_encoding = color_encoding,
             .palette_index = palette_index};
 }
 
 [[nodiscard]] auto sc::assets::serialize_sprite_metadata(
         const sprite<>::metadata meta) noexcept -> nb::bytes
 {
-    std::byte buffer[SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES];
+    std::byte buffer[SPRITE_METADATA_WITH_MAGIC_SIZE_BYTES]{};
     std::memcpy(buffer, SPRITE_MAGIC, sizeof SPRITE_MAGIC);
-    std::memcpy(buffer + sizeof SPRITE_MAGIC, &meta, sizeof meta);
+    std::memcpy(buffer + sizeof SPRITE_MAGIC, &meta, sizeof meta - 1UZ);
     return nb::bytes{buffer, sizeof buffer};
 }
 
@@ -400,10 +367,10 @@ NB_MODULE(_pipeline, m)
                         sizeof SPRITE_MAGIC})};
     }
 
-    std::byte meta[sizeof(sprite<>::metadata)];
+    std::byte meta[sizeof(sprite<>::metadata)]{};
     const auto* const start{static_cast<const std::byte*>(buffer.data()) +
             sizeof SPRITE_MAGIC};
-    std::memcpy(&meta, start, sizeof meta);
+    std::memcpy(&meta, start, sizeof meta - 1UZ);
     return std::bit_cast<sprite<>::metadata>(meta);
 }
 

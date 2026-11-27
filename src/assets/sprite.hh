@@ -22,7 +22,7 @@ namespace sc::assets {
          * A sprite’s metadata.
          *
          * Contains information regarding a sprite’s bounding box, anchor
-         * point, depth, physics type, color encoding, and palette index.
+         * point, depth, physics type, and palette index.
          */
         const struct alignas(memory::ALIGNMENT_NEON) metadata final {
             geometry::bbox<> bbox;
@@ -30,8 +30,6 @@ namespace sc::assets {
                     v_anchor{math::FIXED_POINT_ZERO};
             uint8_t depth{0U};
             core::physics_t physics_type{0U};
-            graphics::color_encoding color_encoding{
-                    graphics::color_encoding::NEUTRAL};
             uint8_t palette_index{0x3FU};
         } meta;
 

@@ -16,8 +16,8 @@ The binary layout contains:
             - v_anchor (4 bytes)
         - Depth (1 byte)
         - Physics type (1 byte)
-        - Color encoding (1 byte)
         - Palette index (1 byte), set to 0x3F (ASCII for '?') as a placeholder
+        - Reserved (1 byte)
 - Pixels (height×width bytes): 1‑byte packed values [*][E][AA][IIII]
 - Footer (34 bytes): additional metadata
     - Color palette (32 bytes): 16 2‑byte unique colors
@@ -39,14 +39,16 @@ import numpy.typing as npt
 from pipeline import (
     MASK_PALETTE_INDEX,
     MAX_2BIT,
+    MAX_5BIT,
+    MAX_6BIT,
     MAX_8BIT,
     MAX_COLOR_COUNT,
     SHIFT_ALPHA,
     SHIFT_EMISSION,
+    SHIFT_GREEN,
+    SHIFT_RED,
     SPRITE_MINIMUM_FILE_SIZE_BYTES,
     BGRImage,
-    ColorEncoding,
-    ColorEncodingParams,
     FixedPoint,
     Palette,
     PhysicsType,
@@ -81,7 +83,6 @@ class SpriteComponents:
 
 def ingest_asset(
     bgra_image_path: Path,
-    color_encoding: ColorEncoding,
     anchor: tuple[float, float],
     depth: int,
     physics_type: PhysicsType,
@@ -94,7 +95,6 @@ def ingest_asset(
     grid for evaluation, and pre-threshold the glow mask.
 
     :param bgra_image_path: The path to the BGRA image.
-    :param color_encoding: The target encoding.
     :param anchor: The anchor points.
     :param depth: The asset’s 'thickness'.
     :param physics_type: The laws of physics this asset obeys.
@@ -124,6 +124,9 @@ def ingest_asset(
         )
 
     # Extract alpha mask
+
+    source_bgr: BGRImage
+    source_alpha: AlphaMask | None
 
     if image.shape[2] >= 4:
         source_bgr = image[:, :, :3]
@@ -193,7 +196,6 @@ def ingest_asset(
         v_anchor,
         depth,
         physics_type,
-        color_encoding,
     )
     return SpriteComponents(
         header,
@@ -224,7 +226,7 @@ def compile_asset(output_path: Path, components: SpriteComponents) -> None:
 
     palette_bytes = bytearray()
     palette_size = len(palette)
-    packed_palette = _pack_colors_to_16bit(palette, meta.color_encoding)
+    packed_palette = _pack_colors_to_16bit(palette)
     for i in range(MAX_COLOR_COUNT):
         if i < palette_size:
             color = packed_palette[i]
@@ -287,6 +289,8 @@ def _ingest_grayscale_mask(
     :raises RuntimeError: If OpenCV fails to read the mask.
     :raises ResourceLayoutError: If the mask dimensions do not match source image.
     """
+
+    mask: EmissionMask
 
     if not mask_path.exists():
         raise FileNotFoundError(f"Missing mask file: '{mask_path}'")
@@ -392,28 +396,27 @@ def _index_colors(bgr_array: BGRImage, palette: Palette):
     return np.argmin(distances, axis=1)
 
 
-def _pack_colors_to_16bit(
-    bgr_matrix: BGRImage, encoding: ColorEncoding
-) -> PackedColors:
+def _pack_colors_to_16bit(bgr_matrix: BGRImage) -> PackedColors:
     """
     Pack 1‑byte BGR channels into 2‑byte integers.
 
     :param bgr_matrix: The original color channels to pack.
-    :param encoding: The color encoding mode to use.
 
     :returns: The packed 2‑byte colors.
     """
-
-    r_max, g_max, b_max, r_shift, g_shift = ColorEncodingParams(encoding)
 
     b: npt.NDArray[np.uint16]
     g: npt.NDArray[np.uint16]
     r: npt.NDArray[np.uint16]
 
+    b_quantized: npt.NDArray[np.uint16]
+    g_quantized: npt.NDArray[np.uint16]
+    r_quantized: npt.NDArray[np.uint16]
+
     b, g, r = bgr_matrix.astype(np.uint16).T
-    r_quantized = remap_from_8bit(r, r_max) << r_shift
-    g_quantized = remap_from_8bit(g, g_max) << g_shift
-    b_quantized = remap_from_8bit(b, b_max)
+    r_quantized = remap_from_8bit(r, MAX_5BIT) << SHIFT_RED
+    g_quantized = remap_from_8bit(g, MAX_6BIT) << SHIFT_GREEN
+    b_quantized = remap_from_8bit(b, MAX_5BIT)
 
     return r_quantized | g_quantized | b_quantized
 
@@ -425,14 +428,6 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "output_path", type=Path, help="Target path for the asset binary."
-    )
-    parser.add_argument(
-        "-c",
-        "--color_encoding",
-        default=ColorEncoding.NEUTRAL,
-        type=lambda e: ColorEncoding[e.upper()],
-        choices=tuple(ColorEncoding),
-        help="Color encoding (Neutral, Warm, or Cool). Default is Neutral.",
     )
     parser.add_argument(
         "-a",
@@ -469,7 +464,6 @@ if __name__ == "__main__":
 
     asset_components = ingest_asset(
         args.source_image,
-        args.color_encoding,
         args.anchor,
         args.depth,
         args.physics_type,

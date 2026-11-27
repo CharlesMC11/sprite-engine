@@ -14,6 +14,8 @@ from pipeline import (
     MAX_4BIT,
     MAX_5BIT,
     MAX_6BIT,
+    SHIFT_GREEN,
+    SHIFT_RED,
     remap_from_8bit,
     remap_to_8bit,
 )
@@ -33,20 +35,20 @@ def preview_colors(hex_codes: Iterable[str]) -> None:
     grid_top = (
         "┌"
         + "─" * 9
-        + ("┬" + "─" * 16) * 3
+        + ("┬" + "─" * 16)
         + "┬"
-        + ("─" * 10)
+        + ("─" * 6)
         + ("┬" + "─" * 14) * 3
         + "┬"
         + "─" * 10
         + "┐"
     )
     grid_sep = grid_top.replace("┌", "├").replace("┬", "┼").replace("┐", "┤")
-    header = f"│ {'Entered':<7} │ {'Neutral 16':^14} │ {'Warm 16':^14} │ {'Cool 16':^14} │ {'Pal 16':^8} │ {'Neutral 8':^12} │ {'Warm 8':^12} │ {'Cool 8':^12} │ {'Pal 8':^8} │"
+    header = f"│ {'Entered':<7} │ {'RGB565':^14} │ {'Diff':^4} │ {'RGB332':^12} │ {'RGB422':^12} │ {'RGB224':^12} │ {'Pal 8':^8} │"
 
     print(grid_top, header.rstrip(), grid_sep, sep="\n")
 
-    unique_codes: tuple[Color] = filter_hex_codes(hex_codes)
+    unique_codes: tuple[Color, ...] = filter_hex_codes(hex_codes)
     for color in unique_codes:
         print("│", hex_str(*color), end="")
         print_16bit(color)
@@ -58,7 +60,7 @@ def preview_colors(hex_codes: Iterable[str]) -> None:
 
     print(
         grid_sep.replace("┼", "┴"),
-        f"│ {f'{palette_size} colors ({bit_count} {unit})':<125} │",
+        f"│ {f'{palette_size} colors ({bit_count} {unit})':<{len(grid_top) - 4}} │",
         f"└{'─' * (len(grid_top) - 2)}┘",
         sep="\n",
     )
@@ -92,13 +94,17 @@ def print_16bit(color: Color) -> None:
     :param color: The original color value
     """
 
-    q6 = _quantize(color, dst_max=MAX_6BIT)
-    e6 = _dequantize(q6, src_max=MAX_6BIT)
+    rq = remap_from_8bit(color.r, dst_max=MAX_5BIT)
+    gq = remap_from_8bit(color.g, dst_max=MAX_6BIT)
+    bq = remap_from_8bit(color.b, dst_max=MAX_5BIT)
+    quantized = Color(rq, gq, bq)
 
-    q5 = _quantize(color, dst_max=MAX_5BIT)
-    e5 = _dequantize(q5, src_max=MAX_5BIT)
+    re = remap_to_8bit(rq, src_max=MAX_5BIT)
+    ge = remap_to_8bit(gq, src_max=MAX_6BIT)
+    be = remap_to_8bit(bq, src_max=MAX_5BIT)
+    expanded = Color(re, ge, be)
 
-    _print_codes_16bit(color, q6, q5, e6, e5)
+    _print_codes_16bit(color, quantized, expanded)
 
 
 def print_8bit(color: Color) -> None:
@@ -138,48 +144,22 @@ def _dequantize(color: Color, src_max: int) -> Color:
 
 
 def _print_codes_16bit(
-    original: Color,
-    q6: Color,
-    q5: Color,
-    e6: Color,
-    e5: Color,
+    original: Color, quantized: Color, expanded: Color
 ) -> None:
     """Print the 16‑bit packed color
 
-    :param original: The original blue value
-    :param q6: The 6‑bit quantized color value
-    :param q5: The 5‑bit quantized color value
-    :param e6: The 6‑bit expanded color value
-    :param e5: The 5‑bit expanded color value
+    :param original: The original color value
+    :param quantized: The quantized color value
+    :param expanded: The expanded color value
     """
 
-    rq6, gq6, bq6 = q6
-    rq5, gq5, bq5 = q5
-
-    nq = (rq5 << 11) | (gq6 << 5) | bq5
-    wq = (rq6 << 10) | (gq5 << 5) | bq5
-    cq = (rq5 << 11) | (gq5 << 6) | bq6
-
-    re6, ge6, be6 = e6
-    re5, ge5, be5 = e5
-
-    ne = hex_str(re5, ge6, be5)
-    we = hex_str(re6, ge5, be5)
-    ce = hex_str(re5, ge5, be6)
-
-    patches = (
-        f"{_ansi_str(*original)}"
-        f"{_ansi_str(re5, ge6, be5)}"
-        f"{_ansi_str(re6, ge5, be5)}"
-        f"{_ansi_str(re5, ge5, be6)}"
+    hex_code = hex_str(expanded.r, expanded.g, expanded.b)
+    packed = (
+        (quantized.r << SHIFT_RED) | (quantized.g << SHIFT_GREEN) | quantized.b
     )
+    patches = f"{_ansi_str(*original)}{_ansi_str(*expanded)}"
 
-    print(
-        f" │ {ne} [{nq:04X}] │ {we} [{wq:04X}] │ {ce} [{cq:04X}] │ ",
-        patches,
-        end="",
-        sep="",
-    )
+    print(f" │ {hex_code} [{packed:04X}] │ {patches}", end="")
 
 
 def _print_codes_8bit(

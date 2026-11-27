@@ -15,8 +15,8 @@ The binary layout contains:
             - v_anchor (4 bytes)
         - Depth (1 byte)
         - Physics type (1 byte)
-        - Color encoding (1 byte)
         - Palette index (1 byte), set to 0x3F (ASCII for '?') as a placeholder
+        - Reserved (1 byte)
 - Pixels (height×width bytes): 1‑byte packed pixel values [*][E][AA][IIII]
 - Footer (34 bytes): additional metadata
     - Color palette (32 bytes): 16 2‑byte unique colors
@@ -36,21 +36,26 @@ import numpy.typing as npt
 from pipeline import (
     FOOTER_SIZE_BYTES,
     MASK_ALPHA,
+    MASK_BLUE,
+    MASK_GREEN,
     MASK_PALETTE_INDEX,
+    MASK_RED,
     MAX_2BIT,
+    MAX_5BIT,
+    MAX_6BIT,
     MAX_8BIT,
     SHIFT_ALPHA,
+    SHIFT_GREEN,
+    SHIFT_RED,
     SPRITE_DIMENSIONS_SIZE_BYTES,
     BGRImage,
-    ColorEncoding,
-    ColorEncodingParams,
     ResourceLayoutWarning,
     SpriteMetadata,
     is_power_of_2,
     remap_to_8bit,
 )
 
-TARGET_HEIGHT: int = 0x20
+TARGET_HEIGHT: int = 0x100
 BBOX_THICKNESS: int = 0b1
 ANCHOR_THICKNESS: int = 0b1
 
@@ -85,7 +90,7 @@ def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     alpha_bits = ((pixels & MASK_ALPHA) >> SHIFT_ALPHA).astype(np.uint16)
     alpha_mask = remap_to_8bit(alpha_bits, MAX_2BIT).reshape((height, width))
 
-    palette = _unpack_16bit_to_color(palette_blob, meta.color_encoding)
+    palette = _unpack_16bit_to_color(palette_blob)
     image_bgr = palette[index_bits].reshape((height, width, 3))
 
     return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8), meta
@@ -94,28 +99,23 @@ def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
 # Protected helpers
 
 
-def _unpack_16bit_to_color(
-    packed_buffer: bytes, encoding: ColorEncoding
-) -> BGRImage:
+def _unpack_16bit_to_color(packed_buffer: bytes) -> BGRImage:
     """
     Unpack 2‑byte integers into 1‑byte BGR channels.
 
     :param packed_buffer: The buffer containing the 2‑byte integers.
-    :param encoding: The color encoding to use.
 
     :returns: The unpacked BGR image.
     """
-
-    r_max, g_max, b_max, r_shift, g_shift = ColorEncodingParams(encoding)
 
     b: npt.NDArray[np.uint16]
     g: npt.NDArray[np.uint16]
     r: npt.NDArray[np.uint16]
 
     packed_color = np.frombuffer(packed_buffer, dtype=np.uint16)
-    r = remap_to_8bit((packed_color >> r_shift) & r_max, r_max)
-    g = remap_to_8bit((packed_color >> g_shift) & g_max, g_max)
-    b = remap_to_8bit(packed_color & b_max, b_max)
+    r = remap_to_8bit(((packed_color & MASK_RED) >> SHIFT_RED), MAX_5BIT)
+    g = remap_to_8bit(((packed_color & MASK_GREEN) >> SHIFT_GREEN), MAX_6BIT)
+    b = remap_to_8bit(packed_color & MASK_BLUE, MAX_5BIT)
 
     return np.stack((b, g, r), axis=-1)
 
