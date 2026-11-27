@@ -80,7 +80,7 @@ target_include_directories(shared PUBLIC
 
 # Sprite Compiler / Atlas Linker
 
-find_package(Python 3.14 COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python 3.15 COMPONENTS Interpreter Development.Module REQUIRED)
 execute_process(
         COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
         OUTPUT_VARIABLE nanobind_ROOT
