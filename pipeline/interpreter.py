@@ -57,7 +57,7 @@ from pipeline import (
 
 TARGET_HEIGHT: int = 0x100
 BBOX_THICKNESS: int = 0b1
-ANCHOR_THICKNESS: int = 0b1
+ANCHOR_THICKNESS: int = 0b11
 
 
 def decompile_asset(source_path: Path) -> tuple[SpriteMetadata, BGRImage]:
