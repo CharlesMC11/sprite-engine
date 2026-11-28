@@ -91,6 +91,10 @@ OR
 
 320 × 240 px viewport
 
+- ST7789?
+- ST7789V?
+- ILI9341?
+
 Requires:
 
 - 320 × 240 × 2 = 153,600 B = 150 KiB
@@ -110,7 +114,7 @@ Requires:
 
 ### Overworld
 
-- Q13.19 fixed-point kinematics
+- Q21.10 fixed-point kinematics
     - Top-down discrete grid view
     - Continuous, smooth scrolling camera
 
@@ -129,7 +133,6 @@ Requires:
 
 - 32 × 32 px sprites for characters
     - 16-bit color
-- 8-bit color for supernatural and environment
 - 2-bit alpha? Glow?
 
 #### Pause Menu
@@ -144,17 +147,15 @@ Requires:
 
 #### Virginia Exclusion Zone
 
-- Upgraded Q32.32 fixed-point kinematics
-- 8-bit colors for characters
-    - Occasionally glitches
-- 16-bit colors for supernatural
+- Occasionally glitches colors
+    - `xor` certain bits of the colors?
 - Reversed music & sound effects / off-sync sound effects
 - Broken physics
     - Overshoot or invert movement and actions
     - Randomly invert or null controls
     - Randomly teleport to certain tiles
 
-### Battle
+### Battle / Encounter
 
 - Turn-based
 - Actions
@@ -174,12 +175,11 @@ Requires:
     - **Spd**: Affects turn cooldown
     - **Mov**: Affects travel distance
 - Environment hazards/obstacles
-- Top-down _Fire Emblem_-like grid or _Naruto: Path of the Ninja_ arena
-    - Both discrete grids
+- Top-down _Fire Emblem_-like grid
+    - Discrete grids
 
 #### Final Boss
 
-- Upgraded Q32.32 fixed-point kinematics
 - 12-frame animation for boss idle
     - 15-frame animation for special move
 - 15-frame animation for special move
