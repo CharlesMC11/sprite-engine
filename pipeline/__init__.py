@@ -36,6 +36,8 @@ MAX_8BIT: int = 0xFF
 # Graphics
 
 type BGRImage = npt.NDArray[np.uint8]
+type AlphaMask = npt.NDArray[np.uint16]
+
 type Palette = npt.NDArray[np.uint8]
 
 

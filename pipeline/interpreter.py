@@ -60,7 +60,7 @@ BBOX_THICKNESS: int = 0b1
 ANCHOR_THICKNESS: int = 0b1
 
 
-def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
+def decompile_asset(source_path: Path) -> tuple[SpriteMetadata, BGRImage]:
     """
     Decompile the asset into a viewable image.
 
@@ -93,7 +93,7 @@ def decompile_asset(source_path: Path) -> tuple[BGRImage, SpriteMetadata]:
     palette = _unpack_16bit_to_color(palette_blob)
     image_bgr = palette[index_bits].reshape((height, width, 3))
 
-    return cv2.merge((image_bgr, alpha_mask)).astype(np.uint8), meta
+    return meta, cv2.merge((image_bgr, alpha_mask)).astype(np.float32)
 
 
 # Protected helpers
@@ -120,30 +120,28 @@ def _unpack_16bit_to_color(packed_buffer: bytes) -> BGRImage:
     return np.stack((b, g, r), axis=-1)
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser("Asset Interpreter", description=__doc__)
-    parser.add_argument(
-        "source_sprite", type=Path, help="Path to the source sprite file."
-    )
+def _preview(meta: SpriteMetadata, bgra_image) -> None:
+    """
 
-    args = parser.parse_args()
+    :param meta: :class:`SpriteMetadata`
+    :param bgra_image:
+    """
 
-    if not (path := args.source_sprite).exists():
-        raise FileNotFoundError(f"Missing asset file: '{path}'")
+    bgr = bgra_image[:, :, :3]
+    alpha = bgra_image[:, :, 3:4] / MAX_8BIT
+    bg = np.full_like(bgr, MAX_8BIT, dtype=np.float32)
+    composite = np.round(bgr * alpha + bg * (1.0 - alpha)).astype(np.uint8)
 
-    image, meta = decompile_asset(path)
-
-    # TODO: Hide scaling in a function later
-    scale_factor = TARGET_HEIGHT / image.shape[0]
-    target_width = round(image.shape[1] * scale_factor)
+    scale_factor: float = TARGET_HEIGHT / composite.shape[0]
+    target_width: int = round(composite.shape[1] * scale_factor)
 
     image_resized = cv2.resize(
-        image,
+        composite,
         (target_width, TARGET_HEIGHT),
         interpolation=cv2.INTER_NEAREST,
     )
 
-    # TODO: Hide annotation in a function later
+    # Show bounding box
     cv2.rectangle(
         image_resized,
         (
@@ -158,6 +156,7 @@ if __name__ == "__main__":
         thickness=BBOX_THICKNESS,
     )
 
+    # Show anchor point
     u_anchor = meta.u_anchor.to_float()
     v_anchor = meta.v_anchor.to_float()
     cv2.circle(
@@ -173,3 +172,18 @@ if __name__ == "__main__":
 
     cv2.imshow(f"SC::Preview - {path.name}", image_resized)
     cv2.waitKey(0)
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser("Asset Interpreter", description=__doc__)
+    parser.add_argument(
+        "source_sprite", type=Path, help="Path to the source sprite file."
+    )
+
+    args = parser.parse_args()
+
+    if not (path := args.source_sprite).exists():
+        raise FileNotFoundError(f"Missing asset file: '{path}'")
+
+    meta, bgr_image = decompile_asset(path)
+    _preview(meta, bgr_image)
