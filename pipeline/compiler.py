@@ -61,7 +61,7 @@ from pipeline import (
 
 # Types
 
-type AlphaMask = npt.NDArray[np.uint8]
+type AlphaMask = npt.NDArray[np.uint16]
 type EmissionMask = npt.NDArray[np.uint8]
 
 type PackedColors = npt.NDArray[np.uint16]
@@ -126,19 +126,22 @@ def ingest_asset(
     # Extract alpha mask
 
     source_bgr: BGRImage
-    source_alpha: AlphaMask | None
+    alpha: AlphaMask | None
 
     if image.shape[2] >= 4:
         source_bgr = image[:, :, :3]
-        source_alpha = image[:, :, 3]
+        source_alpha = image[:, :, 3].astype(np.uint16)
+
+        # Quantize it now so we get correct values downstream
+        alpha = remap_from_8bit(source_alpha, MAX_2BIT)
     else:
         source_bgr = image
-        source_alpha = None
+        alpha = None
 
     # Calculate bounding box
 
-    if source_alpha is not None:
-        u_min, u_max, v_min, v_max = _calculate_bounding_box(source_alpha)
+    if alpha is not None:
+        u_min, u_max, v_min, v_max = _calculate_bounding_box(alpha)
     else:
         u_min = v_min = 0
         u_max = width - 1
@@ -200,7 +203,7 @@ def ingest_asset(
     return SpriteComponents(
         header,
         source_bgr,
-        source_alpha,
+        alpha,
         source_emission,
         width,
         height,
@@ -327,16 +330,21 @@ def _bake_pixels(
     """
 
     bgr_flat_array = pixel_components.bgr_image.reshape(-1, 3)
-    palette = _extract_palette(bgr_flat_array, asset_name)
-    index = _index_colors(bgr_flat_array, palette) & MASK_PALETTE_INDEX
+    palette_src = bgr_flat_array
 
     total_pixels = pixel_components.width * pixel_components.height
 
     if pixel_components.alpha_mask is not None:
-        flattened_alpha = pixel_components.alpha_mask.flatten(order="C")
-        alpha = remap_from_8bit(flattened_alpha.astype(np.uint16), MAX_2BIT)
+        alpha = pixel_components.alpha_mask.flatten(order="C")
+
+        if (visible_bgr := bgr_flat_array[alpha > 0]).size > 0:
+            palette_src = visible_bgr
     else:
         alpha = np.full(total_pixels, MAX_2BIT, dtype=np.uint16)
+
+    palette = _extract_palette(palette_src, asset_name)
+    index = _index_colors(bgr_flat_array, palette) & MASK_PALETTE_INDEX
+    index[alpha == 0] = 0x00
 
     if pixel_components.emission_mask is not None:
         flattened_emission = pixel_components.emission_mask.flatten(order="C")
