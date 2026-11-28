@@ -33,5 +33,6 @@ __pycache__/
 *.atlas
 *.clip
 *.png
+*.px?
 *.sprite
 *_ids.hh
